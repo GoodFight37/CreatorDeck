@@ -14,7 +14,10 @@ près de l'action de rangement. Aucune nouvelle vue ni dépendance ; pas de refo
 des cartes du classeur, du tirage, du son ou de la sortie vers Twitch.
 L'inspection de la capture Android avec Reflets coupés montre les légendes
 masquées par le contexte 3D ; un plan de peinture explicite sur la légende les
-rétablit (essai CSS injecté avant intégration, puis retest de l'APK requis).
+rétablit (essai CSS injecté avant intégration, puis APK finale recompilée et
+quatre parcours natifs réussis, captures examinées). Les quatre E2E Perfect
+passent sur le CSS final, trois modes et quatre formats ; le test attend la
+fin des animations avant de mesurer les positions.
 Tests et état de publication : premier checkpoint de `agent-handoff.md`.
 
 ## D-164 — 24 octobre 2026 : alléger l'accueil et les mouvements, préserver les arbitrages produit

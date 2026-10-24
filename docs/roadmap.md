@@ -2,8 +2,10 @@
 
 **Booster parfait, 24 octobre 2026 — D-165 :** correction locale du récapitulatif
 encombré (`CreatorDeck-Codex-ohb`) : portraits dégagés, noms non répétés, titre et
-halos allégés, cinq cartes adaptées à la fenêtre. Dépend de la validation visuelle
-APK/émulateur, petits écrans et mouvements réduits, puis E2E complète et publication.
+halos allégés, cinq cartes adaptées à la fenêtre. Implémenté et validé sur
+APK/émulateur (4 parcours natifs) et navigateur (4 E2E finaux), trois modes,
+petits écrans et paysage ; suite complète exécutée, attente du nouveau test
+corrigée après un échec puis scénarios concernés relancés verts. Publication à vérifier.
 Critères : cinq cartes entières entre titre et bouton, mentions utiles conservées,
 direct accessible et rangement fonctionnel. Pas encore validé sur téléphone réel.
 

@@ -5,7 +5,9 @@ Malik demande de corriger le dernier problème commité, avec Ponytail. Lot
 identique à `origin/main` après fetch ; aucune PR ouverte, CI précédente verte.
 Le checkout `CreatorDeck-Codex` conserve son ancien chantier et n'est pas modifié.
 
-**Checkpoint local, pas encore publié :** problème reproduit sur APK debug sans
+**Code commité localement, pas encore publié :**
+[`3937b84c`](https://github.com/GoodFight37/CreatorDeck/commit/3937b84cfce6662f01da2f4051bc9c1345ec3a1a).
+Problème reproduit sur APK debug sans
 cloud, émulateur Android API 36, 412 × 842 CSS : cinq encarts de spectateurs
 recouvrent les portraits, cinq noms répétés. Directs simulés par cache local,
 tirage déterministe ; aucune modification de compte ou base distante.
@@ -27,19 +29,35 @@ mouvement). APK/émulateur : quatre parcours réussis, appuis Android natifs,
 normal/réduit/Reflets coupés à 412 × 842 et petit écran 336 × 568, sans erreur JS.
 L'inspection des captures a ensuite révélé les légendes masquées en mode Reflets
 coupés ; un plan de peinture explicite (`position: relative; z-index: 3`) les
-rétablit, confirmé par injection CSS sur l'APK. Intégré au CSS, retest de l'APK
-compilée encore requis ; les E2E Perfect incluent maintenant ce troisième mode.
+rétablit, confirmé par injection CSS puis sur l'APK finale recompilée
+(build + sync + assembleDebug, sortie 0). Retest final **4/4 réussi**, zéro erreur
+JS ; captures normal, réduit, Reflets coupés et 336 × 568 examinées.
+Les E2E Perfect incluent maintenant ce troisième mode. Suite E2E complète lancée
+en configuration sans cloud : **212 réussis, 29 ignorés, 1 échec** en 26,1 min.
+L'échec mesure les cartes encore en animation après bascule de Reflets ; la
+capture montre le retournement en cours. Le test attend maintenant les animations
+finies avant de mesurer. Relance finale bureau **2/2 verte**, téléphone **2/2 vert**
+séparément (une tentative partageant le serveur du run complet a perdu ce serveur
+à la fin de la suite, `ERR_CONNECTION_REFUSED`, et n'est pas comptée comme verte).
 Le lint global a parcouru les bundles/rapports générés locaux et échoué sur ces
 artefacts ; le contrôle ciblé des sources est vert. Aucun contrôle applicatif
 désactivé. Pour le diff CSS historiquement stocké en CRLF :
 `git -c core.whitespace=cr-at-eol diff --check`.
 Preuves/scripts locaux : `reports/recap-parfait-2026-10-24/`.
 
-**Suite précise :** laisser terminer la suite E2E complète déjà lancée
-(`reports/recap-parfait-2026-10-24/e2e.log`), reconstruire l'APK puis retester le
-dernier correctif de peinture, relancer les quatre E2E Perfect sur le CSS final.
-Actualiser le statut du défaut, committer seulement ce lot et publier
-normalement sur `main`, vérifier SHA distant, CI, Vercel et APK publiée.
+**Commandes finales :** `npm run e2e -- --reporter=list
+--output=reports/recap-parfait-2026-10-24/e2e` (variables publiques vides et
+`CREATORDECK_LOCAL_QUALITY=1`) ; relance `npx playwright test
+e2e/perfect-recap.spec.ts --reporter=line` sur bureau puis `--project=téléphone` ;
+`node reports/recap-parfait-2026-10-24/android-recap.mjs final` sur l'APK issue
+de `npm run android:debug` avec les deux variables publiques explicitement vides.
+Le code fonctionnel audité est `3937b84c` ; le commit suivant ne change que le
+test d'attente, les captures et la documentation. Les 29 scénarios ignorés ne
+sont pas annoncés réussis. Pas de SQL modifié, aucune suite SQL relancée.
+
+**Suite précise :** publier normalement les commits locaux sur `main`, puis
+vérifier SHA distant, CI, Vercel et état de l'APK publiée. Aucun essai sur téléphone
+physique ; les directs du test étaient simulés, aucun compte réel testé.
 Modifications préexistantes à préserver : Gradle généré, quatre PNG `pack-tear`,
 bloc Kyara non commité dans cette passation et fichiers non suivis.
 

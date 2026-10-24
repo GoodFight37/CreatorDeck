@@ -29,6 +29,11 @@ for (const withLive of [true, false]) test(`le booster parfait laisse voir ses c
     await page.evaluate(mode => document.documentElement.dataset.cardFx = mode === "off" ? "off" : "on", mode);
     for (const [width, height] of [[320, 568], [412, 915], [915, 412], [1280, 720]]) {
       await page.setViewportSize({ width, height });
+      await reveal.locator(".reveal-perfect-grid").evaluate(async grid => {
+        await Promise.all(grid.getAnimations({ subtree: true })
+          .filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity)
+          .map(animation => animation.finished.catch(() => {})));
+      });
       const bounds = await reveal.evaluate(root => {
         const box = (node: Element) => { const r = node.getBoundingClientRect(); return { x: r.x, y: r.y, right: r.right, bottom: r.bottom }; };
         const nextPack = root.querySelector(".reveal-next-pack");

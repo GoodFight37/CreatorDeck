@@ -1,6 +1,6 @@
-## Booster parfait : récapitulatif encombré — correction locale, 24 octobre 2026
+## Booster parfait : récapitulatif encombré — corrigé et validé localement, 24 octobre 2026
 
-**Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), validation en cours.**
+**Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), correction validée.**
 Malik signale qu'après un booster parfait (« God Pack » dans son message),
 les cartes sont difficiles à voir à cause de l'accumulation d'informations.
 Sa capture Android montre le récapitulatif 5/5 : quatre Épiques et une Légendaire.
@@ -25,7 +25,10 @@ répétés et halos de fond, grille adaptée à la hauteur. Rareté, Nouvelle, c
 lien Twitch, série et minuterie restent accessibles. Tests d'écran ciblés 33/33 ;
 quatre parcours Android réussis et captures inspectées. Un défaut supplémentaire
 de peinture des légendes avec Reflets coupés est corrigé par un plan explicite
-sur la légende ; retest de l'APK finale et E2E complète en cours. Aucun contournement
+sur la légende ; APK finale **4/4** réussie et captures examinées dans les trois
+modes plus petit écran. E2E complète : 212 réussis, 29 ignorés, 1 échec d'attente
+dans le nouveau test ; attente des animations corrigée, relance finale bureau
+2/2 et téléphone 2/2 vertes. Aucun contournement
 nécessaire une fois la correction livrée ; téléphone physique non testé.
 
 Points d'entrée repérés pour la reprise : `src/components/reveal-overlay.tsx`
@@ -37,7 +40,8 @@ Points d'entrée repérés pour la reprise : `src/components/reveal-overlay.tsx`
 Captures de reproduction sur APK/émulateur (directs simulés, pas un téléphone
 physique) : [avant](images/bugs/2026-10-24-booster-parfait-avant-emulateur.png),
 [après](images/bugs/2026-10-24-booster-parfait-apres-emulateur.png),
-[petit écran](images/bugs/2026-10-24-booster-parfait-petit-emulateur.png).
+[petit écran](images/bugs/2026-10-24-booster-parfait-petit-emulateur.png),
+[Reflets coupés](images/bugs/2026-10-24-booster-parfait-reflets-off-emulateur.png).
 
 ## Révélation MEMES : doigt secondaire et sortie de carte — publié, 24 octobre 2026
 
