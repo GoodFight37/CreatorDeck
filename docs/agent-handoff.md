@@ -28,8 +28,15 @@ avec leurs 58 identifiants conservés ; source sans occurrence Mèmes/MÈMES.
 Après ce complément : unitaires ciblés 12/12, écrans 261/261, typecheck et lint verts.
 Relance E2E complète finale : **209 réussis, 29 ignorés, zéro échec, zéro instable**,
 code de sortie 0 ; 21 min 5,7 s. Rendu de la note historique MEMES vérifié à 390 px,
-date conservée et zéro erreur JS. Source du complément et preuves indexés pour publication.
-Suivi `CreatorDeck-Codex-blp`.
+date conservée et zéro erreur JS. Complément et preuves publiés normalement sur `main` :
+[`f9c2d9ea`](https://github.com/GoodFight37/CreatorDeck/commit/f9c2d9ea68d07929753447ba333401d3c3975593),
+SHA distant vérifié. [CI du complément](https://github.com/GoodFight37/CreatorDeck/actions/runs/40096003985)
+en cours au relevé après push, à ne pas annoncer verte ; aucun nouveau test nécessaire
+pour ce dernier checkpoint uniquement documentaire.
+Vercel Production du code final `f9c2d9ea` vérifié **réussi**, statut `success`
+du déploiement GitHub `7298901994` le 24 octobre à 12:56 UTC :
+[application](https://creator-deckk-mvznlof0x-hafsi37-2386.vercel.app).
+Suivi `CreatorDeck-Codex-blp` clôturé. Serveur local de vérification arrêté.
 Le commit documentaire de ce checkpoint se retrouve par
 `git log -1 --format=%H -- docs/agent-handoff.md`.
 

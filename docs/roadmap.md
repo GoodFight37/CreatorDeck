@@ -13,6 +13,8 @@ entièrement verte ; checkpoint documentaire `064a629f` aussi déployé.
 Complément global : les 20 anciens libellés des nouveautés sont harmonisés en MEMES,
 58 identifiants conservés ; écrans 261/261 et unitaires ciblés 12/12 verts.
 Relance E2E complète finale : 209 réussis, 29 ignorés, aucun échec ni instable.
+Complément publié dans [`f9c2d9ea`](https://github.com/GoodFight37/CreatorDeck/commit/f9c2d9ea68d07929753447ba333401d3c3975593),
+Production du même SHA réussie ; CI du complément encore en cours au relevé.
 Les arbitrages du point 7 restent à Malik. [Mesures et preuves](optimisation-2026-10-24.md).
 
 **Imgflip serveur, 23 octobre 2026 :** migration 0062 préparée et validée sur

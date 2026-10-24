@@ -190,6 +190,16 @@ Contrôle visuel supplémentaire dans l'application à 390×844 : ancienne note
 « Les MEMES arrivent dans CreatorDeck », date du 16 octobre conservée,
 ancien nom absent et zéro erreur JS. Capture examinée :
 `reports/optimisation-2026-10-24/nouveautes-memes.png`.
+Complément de code audité et poussé normalement sur `main` :
+[`f9c2d9ea68d07929753447ba333401d3c3975593`](https://github.com/GoodFight37/CreatorDeck/commit/f9c2d9ea68d07929753447ba333401d3c3975593),
+SHA distant vérifié. [CI de ce complément](https://github.com/GoodFight37/CreatorDeck/actions/runs/40096003985)
+encore en cours au relevé après push, sans attendre de nouveau ses suites longues.
+Vercel Production du code final `f9c2d9ea` vérifié **réussi** : déploiement GitHub
+`7298901994` du même SHA, statut `success` le 24 octobre à 12:56 UTC,
+[application](https://creator-deckk-mvznlof0x-hafsi37-2386.vercel.app).
+Bead `CreatorDeck-Codex-blp` clôturé. Les fichiers Kyara, quatre PNG préexistants
+et fichiers locaux non suivis restent hors des commits. Les deux fichiers Gradle
+touchés par la synchronisation Android n'ont aucun changement de contenu et ne sont pas indexés.
 Modifications préexistantes préservées : bloc Kyara de la passation, quatre
 captures Windows et fichiers non suivis. AVD `CreatorDeck_API36` démarré avec
 `-gpu host`, visible par ADB hors bac à sable.
