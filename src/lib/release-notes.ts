@@ -17,7 +17,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Les reflets du sachet et les anneaux de direct gardent leur mouvement avec moins de travail de dessin.",
       "Les petits boutons sont plus faciles à toucher et les fenêtres gardent leur propre défilement.",
       "La barre système Android garde des icônes claires sur fond sombre.",
-      "Les textes te tutoient, le sablier décrit son sachet bonus et le nom MEMES est harmonisé.",
+      "Les textes te tutoient, le sablier décrit son sachet bonus et le nom MEMES est harmonisé, y compris dans les anciennes nouveautés.",
       "Le geste de révélation MEMES garde le premier doigt, même si tu touches l’écran avec un second.",
     ] }],
   },
@@ -35,7 +35,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
   },
   {
     id: "2026-10-23-animations-boosters", date: "2026-10-23", title: "Des boosters plus vifs et plus beaux",
-    summary: "La révélation Mèmes s'accélère, le sachet s'efface, et le booster du Drop s'incline avec le téléphone.",
+    summary: "La révélation MEMES s'accélère, le sachet s'efface, et le booster du Drop s'incline avec le téléphone.",
     sections: [
       { title: "Révélation", items: [
         "Les cartes Communes et Peu communes se retournent presque aussitôt, sans pause avant le geste. Les cartes Rare et mieux gardent leur mise en scène.",
@@ -55,7 +55,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     summary: "Le troisième sachet a désormais sa réserve, ses cartes gardées et ses tirages comptés comme les autres.",
     sections: [{ title: "Nouveauté", items: [
       "Le booster IMGFLIP puise dans sa propre réserve : quatre sachets au maximum, un nouveau toutes les 30 minutes.",
-      "Les cartes IMGFLIP obtenues restent dans ton classeur Mèmes, avec leurs exemplaires.",
+      "Les cartes IMGFLIP obtenues restent dans ton classeur MEMES, avec leurs exemplaires.",
       "Un tirage interrompu par une coupure réseau se reprend sans jamais être compté deux fois.",
     ] }],
   },
@@ -92,7 +92,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
   },
   {
     id: "2026-10-21-createur-memes", date: "2026-10-21", title: "Crée un mème avec tes cartes",
-    summary: "Une carte Mèmes obtenue peut devenir une nouvelle création, sans changer ta carte.",
+    summary: "Une carte MEMES obtenue peut devenir une nouvelle création, sans changer ta carte.",
     sections: [{ title: "Créations", items: [
       "Ouvre une carte obtenue et choisis Créer un mème : ajoute plusieurs textes, déplace-les et règle leur taille et leur couleur.",
       "Enregistre une nouvelle image. Les modèles GIF restent animés, avec leurs durées et leurs boucles.",
@@ -231,16 +231,16 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     ] }],
   },
   {
-    id: "2026-10-16-meme-reveal-title", date: "2026-10-16", title: "Les titres des cartes Mèmes en entier",
+    id: "2026-10-16-meme-reveal-title", date: "2026-10-16", title: "Les titres des cartes MEMES en entier",
     summary: "Les noms ne sont plus coupés pendant la révélation.",
-    sections: [{ title: "Cartes Mèmes", items: [
+    sections: [{ title: "Cartes MEMES", items: [
       "Pendant l’ouverture d’un booster, les noms longs des cartes peuvent maintenant tenir sur plusieurs lignes.",
     ] }],
   },
   {
-    id: "2026-10-16-meme-fiche-retiree", date: "2026-10-16", title: "Une fiche retirée du classeur Mèmes",
+    id: "2026-10-16-meme-fiche-retiree", date: "2026-10-16", title: "Une fiche retirée du classeur MEMES",
     summary: "La fiche sans illustration n’apparaît plus dans la collection.",
-    sections: [{ title: "Cartes Mèmes", items: [
+    sections: [{ title: "Cartes MEMES", items: [
       "La fiche « Carte supprimée » a été retirée du classeur : son image n’était qu’un visuel de remplacement et la carte ne pouvait pas être obtenue en booster.",
     ] }],
   },
@@ -253,9 +253,9 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
   },
   {
     id: "2026-10-16-choix-boosters", date: "2026-10-16", title: "Choisis ton booster sur Drop",
-    summary: "Passe de Live Drop à Mèmes d’un glissement, puis prépare ton ouverture.",
+    summary: "Passe de Live Drop à MEMES d’un glissement, puis prépare ton ouverture.",
     sections: [{ title: "Drop", items: [
-      "Les boosters Live Drop et Mèmes se choisissent depuis le même écran, au doigt ou avec les boutons d’univers.",
+      "Les boosters Live Drop et MEMES se choisissent depuis le même écran, au doigt ou avec les boutons d’univers.",
       "Touche un sachet pour le préparer. Retour permet de changer d’avis sans dépenser de booster.",
       "Le booster est consommé quand tu valides la déchirure ou choisis Ouvrir sans déchirer.",
     ] }],
@@ -269,29 +269,29 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     ] }],
   },
   {
-    id: "2026-10-16-memes-matiere", date: "2026-10-16", title: "Des Mèmes qui ont leur matière",
-    summary: "Les cartes Mèmes se distinguent davantage selon leur rareté et leur format Full Art.",
-    sections: [{ title: "Cartes Mèmes", items: [
+    id: "2026-10-16-memes-matiere", date: "2026-10-16", title: "Des MEMES qui ont leur matière",
+    summary: "Les cartes MEMES se distinguent davantage selon leur rareté et leur format Full Art.",
+    sections: [{ title: "Cartes MEMES", items: [
       "Les cadres et les reflets changent progressivement de la Commune à la Mythique, en gardant l'image lisible.",
       "Les Full Art laissent plus de place à l'illustration. Sur une grande carte rare, épique ou supérieure, le reflet répond au doigt si les effets sont activés.",
     ] }],
   },
   {
-    id: "2026-10-16-memes-ouverture-tactile", date: "2026-10-16", title: "Les Mèmes se déchirent aussi",
-    summary: "Le booster Mèmes reprend le geste d’ouverture et la révélation animée du Drop.",
+    id: "2026-10-16-memes-ouverture-tactile", date: "2026-10-16", title: "Les MEMES se déchirent aussi",
+    summary: "Le booster MEMES reprend le geste d’ouverture et la révélation animée du Drop.",
     sections: [{ title: "Ouverture", items: [
-      "Tire sur la soudure du sachet Mèmes : les cinq dos sortent avant que les cartes se retournent.",
+      "Tire sur la soudure du sachet MEMES : les cinq dos sortent avant que les cartes se retournent.",
       "Chaque carte se révèle automatiquement ; glisse ou touche la carte pour avancer. Les cartes rares marquent davantage leur arrivée.",
       "Les cinq cartes restent réunies dans un récap avant le retour au classeur.",
     ] }],
   },
   {
-    id: "2026-10-16-univers-memes", date: "2026-10-16", title: "Les Mèmes arrivent dans CreatorDeck",
-    summary: "Un booster et un classeur Mèmes FR séparés de tes cartes Twitch.",
+    id: "2026-10-16-univers-memes", date: "2026-10-16", title: "Les MEMES arrivent dans CreatorDeck",
+    summary: "Un booster et un classeur MEMES FR séparés de tes cartes Twitch.",
     sections: [{ title: "Nouvel univers", items: [
-      "Depuis le Drop, ouvre un booster Mèmes de cinq cartes et retrouve tes découvertes dans leur propre collection.",
-      "La réserve Mèmes se recharge séparément : un booster toutes les 30 minutes, jusqu’à quatre prêts. Tes cartes et ressources Twitch ne changent pas.",
-      "Le catalogue compte 2 151 fiches, dont une carte au visuel indisponible qui ne sort pas en booster. Les chances de la dernière carte sont affichées sur l’écran Mèmes.",
+      "Depuis le Drop, ouvre un booster MEMES de cinq cartes et retrouve tes découvertes dans leur propre collection.",
+      "La réserve MEMES se recharge séparément : un booster toutes les 30 minutes, jusqu’à quatre prêts. Tes cartes et ressources Twitch ne changent pas.",
+      "Le catalogue compte 2 151 fiches, dont une carte au visuel indisponible qui ne sort pas en booster. Les chances de la dernière carte sont affichées sur l’écran MEMES.",
     ] }],
   },
   {

@@ -8,8 +8,11 @@ sur APK/émulateur API 36. Unitaires 1218/1218, écrans 261/261 ; E2E complet
 exécuté et anciennes attentes corrigées, revue d'animations terminée avec
 protection du geste MEMES. Relances cloud MEMES/IMGFLIP 4/4 vertes ; code publié
 dans [`2e48cd76`](https://github.com/GoodFight37/CreatorDeck/commit/2e48cd7633a35d20e130053ac37eb3ff8a5fe847),
-Vercel Production du même SHA vérifié réussi. CI distante encore en cours au
-relevé après publication ; ne pas la considérer comme verte.
+Vercel Production du même SHA vérifié réussi. CI distante du code `2e48cd76`
+entièrement verte ; checkpoint documentaire `064a629f` aussi déployé.
+Complément global : les 20 anciens libellés des nouveautés sont harmonisés en MEMES,
+58 identifiants conservés ; écrans 261/261 et unitaires ciblés 12/12 verts.
+Relance E2E complète finale : 209 réussis, 29 ignorés, aucun échec ni instable.
 Les arbitrages du point 7 restent à Malik. [Mesures et preuves](optimisation-2026-10-24.md).
 
 **Imgflip serveur, 23 octobre 2026 :** migration 0062 préparée et validée sur

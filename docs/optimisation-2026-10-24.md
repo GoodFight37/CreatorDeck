@@ -120,7 +120,8 @@ La mémoire externe a été refusée par le contrôle de confidentialité : suiv
   ordre et titres des groupes conservés (point 7).
 - Confirmation explicite de Malik pendant le travail : harmonisation globale
   « Mèmes → MEMES » autorisée. Appliquée à l'interface, ses libellés accessibles,
-  aux erreurs client et aux attentes des tests ; anciennes notes historiques conservées.
+  aux erreurs client et aux attentes des tests. Dernier contrôle : les libellés
+  des anciennes nouveautés sont harmonisés aussi ; identifiants et faits historiques conservés.
 - Cibles d'arrondi 3→4 px ; rareté du dos 8–11→12 px ; interrupteur actif en
   `--action` avec curseur `--action-ink` ; deux règles `.menu-count` fusionnées
   en une seule en préservant leur résultat de cascade.
@@ -172,8 +173,23 @@ poussé normalement sur `main`, SHA distant vérifié.
 Vercel Production : déploiement GitHub `7298546779` de ce SHA, statut `success`
 le 24 octobre à 12:24 UTC, [application](https://creator-deckk-pmkwwpp9v-hafsi37-2386.vercel.app).
 [CI distante](https://github.com/GoodFight37/CreatorDeck/actions/runs/40093728855)
-encore en cours au relevé après publication : SQL réussi, cinq autres jobs en cours.
-Cette observation ne vaut pas résultat vert de la CI. Bead `CreatorDeck-Codex-blp` clôturé.
+du code `2e48cd76` entièrement **réussie** : six jobs de vérification verts,
+synthèse d'échec ignorée puisqu'aucun échec. Checkpoint documentaire `064a629f`
+également poussé, Vercel Production du même SHA réussi (déploiement `7298597831`).
+
+Complément à l'harmonisation globale : les **20** occurrences historiques de
+« Mèmes » dans les nouveautés affichées deviennent MEMES, avec les **58**
+identifiants inchangés. Contrôle du source : aucune occurrence résiduelle de
+« Mèmes » ou « MÈMES ». Unitaires ciblés (nouveautés, MEMES et IMGFLIP) **12/12**,
+écrans **261/261**, typecheck et lint réussis après ce complément.
+Relance E2E complète finale (`npm run e2e`, CLI Playwright installée, variables
+Supabase explicitement vides comme ci-dessus) : **209 réussis, 29 ignorés,
+zéro échec et zéro instable**, sortie **0**, 21 min 5,7 s.
+Résultat : `reports/optimisation-2026-10-24/e2e-harmonisation.json`.
+Contrôle visuel supplémentaire dans l'application à 390×844 : ancienne note
+« Les MEMES arrivent dans CreatorDeck », date du 16 octobre conservée,
+ancien nom absent et zéro erreur JS. Capture examinée :
+`reports/optimisation-2026-10-24/nouveautes-memes.png`.
 Modifications préexistantes préservées : bloc Kyara de la passation, quatre
 captures Windows et fichiers non suivis. AVD `CreatorDeck_API36` démarré avec
 `-gpu host`, visible par ADB hors bac à sable.

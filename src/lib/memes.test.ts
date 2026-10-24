@@ -3,7 +3,7 @@ import { MEME_BY_ID, MEME_CARDS, MEME_PULLABLE } from "@/lib/memes";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-describe("catalogue Mèmes FR distribué", () => {
+describe("catalogue MEMES FR distribué", () => {
   it("retire la fiche source sans illustration du classeur et des tirages", () => {
     expect(MEME_BY_ID.has("juventus-rose")).toBe(false);
     expect(MEME_CARDS.some((card) => card.name === "Carte supprimée")).toBe(false);

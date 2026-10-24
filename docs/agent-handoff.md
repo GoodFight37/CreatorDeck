@@ -21,8 +21,15 @@ SHA distant vérifié. Vercel Production du même SHA vérifié **réussi** le
 24 octobre à 12:24 UTC : [déploiement](https://creator-deckk-pmkwwpp9v-hafsi37-2386.vercel.app),
 déploiement GitHub `7298546779`, statut `success`.
 [CI Vérification](https://github.com/GoodFight37/CreatorDeck/actions/runs/40093728855)
-encore en cours au relevé après publication ; SQL réussi, cinq autres jobs en cours.
-Ne pas annoncer cette CI verte. Suivi `CreatorDeck-Codex-blp` clôturé.
+du code `2e48cd76` entièrement réussie (six jobs verts).
+Checkpoint documentaire `064a629f` poussé et Vercel Production de ce SHA réussi.
+Complément MEMES : les 20 anciens libellés des nouveautés sont harmonisés aussi,
+avec leurs 58 identifiants conservés ; source sans occurrence Mèmes/MÈMES.
+Après ce complément : unitaires ciblés 12/12, écrans 261/261, typecheck et lint verts.
+Relance E2E complète finale : **209 réussis, 29 ignorés, zéro échec, zéro instable**,
+code de sortie 0 ; 21 min 5,7 s. Rendu de la note historique MEMES vérifié à 390 px,
+date conservée et zéro erreur JS. Source du complément et preuves indexés pour publication.
+Suivi `CreatorDeck-Codex-blp`.
 Le commit documentaire de ce checkpoint se retrouve par
 `git log -1 --format=%H -- docs/agent-handoff.md`.
 

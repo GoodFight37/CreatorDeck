@@ -49,7 +49,7 @@ export class CloudApi {
   private sessionRevision = 0;
   private readonly refreshes = new Map<string, Promise<CloudSession | null>>();
 
-  /** Univers Mèmes isolé des sauvegardes et tirages Twitch. */
+  /** Univers MEMES isolé des sauvegardes et tirages Twitch. */
   async memeStatus(): Promise<MemeStatus> {
     return memes.memeStatus(this.core);
   }
@@ -58,7 +58,7 @@ export class CloudApi {
     return memes.openMemePack(this.core, requestId);
   }
 
-  /** Univers Imgflip : même contrat que les Mèmes, réserve et collection propres (0062). */
+  /** Univers Imgflip : même contrat que les MEMES, réserve et collection propres (0062). */
   async imgflipStatus(): Promise<ImgflipStatus> {
     return imgflip.imgflipStatus(this.core);
   }

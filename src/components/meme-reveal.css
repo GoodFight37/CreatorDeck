@@ -85,7 +85,7 @@
 .meme-reveal-summary-grid > div:nth-child(4) { grid-column: 1 / 2; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid > div:nth-child(5) { grid-column: 2 / 3; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid .creator-card { width: 100%; }
-/* Vignette du récapitulatif : le cartouche garde la taille du deck Mèmes.
+/* Vignette du récapitulatif : le cartouche garde la taille du deck MEMES.
    La formule auto-ajustée des cartes Créateur (globals.css) sortait le titre à
    22,5 px dans 97 px de large, coupé net ; quatre classes pour que l'ordre des
    feuilles n'ait aucune importance. */

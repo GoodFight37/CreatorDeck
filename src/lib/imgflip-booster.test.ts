@@ -10,7 +10,7 @@ describe("catalogue Imgflip côté client (tirage serveur, 0062)", () => {
     expect(IMGFLIP_POOL.every(card => card.image?.startsWith("/imgflip-web/") && card.image.endsWith(".webp"))).toBe(true);
   });
 
-  it("indexe chaque carte par son identifiant, sans collision avec les Mèmes FR", () => {
+  it("indexe chaque carte par son identifiant, sans collision avec les MEMES FR", () => {
     expect(IMGFLIP_BY_ID.size).toBe(IMGFLIP_POOL.length);
     expect(IMGFLIP_POOL.every(card => card.id.startsWith("imgflip-") && IMGFLIP_BY_ID.get(card.id) === card)).toBe(true);
   });
