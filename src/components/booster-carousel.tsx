@@ -42,18 +42,24 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     let frame = 0;
     let betaZero: number | null = null;
     const borne = (value: number, max: number) => Math.max(-max, Math.min(max, value));
-    const distrait = () => document.visibilityState !== "visible" || Boolean(node.closest(".is-dragging"));
+    const distrait = () => document.visibilityState !== "visible" || Boolean(node.closest(".is-dragging, .is-switching"));
+    // Le JS lisse déjà l'angle : la transition CSS de 180 ms, relancée à chaque écriture,
+    // ajoutait du retard et des à-coups.
+    node.style.transition = "none";
     const remettre = () => {
       node.style.transform = "";
-      film.style.backgroundPosition = "";
+      film.style.transform = "";
     };
     const ecrire = () => {
       frame = 0;
       if (document.documentElement.dataset.cardFx === "off") { remettre(); return; }
       courantX += (cibleX - courantX) * 0.18;
       courantY += (cibleY - courantY) * 0.18;
-      node.style.transform = `rotateX(${courantX.toFixed(2)}deg) rotateY(${courantY.toFixed(2)}deg)`;
-      film.style.backgroundPosition = `${(50 + courantY * 4).toFixed(1)}% ${(50 + courantX * 4).toFixed(1)}%`;
+      // Même pose de base que .pack-3d-object au repos, plus l'inclinaison.
+      node.style.transform = `perspective(1050px) rotateX(${(2 + courantX).toFixed(2)}deg) rotateY(${(courantY - 5).toFixed(2)}deg) rotateZ(1deg)`;
+      // Le film arc-en-ciel glisse par transform (composition seule) : l'ancien
+      // background-position repeignait tout le calque masqué à chaque image.
+      film.style.transform = `translate(${(courantY * -4).toFixed(2)}%, ${(courantX * -4).toFixed(2)}%)`;
       if (Math.abs(cibleX - courantX) > 0.05 || Math.abs(cibleY - courantY) > 0.05) {
         frame = requestAnimationFrame(ecrire);
       }
@@ -94,6 +100,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       bouton.removeEventListener("pointermove", auPointeur);
       bouton.removeEventListener("pointerleave", auSortie);
       window.removeEventListener("deviceorientation", auCapteur);
+      node.style.transition = "";
       remettre();
     };
   }, [active]);
@@ -120,7 +127,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
         <span className="pack-bulge" />
         <span className="pack-glint" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} />
-        <span ref={holo} className="pack-holo" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} /></span>
+        <span className="pack-holo" style={{ "--pack-art": `url(${artwork})` } as CSSProperties}><span ref={holo} className="pack-holo-film" /></span></span>
     </span></span>
   </button>;
 }

@@ -16,6 +16,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       { title: "Le Drop", items: [
         "Quand tu passes de Live Drop à MEMES ou IMGFLIP, le sachet glisse tout de suite au lieu de rester bloqué un instant.",
         "Les morceaux de sachet qui disparaissaient pendant la bascule, comme une coupure au milieu, ne s'affichent plus.",
+        "Pendant le chargement de ta réserve, le sachet ne devient plus transparent.",
+        "Pencher le téléphone fait glisser le reflet arc-en-ciel sans ralentir le reste de l'écran.",
       ] },
     ],
   },

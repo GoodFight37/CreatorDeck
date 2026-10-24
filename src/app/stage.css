@@ -364,7 +364,8 @@
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
   transform: perspective(900px) rotateX(2deg) scale(.97);
 }
-.home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
+/* Pas d'opacité sur le sachet désactivé (réserve en lecture, plus de sachet) : translucide,
+   il laissait voir ses voisins à travers et aplatissait sa 3D. Le texte dessous dit pourquoi. */
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
 /* Le choix d'univers : deux mots discrets, pas une seconde pilule rouge. */
 .home-view .booster-switcher { position: absolute; z-index: 5; top: 0; right: -6px; gap: 0; }

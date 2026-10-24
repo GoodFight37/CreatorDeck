@@ -578,14 +578,21 @@
 /* Reflet holographique : même découpe que l'impression du sachet, dégradé
    arc-en-ciel dont la position suit l'inclinaison (écrite par le composant). */
 .home-view .pack-holo {
-  position: absolute; inset: 0; pointer-events: none;
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask: var(--pack-art) center / 100% 100% no-repeat;
   mask: var(--pack-art) center / 100% 100% no-repeat;
-  background: linear-gradient(115deg,
-    transparent 20%, rgb(255 92 186 / .9) 32%, rgb(255 214 92 / .9) 40%,
-    rgb(92 255 196 / .9) 48%, rgb(92 170 255 / .9) 56%, rgb(186 92 255 / .9) 64%, transparent 76%) 50% 50% / 300% 300%;
   mix-blend-mode: color-dodge;
   opacity: .28;
+}
+/* Deux fois la taille du sachet, centré : le composant le fait glisser par transform
+   (arrêts recalculés pour garder la bande de l'ancien fond à 300 %). Son propre calque,
+   sinon chaque déplacement redessine toute la face (mesuré : ~550 ms de rendu pour 2 s
+   de capteur, ~15 ms avec le calque) ; 2× et non 3× pour un calque 2,25 fois plus petit. */
+.home-view .pack-holo-film {
+  position: absolute; inset: -50%; will-change: transform;
+  background: linear-gradient(115deg,
+    transparent 5%, rgb(255 92 186 / .9) 23%, rgb(255 214 92 / .9) 35%,
+    rgb(92 255 196 / .9) 47%, rgb(92 170 255 / .9) 59%, rgb(186 92 255 / .9) 71%, transparent 89%);
 }
 .home-view .booster-neighbor .pack-holo,
 [data-card-fx="off"] .home-view .pack-holo { display: none; }

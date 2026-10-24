@@ -34,7 +34,7 @@ describe("sachet holographique du Drop", () => {
     await banc.monter(<Carrousel />);
     const bouton = document.querySelector<HTMLElement>('.booster-pack-slot[data-active="true"] button')!;
     const objet = bouton.querySelector<HTMLElement>(".pack-3d-object")!;
-    const holo = bouton.querySelector<HTMLElement>(".pack-holo")!;
+    const holo = bouton.querySelector<HTMLElement>(".pack-holo-film")!;
     expect(objet, "objet 3D absent").toBeTruthy();
     expect(holo, "reflet holographique absent").toBeTruthy();
     // jsdom ne fait aucune mise en page : on lui donne la boîte du sachet.
@@ -43,8 +43,10 @@ describe("sachet holographique du Drop", () => {
     souris(bouton, 150, 60);
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 120)); });
 
-    expect(objet.style.transform).toMatch(/^rotateX\(-?[\d.]+deg\) rotateY\(-?[\d.]+deg\)$/);
-    expect(holo.style.backgroundPosition).toMatch(/^[\d.]+% [\d.]+%$/);
+    expect(objet.style.transform).toMatch(/^perspective\(1050px\) rotateX\(-?[\d.]+deg\) rotateY\(-?[\d.]+deg\) rotateZ\(1deg\)$/);
+    // Le reflet glisse par transform, jamais par background-position (repeint à chaque image).
+    expect(holo.style.transform).toMatch(/^translate\(-?[\d.]+%, -?[\d.]+%\)$/);
+    expect(holo.style.backgroundPosition).toBe("");
   });
 
   it("ne touche à rien quand Reflets est coupé", async () => {

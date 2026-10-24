@@ -325,7 +325,7 @@ test("le sachet penche sous la souris et le reflet holographique suit l'angle", 
     }));
     return (node as HTMLElement).style.transform;
   })).not.toBe("");
-  await expect.poll(() => holo.evaluate((node) => (node as HTMLElement).style.backgroundPosition)).not.toBe("");
+  await expect.poll(() => holo.locator(".pack-holo-film").evaluate((node) => (node as HTMLElement).style.transform)).not.toBe("");
 });
 
 test("Reflets coupés : le sachet ne penche pas et le reflet holographique reste absent", async ({ page }) => {
