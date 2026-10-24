@@ -558,7 +558,7 @@
   50% { transform: translateY(-5px) rotateZ(1.4deg) rotateY(6deg); }
 }
 /* Le reflet du film : un passage de lumière de temps en temps, découpé par l'impression
-   elle-même (masque alpha du SVG), donc jamais en dehors du sachet. */
+   elle-même (masque alpha de l'impression), donc jamais en dehors du sachet. */
 .home-view .pack-glint {
   position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   -webkit-mask: var(--pack-art) center / 100% 100% no-repeat;

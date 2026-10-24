@@ -48,7 +48,7 @@ describe("troisième sachet Imgflip : carrousel", () => {
     expect([...document.querySelectorAll("[data-booster]")].map(node => node.getAttribute("data-booster")))
       .toEqual(["live", "memes", "imgflip"]);
     banc.appuyer("IMGFLIP");
-    expect(document.querySelector('[data-booster="imgflip"] img')?.getAttribute("src")).toContain("imgflip-opening.svg");
+    expect(document.querySelector('[data-booster="imgflip"] img')?.getAttribute("src")).toContain("imgflip-opening.webp");
     expect(document.querySelectorAll('.booster-pack-slot button:not([inert])')).toHaveLength(1);
     expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("imgflip");
     banc.appuyer("MEMES");

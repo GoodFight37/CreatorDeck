@@ -6,13 +6,16 @@ import Image from "next/image";
 import "./booster-carousel.css";
 
 export type BoosterUniverse = "live" | "memes" | "imgflip";
+// WebP et non SVG : à chaque bascule, Android re-rastérisait les ~280 tracés de
+// chaque sachet (image + masques du reflet) et figeait la scène en tuiles vides.
+// Générés par scripts/build-pack-webp.mjs.
 const BOOSTERS = [
-  { id: "live", label: "Live Drop", artwork: "/packs/live-opening.svg" },
-  { id: "memes", label: "MEMES", artwork: "/packs/memes-opening.svg" },
-  { id: "imgflip", label: "IMGFLIP", artwork: "/packs/imgflip-opening.svg" },
+  { id: "live", label: "Live Drop", artwork: "/packs/live-opening.webp" },
+  { id: "memes", label: "MEMES", artwork: "/packs/memes-opening.webp" },
+  { id: "imgflip", label: "IMGFLIP", artwork: "/packs/imgflip-opening.webp" },
 ] as const;
 
-export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.svg",
+export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.webp",
   label = "Ouvrir le sachet Live Drop", active = true,
 }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean;
   artwork?: string; label?: string; active?: boolean;

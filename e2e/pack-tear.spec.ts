@@ -465,7 +465,8 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   const homeArt = homePack.locator(".pack-foil-image");
   const homeSpecular = homePack.locator(".pack-specular");
   await expect(homeArt).toBeVisible();
-  await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.svg");
+  // Accueil en WebP (bascule sans re-rastérisation) ; la scène de déchirure garde le SVG.
+  await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.webp");
   // Sachet plat : plus de tranches 3D (le liseré venait d'elles), un reflet découpé par l'impression.
   await expect(homePack.locator(".pack-3d-side")).toHaveCount(0);
   await expect(homePack.locator(".pack-glint")).toHaveCount(1);

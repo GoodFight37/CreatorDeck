@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-24-bascule-boosters", date: "2026-10-24", title: "Passer d'un booster à l'autre sans accroc",
+    summary: "Sur Android, changer de booster sur le Drop ne fige plus l'écran et ne coupe plus le sachet en deux.",
+    sections: [
+      { title: "Le Drop", items: [
+        "Quand tu passes de Live Drop à MEMES ou IMGFLIP, le sachet glisse tout de suite au lieu de rester bloqué un instant.",
+        "Les morceaux de sachet qui disparaissaient pendant la bascule, comme une coupure au milieu, ne s'affichent plus.",
+      ] },
+    ],
+  },
+  {
     id: "2026-10-23-animations-boosters", date: "2026-10-23", title: "Des boosters plus vifs et plus beaux",
     summary: "La révélation Mèmes s'accélère, le sachet s'efface, et le booster du Drop s'incline avec le téléphone.",
     sections: [

@@ -1,3 +1,11 @@
+# Checkpoint Claude — bascule des boosters : gel et tuiles vides corrigés (24 octobre 2026)
+
+- **Signalement réel de Malik (vidéo APK `4737dad`, 23/10 20 h 51)** : en passant de MEMES à LIVE DROP, la scène reste figée ~0,6 s, le sachet n'est affiché que par grands rectangles (moitié basse et voisin IMGFLIP manquants, LIVE réduit à une silhouette sombre), puis LIVE apparaît d'un coup. Le libellé passe à « LIVE DROP » tout de suite : l'état React change, c'est le rendu qui ne suit pas. Les correctifs D-163 (opacité/z-index, filtre) n'ont donc pas suffi sur le téléphone.
+- **Cause mesurée** : ce sont des tuiles GPU pas encore rastérisées. Chaque sachet du carrousel est un SVG de ~280 tracés, rastérisé trois fois (image + masques `--pack-art` de `.pack-glint` et `.pack-holo`) sur une face dessinée à 150 %, et redessiné à chaque bascule. Trace Chrome (DPR 2,75, CPU ×4), RasterTask par bascule : **156–240 ms en SVG → 31–44 ms en WebP** (même dessin, A/B par substitution réseau puis vrai code).
+- **Correctif** : `scripts/build-pack-webp.mjs` (sharp, 1050×1540 avec alpha, à relancer après `build-pack-art.py`) ; `BOOSTERS[].artwork` et le défaut de `PackArtwork` pointent vers `public/packs/*-opening.webp`. La déchirure (`PackTear`, ouvertures MEMES/IMGFLIP) garde ses SVG. Rendu relu à l'œil : net, reflet holographique intact. Note joueur `2026-10-24-bascule-boosters`.
+- **Tests** : typecheck ✅, ESLint ✅, `test` 1218/1218, `ecrans` 256/256, `test:autonomy` 18/18, `catalog:ci` ✅, jargon ✅, build ✅. E2E complet une fois : 207 réussis / 29 ignorés / 2 échecs attendus (`pack-tear` « CSS-only pouch » attendait `live-opening.svg` sur l'accueil) ; attente mise à jour, rejoué 2/2. Revue `ecc:react-reviewer` : rien de bloquant.
+- **Non vérifié** : le téléphone de Malik (aucun appareil adb branché) ; le gain réel sur le Redmi est déduit de la mesure PC, pas constaté. Les 4 PNG `pack-tear` modifiés localement avant ce lot et le bloc Kyara non commité d'un autre agent sont laissés hors du commit.
+
 # Checkpoint — couture en plein milieu du sachet et saccade de bascule (23 octobre 2026)
 
 - **Signalement de Malik sur l'APK** : « une sorte de coupure en plein milieu du booster numéro 2 » + bascule non fluide. Reproduit, corrigé, testé.
