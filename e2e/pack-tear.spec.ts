@@ -446,17 +446,13 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
 
 test("home pack artwork stays named and the long gesture hint is removed", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
-  await expect(page.locator(".drop-edition")).not.toContainText("DROP");
-  await expect(page.locator(".drop-intro h1")).toHaveText("Drop");
+  // Un seul sachet, nommé par son bouton : plus de titre flottant au-dessus.
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
+  await expect(page.locator(".pack-stage .pack-copy")).toHaveCount(0);
   for (const width of [320, 360, 412, 1280]) {
     await page.setViewportSize({ width, height: 915 });
     const artwork = await page.locator(".pack-stage .pack-artwork").boundingBox();
-    const copy = await page.locator(".pack-stage .pack-copy").boundingBox();
     expect(artwork).not.toBeNull();
-    expect(copy).not.toBeNull();
-    // Nuit de direct : le titre est discret, en haut du plateau, jamais sur le paquet.
-    expect(copy!.y + copy!.height, `titre au-dessus du paquet à ${width}px`).toBeLessThanOrEqual(artwork!.y);
     await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
@@ -897,7 +893,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   await expect.poll(() => stockOf(page)).toBe(stock - 1);
   if (stock === 1) {
     await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeDisabled();
-    await expect(page.locator(".pack-copy h2")).toBeFocused();
+    await expect(page.locator(".pack-artwork")).toBeFocused();
   }
 });
 

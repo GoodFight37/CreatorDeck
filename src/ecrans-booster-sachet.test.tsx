@@ -9,7 +9,7 @@ import { creerBanc, type Banc } from "@/ecrans-banc";
  * les reflets sont coupés.
  */
 function Carrousel() {
-  return <BoosterCarousel value="live" onChange={() => {}} onPrepare={() => {}} disabled={false} canPrepare />;
+  return <BoosterCarousel onPrepare={() => {}} disabled={false} canPrepare />;
 }
 
 function souris(cible: HTMLElement, x: number, y: number) {

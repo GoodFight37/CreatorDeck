@@ -105,8 +105,6 @@ export function CreatorDeckApp() {
   // d'une heure ». Elle se lit dans le carnet (aucun appel serveur en plus) et
   // se recalcule à la minute, pour qu'elle disparaisse toute seule.
   const { items: inboxItems } = useInbox();
-  const friendsNow = useNow(60_000);
-  const friendsOpening = friendsOpenedRecently(inboxItems, friendsNow).count;
   // Termine une connexion Twitch si l'on revient d'un aller-retour navigateur.
   useTwitchReturn();
   const state = useGame();
@@ -797,13 +795,9 @@ export function CreatorDeckApp() {
           <HomeView
             game={game}
             themeStyle={themeStyle}
-            friendsOpening={friendsOpening}
-            onShowInbox={() => setNotificationsOpen(true)}
             onShowCollection={() => setTab("collection")}
             onOpen={prepareLivePack}
-            onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
             onUseHourglass={handleUseHourglass}
-            onShowAtelier={() => { setBinderMode("atelier"); setTab("collection"); }}
             opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
             now={now}
@@ -811,6 +805,7 @@ export function CreatorDeckApp() {
             tutorialAvailable={tutorialAvailable}
             needsAccount={cloud.configured && !cloud.userId}
             onEditCircle={() => setCircleEditOpen(true)}
+            onShowObjectives={() => setTab("missions")}
           />
         ) : null}
         {tab === "collection" ? (

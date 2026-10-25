@@ -75,11 +75,18 @@ def sparkles(items, fill):
     return "".join(f'<path d="{star(x, y, r)}" fill="{fill}" opacity="{o}"/>' for x, y, r, o in items)
 
 
-def pouch(body, crimp, ids, rim, label_bg, label_ink, crimp_light, crimp_dark, title_attr):
+def pouch(body, crimp, ids, rim, label_bg, label_ink, crimp_light, crimp_dark, title_attr,
+          top_label="DÉCHIRE LE SACHET", bottom_label="5 CARTES · ÉDITION 01"):
+    """Le sachet, ses soudures et ses deux étiquettes.
+
+    Tout ce que le joueur lit est en français : le sachet est un objet du jeu,
+    pas une illustration d'importation. Seuls les noms d'univers (« LIVE DROP »,
+    « MEMES », « IMGFLIP ») et la marque restent tels quels.
+    """
     # La flèche n'est pas dans le sous-ensemble latin de la police : elle est dessinée.
-    top, w = text("TEAR ALONG THE SEAL", 31, 270, 85, weight=800, track=1.5)
+    top, w = text(top_label, 31, 270, 85, weight=800, track=1.5)
     ax = 270 + w / 2 + 18
-    bottom, _ = text("5 CARDS · EDITION 01", 31, 300, 826, weight=800, track=1.5)
+    bottom, _ = text(bottom_label, 31, 300, 826, weight=800, track=1.5)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="600" height="880" viewBox="0 0 600 880">
 <title>{title_attr}</title>
 <defs>
@@ -127,11 +134,11 @@ def live():
                     for x, y, r, o in [(-120, -70, 22, .22), (-60, -100, 12, .3), (110, -90, 26, .2), (130, 20, 14, .26), (-140, 30, 16, .22), (70, -40, 9, .3)])
     brackets = "".join(f'<path d="M{sx * 150} {sy * 100}V{sy * 118}M{sx * 150} {sy * 118}H{sx * 132}" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" opacity=".9"/>'
                        for sx in (-1, 1) for sy in (-1, 1))
-    live_t, _ = text("LIVE", 32, 40, 29, anchor="start")
+    live_t, _ = text("EN DIRECT", 27, 40, 29, anchor="start")
     views_t, _ = text("12,4 K", 29, 40, 29, anchor="start")
-    follow_t, _ = text("+1 FOLLOW", 27, 62, 31, anchor="start", weight=800)
+    follow_t, _ = text("+1 ABONNÉ", 27, 62, 31, anchor="start", weight=800)
     brand_t, _ = text("CREATORDECK", 30, 300, 190, track=7, weight=800)
-    tag_t, _ = text("CREATOR COLLECTION", 25, 300, 715, track=3.5, weight=800)
+    tag_t, _ = text("COLLECTION CRÉATEURS", 25, 300, 715, track=3, weight=800)
     body = f'''
  <path d="M0 0H600V880H0Z" fill="url(#bg)"/>
  <g fill="#fff" opacity=".07">{rays}</g>
@@ -160,7 +167,7 @@ def live():
    <circle cx="-34" cy="8" r="9" fill="#ff7a9c" opacity=".55"/><circle cx="34" cy="8" r="9" fill="#ff7a9c" opacity=".55"/>
    <path d="M-17 13Q0 32 17 13" fill="#8a2a45" stroke="#8a2a45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
    {brackets}
-   <g transform="translate(-150 -114)"><rect width="104" height="42" rx="21" fill="#ff2d4a"/><circle cx="22" cy="21" r="8" fill="#fff"/><path d="{live_t}" fill="#fff" transform="translate(0 6)"/></g>
+   <g transform="translate(-150 -114)"><rect width="148" height="42" rx="21" fill="#ff2d4a"/><circle cx="22" cy="21" r="8" fill="#fff"/><path d="{live_t}" fill="#fff" transform="translate(0 6)"/></g>
    <g transform="translate(26 -114)"><rect width="134" height="42" rx="21" fill="#0b0430" opacity=".78"/>
     <path d="M18 21Q30 8 42 21Q30 34 18 21Z" fill="none" stroke="#fff" stroke-width="3.5"/><circle cx="30" cy="21" r="4.5" fill="#fff"/>
     <path d="{views_t}" fill="#fff" transform="translate(14 6)"/></g>
@@ -190,12 +197,12 @@ def memes():
  <radialGradient id="face" cx=".4" cy=".32" r=".8"><stop stop-color="#ffa6dc"/><stop offset="1" stop-color="#ff5db4"/></radialGradient>
  <clipPath id="img"><rect x="-176" y="-136" width="352" height="272" rx="6"/></clipPath>'''
     lens = "M-92 -26H-8V-2H-22V10H-38V22H-62V10H-78V-2H-92Z"
-    top_t, _ = text("WHEN YOU PULL", 38, 0, -98, weight=900)
-    bot_t, _ = text("A LEGENDARY", 38, 0, 118, weight=900)
+    top_t, _ = text("QUAND TU TIRES", 36, 0, -98, weight=900)
+    bot_t, _ = text("UNE LÉGENDAIRE", 34, 0, 118, weight=900)
     x5, _ = text("×5", 54, 0, 12)
-    cartes, _ = text("CARDS", 21, 0, 38, weight=800)
+    cartes, _ = text("CARTES", 21, 0, 38, weight=800)
     lol, _ = text("LOL", 40, 0, 0)
-    tag_t, _ = text("MEME COLLECTION", 27, 300, 716, track=3.5, weight=800)
+    tag_t, _ = text("COLLECTION DE MÈMES", 27, 300, 716, track=3, weight=800)
     body = f'''
  <path d="M0 0H600V880H0Z" fill="url(#bg)"/>
  <rect width="600" height="880" fill="url(#dots)" opacity=".34" mask="url(#dotMask)"/>
@@ -238,8 +245,8 @@ def memes():
 
 def imgflip():
     ids = '''<linearGradient id="bg" x2="1" y2="1"><stop stop-color="#123366"/><stop offset="1" stop-color="#07b7c9"/></linearGradient>'''
-    tag, _ = text("INTERNET CLASSICS", 30, 300, 710, track=2)
-    cards, _ = text("5 MEME CARDS", 31, 300, 536, track=2)
+    tag, _ = text("CLASSIQUES DU NET", 30, 300, 710, track=2)
+    cards, _ = text("5 CARTES MÈMES", 31, 300, 536, track=2)
     body = f'''<rect width="600" height="880" fill="url(#bg)"/>
     {sparkles([(72, 210, 18, 1), (514, 260, 16, 1), (76, 650, 11, .8)], "#81ffdd")}
     <g transform="translate(300 350) rotate(-9)" stroke="#09234b" stroke-width="8" stroke-linejoin="round">

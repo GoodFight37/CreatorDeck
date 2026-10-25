@@ -26,9 +26,9 @@ describe("statut Scène et identité de collectionneur", () => {
   beforeEach(() => { banc = creerBanc(); banc.preparer(); mocked.cloud = { ...EMPTY_CLOUD_STATE, configured: true, userId: "joueur" }; vi.clearAllMocks(); });
   afterEach(() => banc.nettoyer());
 
-  async function drop(friendsOpening = 0, tribunalPaid = false) {
+  async function drop(tribunalPaid = false) {
     const onOpen = vi.fn();
-    const onShowInbox = vi.fn();
+    const onShowObjectives = vi.fn();
     const onShowTribunal = vi.fn();
     const noop = () => {};
     const state = createInitialState(NOW);
@@ -38,11 +38,11 @@ describe("statut Scène et identité de collectionneur", () => {
       state.missions = { ...state.missions, pack: 1 };
       state.tribunal = { day: gameDay(NOW), verdicts: {}, claimed: true };
     }
-    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={friendsOpening}
-      onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop}
-      onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
-      now={NOW} serverReserve needsAccount={false} />);
-    return { onOpen, onShowInbox, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
+    await banc.monter(<HomeView game={getGameView(state, NOW)}
+      onShowCollection={noop} onOpen={noop}
+      onUseHourglass={noop} opening={false} usingHourglass={false}
+      now={NOW} serverReserve needsAccount={false} onShowObjectives={onShowObjectives} />);
+    return { onOpen, onShowObjectives, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
 
   async function objectives() {
@@ -53,19 +53,20 @@ describe("statut Scène et identité de collectionneur", () => {
     return { onOpen, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
 
-  it("surface les ouvertures récentes des amis sans replier l’accès au Carnet", async () => {
-    const { onShowInbox } = await drop(2);
-    const friends = document.querySelector<HTMLButtonElement>(".friends-row")!;
-    expect(friends.textContent).toContain("2 amis ont ouvert un booster");
-    expect(friends.closest("details")).toBeNull();
-    friends.click();
-    expect(onShowInbox).toHaveBeenCalledOnce();
+  it("ne pose rien d’autre sur le sachet que le cercle, la réserve et le minuteur", async () => {
+    const { onShowObjectives } = await drop();
+    // Ce qui était empilé sur le sachet a disparu : plus de rappel social, plus de barre « En direct ».
+    expect(document.querySelector(".friends-row")).toBeNull();
+    expect(document.querySelector(".live-bar")).toBeNull();
+    // Le reste (missions, Tribunal, Paquet Scène, progression) est derrière un seul accès.
+    expect(document.querySelectorAll(".drop-hub-link")).toHaveLength(1);
+    banc.appuyer(/Objectifs et activités/);
+    expect(onShowObjectives).toHaveBeenCalledOnce();
   });
 
   it("ne propose aucune ouverture avant le statut serveur", async () => {
     mocked.cloud.sceneStatusLoading = true;
     const { button } = await objectives();
-    expect(document.querySelector(".friends-row")).toBeNull();
     expect(button.disabled).toBe(true);
     expect(document.querySelector(".scene-state")?.textContent).toBe("Vérification…");
     expect(button.closest("details")!.open).toBe(false);

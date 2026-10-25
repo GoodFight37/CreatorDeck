@@ -83,6 +83,20 @@ export function MemeDeck() {
         <button type="button" disabled={booster.loading} onClick={() => void booster.refresh()}>Réessayer la lecture</button></div> : null}
       {!account ? <Link className="meme-account-link" href="/">Retourner au jeu pour se connecter</Link> : null}
       <MemePackComposition />
+      {/* L'univers Mèmes n'a plus sa place dans le carrousel du Drop : le sachet
+          Imgflip, qui vit dans ce même classeur, s'ouvre donc ici. */}
+      <div className="meme-imgflip" aria-label="Sachet Imgflip">
+        <p className="meme-hero-line">SACHET IMGFLIP · 5 CARTES</p>
+        <button className="meme-open" type="button"
+          disabled={!imgflipBooster.account || !imgflipBooster.status || imgflipBooster.status.stock < 1 || imgflipBooster.busy}
+          onClick={imgflipBooster.prepare}>{imgflipBooster.busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER IMGFLIP"}</button>
+        <p className="meme-status" aria-live="polite">{imgflipBooster.status
+          ? <BoosterCountdown stock={imgflipBooster.status.stock} nextAt={imgflipBooster.status.nextAt} />
+          : imgflipBooster.account ? "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
+        {imgflipBooster.notice ? <p role="status">{imgflipBooster.notice}</p> : null}
+        {imgflipBooster.problem ? <div className="meme-problem" role="alert"><p>{imgflipBooster.problem}</p>
+          <button type="button" disabled={imgflipBooster.loading} onClick={() => void imgflipBooster.refresh()}>Réessayer la lecture</button></div> : null}
+      </div>
     </section>
     <section className="meme-collection" aria-labelledby="meme-collection-heading">
       <div className="meme-collection-head"><div><p className="meme-eyebrow">TON AUTRE CLASSEUR</p>
@@ -115,6 +129,7 @@ export function MemeDeck() {
       <p className="meme-credit">Cartes MyMemeCards et modèles Imgflip. Sources indiquées sur les fiches.</p>
     </section>
     <MemeBoosterOpening booster={booster} />
+    <MemeBoosterOpening booster={imgflipBooster} artwork="/packs/imgflip-opening.svg" />
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
       aria-label={"Carte " + selected.name}>
       <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>

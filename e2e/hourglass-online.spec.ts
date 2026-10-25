@@ -59,18 +59,15 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   }, { seed, user: USER });
   await page.goto("/");
   await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toHaveCount(0);
-  await page.locator(".drop-secondary-details > summary").click();
   const button = page.getByRole("button", { name: /Utiliser 1 sablier/ });
   await expect(button).toContainText("2");
   await expect(page.getByText(/Synchronise ta partie dans Compte/)).toHaveCount(0);
-  await expect(page.locator(".drop-secondary-details")).toHaveAttribute("open", "");
   await expect(button).toBeEnabled();
   await button.click();
   await expect(page.getByText("Recharge impossible à confirmer. Réessaie pour retrouver ton solde.", { exact: true })).toBeVisible();
   expect(spent.size).toBe(1);
   // La clé doit survivre aussi à la fermeture/reprise de l’application.
   await page.reload();
-  await page.locator(".drop-secondary-details > summary").click();
   await expect(button).toBeEnabled();
   const pushesBeforeRetry = pushes;
   await button.click();
@@ -82,7 +79,6 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   expect(pushes).toBe(pushesBeforeRetry);
   await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
   await page.reload();
-  await page.locator(".drop-secondary-details > summary").click();
   await expect(page.getByRole("button", { name: /Utiliser 1 sablier/ })).toContainText("1");
   await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
 });

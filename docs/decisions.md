@@ -2410,3 +2410,28 @@ La validation porte sur les images du mouvement dans une APK reconstruite,
 avec changements d'univers réellement vérifiés ; un état final correct ou un
 test de propriétés CSS ne suffit pas. Résultats et limites dans le premier
 checkpoint de la [passation](agent-handoff.md).
+
+## D-168 — 25 octobre 2026 : un seul sachet sur le Drop, tout le reste derrière un accès
+
+L'accueil montrait trois sachets dans un carrousel horizontal. Pendant la bascule,
+deux sachets se traversaient : le geste trouait l'impression et croisait les
+paquets. Le carrousel disparaît de l'accueil : il ne reste que le sachet des
+créateurs. Sans voisin, il n'y a plus ni superposition ni glissé horizontal à
+corriger — la cause du défaut est supprimée, pas compensée par un réglage.
+
+Sous le sachet, trois choses et rien d'autre : la rangée du cercle, la réserve et
+le minuteur du prochain booster avec le sablier. Missions du jour, série,
+Tribunal, Paquet Scène et progression passent derrière un seul bouton
+« Objectifs et activités » ; plus rien n'est empilé sur le sachet.
+
+Les univers MEMES et Imgflip quittent l'accueil et gardent leur classeur
+`/memes`, atteint depuis Objectifs → Autres activités. Le nom accessible du
+bouton Imgflip devient « OUVRIR LE SACHET IMGFLIP » : « OUVRIR UN BOOSTER
+IMGFLIP » commençait par le nom du bouton des créateurs, et deux boutons dont
+l'un préfixe l'autre rendent le ciblage ambigu.
+
+Les textes imprimés des trois sachets passent en français ; les noms propres
+(CREATORDECK, LIVE DROP, MEMES, IMGFLIP) restent. Les WebP restent la source
+d'affichage (D-166) : les SVG sont redessinés puis reconvertis par
+`scripts/build-pack-webp.mjs`. Aucun SQL, aucun taux, aucun pity, aucun
+`open_pack`, aucune règle touchés.

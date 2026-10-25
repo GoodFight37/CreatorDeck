@@ -5,7 +5,7 @@ import imgflipSource from "../src/data/imgflip.json";
 
 const imgflipIds = imgflipSource.filter((card) => card.image).slice(0, 5).map((card) => card.id);
 
-/** La collection MEMES compte les deux catalogues affichés (FR + Imgflip). */
+/** La collection Mèmes compte les deux catalogues affichés (FR + Imgflip). */
 const MEME_COLLECTION_TOTAL = source.length + imgflipSource.length;
 
 async function fakeAccount(page: Page) {
@@ -45,35 +45,34 @@ async function fakeAccount(page: Page) {
   return calls;
 }
 
-test("le choix d'univers change de booster sans préparer ni consommer", async ({ page }) => {
+// Le Drop ne montre plus qu'un sachet : celui des créateurs. Il n'y a donc plus
+// de sélecteur d'univers, plus de voisin, et plus rien à faire glisser. Une
+// bascule entre deux sachets ne peut plus ni les croiser ni les trouer.
+test("le Drop ne montre qu'un sachet : aucun sélecteur d'univers", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page, true, { withoutCircle: true });
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "live");
-  await page.getByRole("button", { name: "MEMES", exact: true }).click();
-  await expect(carousel).toHaveAttribute("data-universe", "memes");
-  await expect(page.locator(".opening-continuum")).toHaveCount(0);
-  await page.getByRole("button", { name: "Live Drop", exact: true }).click();
-  await expect(carousel).toHaveAttribute("data-universe", "live");
+  await expect(page.locator(".booster-pack-slot")).toHaveCount(1);
+  await expect(page.locator(".booster-pack-slot[data-active=\"true\"]")).toHaveCount(1);
+  await expect(page.locator("[data-booster=\"live\"]")).toHaveCount(1);
+  await expect(page.locator("[data-booster=\"memes\"]")).toHaveCount(0);
+  await expect(page.locator("[data-booster=\"imgflip\"]")).toHaveCount(0);
+  await expect(page.locator(".booster-switcher")).toHaveCount(0);
+  await expect(page.locator(".booster-neighbor")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "MEMES", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "IMGFLIP", exact: true })).toHaveCount(0);
+  // Le sachet est le bouton, et il est le seul geste d'ouverture.
+  const pack = page.locator('.booster-pack-slot[data-active="true"] button.pack-artwork');
+  await expect(pack).toBeVisible();
+  await pack.click();
+  await expect(page.locator(".opening-continuum")).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.locator(".opening-continuum")).toHaveCount(0);
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
-test("la pill choisie reste distinguable en couleurs forcées", async ({ page }) => {
-  await page.emulateMedia({ forcedColors: "active" });
-  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
-  const memes = page.getByRole("button", { name: "MEMES", exact: true });
-  await memes.click();
-  await page.locator(".pack-copy h2").focus();
-  await expect(memes).toHaveAttribute("aria-pressed", "true");
-  await expect.poll(() => memes.evaluate((button) => {
-    const style = getComputedStyle(button);
-    return `${style.outlineStyle} ${style.outlineWidth} ${style.outlineOffset}`;
-  })).toBe("solid 2px 2px");
-});
-
-
-test("le défilement tactile vertical garde le choix et ne lance aucune ouverture", async ({ page, context }) => {
+test("le défilement tactile vertical garde le sachet et ne lance aucune ouverture", async ({ page, context }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
   const stage = page.locator(".booster-carousel");
@@ -90,42 +89,23 @@ test("le défilement tactile vertical garde le choix et ne lance aucune ouvertur
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
-test("un geste horizontal passe du Live à MEMES et revient, sans rien ouvrir", async ({ page }) => {
+test("un geste horizontal ne change plus rien et n'ouvre rien", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
   const stage = page.locator(".booster-carousel");
   await expect(stage).toHaveAttribute("data-universe", "live");
   const box = (await stage.boundingBox())!;
   const y = box.y + box.height * .5;
-  for (const [from, to, expected] of [[.8, .2, "memes"], [.2, .8, "live"]] as const) {
+  for (const [from, to] of [[.8, .2], [.2, .8]] as const) {
     await page.mouse.move(box.x + box.width * from, y);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * to, y, { steps: 6 });
     await page.mouse.up();
-    await expect(stage).toHaveAttribute("data-universe", expected);
   }
+  await expect(stage).toHaveAttribute("data-universe", "live");
+  await expect(page.locator(".booster-pack-slot")).toHaveCount(1);
   await expect(page.locator(".opening-continuum")).toHaveCount(0);
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
-});
-
-// Régression : au doigt, un glissement démarré SUR le sachet était annulé dès le premier pixel
-// (la capture implicite du bouton se perdait et son événement remontait au carrousel).
-// La souris n'a pas cette capture, d'où des tests verts alors que le téléphone échouait.
-test("un vrai glissement tactile démarré sur le sachet change de booster, dans les deux sens", async ({ page, context }) => {
-  if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
-  const stage = page.locator(".booster-carousel");
-  const cdp = await context.newCDPSession(page);
-  const box = (await stage.boundingBox())!;
-  const x = box.x + box.width / 2, y = box.y + box.height * .5;
-  for (const [dx, dy, expected] of [[-150, 0, "memes"], [150, 32, "live"], [-90, 8, "memes"]] as const) {
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-    for (let i = 1; i <= 8; i++) await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchMove", touchPoints: [{ x: x + dx * i / 8, y: y + dy * i / 8 }],
-    });
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expect(stage).toHaveAttribute("data-universe", expected);
-    await expect(page.locator(".opening-continuum")).toHaveCount(0);
-  }
 });
 
 test("avec le serveur : Retour et Échap quittent la préparation Live sans requête de tirage", async ({ page }) => {
@@ -148,15 +128,16 @@ test("avec le serveur : Retour et Échap quittent la préparation Live sans requ
   await expect(page.locator(".open-panel .stock-row")).toContainText(/^4 /);
 });
 
-test("avec le serveur : MEMES se prépare sans consommation, puis un seul geste ouvre cinq cartes et retrouve sa réserve", async ({ page }) => {
+// Les univers Mèmes et Imgflip ont quitté le carrousel du Drop : leurs sachets
+// s'ouvrent dans leur classeur, à `/memes`, avec les mêmes garanties.
+test("avec le serveur : le sachet Mèmes se prépare sans consommation, puis un seul geste ouvre cinq cartes", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await page.getByRole("button", { name: "MEMES", exact: true }).click();
-  const trigger = page.getByRole("button", { name: "Ouvrir le booster MEMES", exact: true });
-  await expect(page.locator(".meme-booster-reserve")).toContainText("4 MEMES");
+  await page.goto("/memes");
+  const trigger = page.getByRole("button", { name: "OUVRIR UN BOOSTER", exact: true });
+  await expect(page.locator(".meme-status").first()).toContainText("4 booster(s) prêts");
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /memes-opening/);
@@ -179,11 +160,9 @@ test("avec le serveur : MEMES se prépare sans consommation, puis un seul geste 
   await scene.locator(".meme-reveal-next").click();
   await expect(scene).toHaveCount(0);
   await expect(trigger).toBeFocused();
-  await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "memes");
-  await expect(page.locator(".meme-booster-reserve")).toContainText("3 MEMES");
+  await expect(page.locator(".meme-status").first()).toContainText("3 booster(s) prêts");
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
-  await page.getByRole("link", { name: "Voir le classeur MEMES" }).click();
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);
 });
@@ -192,10 +171,9 @@ for (const label of ["MEMES", "IMGFLIP"]) {
   test(`avec le serveur : la carte révélée ${label} garde la taille et le dos des cartes sorties du sachet`, async ({ page }) => {
     test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
     await fakeAccount(page);
-    await page.goto("/");
+    await page.goto("/memes");
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-    await page.getByRole("button", { name: label, exact: true }).click();
-    await page.getByRole("button", { name: `Ouvrir le booster ${label}`, exact: true }).click();
+    await page.getByRole("button", { name: label === "MEMES" ? "OUVRIR UN BOOSTER" : "OUVRIR UN BOOSTER IMGFLIP", exact: true }).click();
     const scene = page.locator(".opening-continuum");
     // Capturer le dos dès son insertion : une capture PNG peut dépasser ses 148 ms.
     const revealedBack = scene.evaluate((node) => new Promise<{ width: number; surface: string; emblem: boolean }>((resolve) => {
@@ -223,15 +201,15 @@ for (const label of ["MEMES", "IMGFLIP"]) {
   });
 }
 
-test("avec le serveur : Imgflip se prépare sans consommation, puis un seul geste ouvre cinq cartes serveur", async ({ page }) => {
+test("avec le serveur : le sachet Imgflip se prépare sans consommation, puis un seul geste ouvre cinq cartes serveur", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await page.getByRole("button", { name: "IMGFLIP", exact: true }).click();
-  const trigger = page.getByRole("button", { name: "Ouvrir le booster IMGFLIP", exact: true });
-  await expect(page.locator(".imgflip-booster-reserve")).toContainText("4 IMGFLIP");
+  await page.goto("/memes");
+  const imgflip = page.locator(".meme-imgflip");
+  const trigger = imgflip.getByRole("button", { name: "OUVRIR UN BOOSTER IMGFLIP", exact: true });
+  await expect(imgflip.locator(".meme-status")).toContainText("4 booster(s) prêts");
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /imgflip-opening/);
@@ -254,55 +232,40 @@ test("avec le serveur : Imgflip se prépare sans consommation, puis un seul gest
   await scene.locator(".meme-reveal-next").click();
   await expect(scene).toHaveCount(0);
   await expect(trigger).toBeFocused();
-  await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "imgflip");
-  await expect(page.locator(".imgflip-booster-reserve")).toContainText("3 IMGFLIP");
+  await expect(imgflip.locator(".meme-status")).toContainText("3 booster(s) prêts");
   expect(calls.filter((name) => name === "open_imgflip_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(0);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
-  // Les cinq cartes tirées sont des possessions persistantes du classeur MEMES.
-  await page.goto("/memes");
+  // Les cinq cartes tirées sont des possessions persistantes du classeur Mèmes.
+  await page.reload();
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);
 });
 
-test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 1024 pixels", async ({ page }) => {
+test("le sachet du Drop domine et les commandes restent lisibles à 320, 390 et 1024 pixels", async ({ page }) => {
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   for (const width of [320, 390, 1024]) {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    for (const universe of ["Live Drop", "MEMES"]) {
-      await page.getByRole("button", { name: universe, exact: true }).click();
-      await page.locator(".booster-carousel").evaluate(async (node) => {
-        await Promise.all(node.getAnimations({ subtree: true })
-          .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
-          .map((animation) => animation.finished));
-      });
-      const active = page.locator('.booster-pack-slot[data-active="true"]');
-      const neighbors = page.locator('.booster-pack-slot[data-active="false"] .booster-neighbor');
-      // Trois univers : les deux paquets en retrait encadrent celui de devant.
-      await expect(neighbors).toHaveCount(2);
-      const a = (await active.boundingBox())!;
-      expect(a.width).toBeGreaterThan(100);
-      for (const neighbor of await neighbors.all()) {
-        const n = (await neighbor.boundingBox())!;
-        expect(a.width).toBeGreaterThan(n.width);
-        await expect(neighbor).toHaveAttribute("aria-hidden", "true");
-        await expect(neighbor.locator("button")).toHaveCount(0);
-        const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
-        // Les voisins restent opaques (pas de translucidité pendant la bascule) ; ils sont en retrait par leur position 3D.
-        expect(neighborOpacity).toBe(1);
-      }
-      await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
-      expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
-      // Le paquet de devant EST le bouton : plus de pilule séparée.
-      await expect(page.locator(".booster-panel .primary-action")).toHaveCount(0);
-      const action = active.locator("button.pack-artwork");
-      const actionBox = (await action.boundingBox())!;
-      const navBox = (await page.locator(".bottom-nav").boundingBox());
-      if (navBox) expect(actionBox.y + actionBox.height).toBeLessThanOrEqual(navBox.y);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      await page.screenshot({ path: `test-results/booster-selector-${width}-${universe}-${test.info().project.name}.png` });
-    }
+    await page.locator(".booster-carousel").evaluate(async (node) => {
+      await Promise.all(node.getAnimations({ subtree: true })
+        .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+        .map((animation) => animation.finished));
+    });
+    const active = page.locator('.booster-pack-slot[data-active="true"]');
+    await expect(active).toHaveCount(1);
+    await expect(page.locator(".booster-pack-slot")).toHaveCount(1);
+    const a = (await active.boundingBox())!;
+    expect(a.width).toBeGreaterThan(100);
+    expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
+    // Le paquet de devant EST le bouton : plus de pilule séparée.
+    await expect(page.locator(".booster-panel .primary-action")).toHaveCount(0);
+    const action = active.locator("button.pack-artwork");
+    const actionBox = (await action.boundingBox())!;
+    const navBox = (await page.locator(".bottom-nav").boundingBox());
+    if (navBox) expect(actionBox.y + actionBox.height).toBeLessThanOrEqual(navBox.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/booster-selector-${width}-${test.info().project.name}.png` });
   }
 });
 
@@ -355,49 +318,23 @@ test("Reflets coupés : le sachet ne penche pas et le reflet holographique reste
   expect(await object.evaluate((node) => (node as HTMLElement).style.transform)).toBe("");
 });
 
-test("la bascule de booster ne laisse jamais le sachet sortant devant ni translucide", async ({ page }) => {
-  // Défaut constaté à l'œil sur l'appli : une couture verticale en plein milieu du
-  // sachet, le temps de la bascule. Cause : le paquet sortant gardait `z-index: 2`
-  // pendant 200 ms (transition différée) tout en s'effaçant de 1 à .5, et le
-  // paquet entrant était encore à demi transparent (.5 -> 1). Les deux se
-  // voyaient donc l'un à travers l'autre. L'entrant doit être opaque et devant
-  // dès la première image ; le sortant descend d'un cran immédiatement.
-  // Depuis, tous les paquets restent opaques et le z-index ne bascule qu'à mi-course.
+test("un seul sachet dans la scène : aucune superposition possible", async ({ page }) => {
+  // Ce test remplace la vérification de bascule : avec un seul sachet, il n'y a
+  // plus ni paquet sortant ni paquet entrant, donc plus de couture ni de
+  // transparence croisée possible. On vérifie la scène, pas une transition.
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   const slots = page.locator(".booster-pack-slot");
-  await expect(slots).toHaveCount(3);
-  await page.getByRole("button", { name: "MEMES", exact: true }).click();
-
-  // Juste après le clic, transition encore en cours : on lit l'état composité.
-  const pendant = await slots.evaluateAll((nodes) => nodes.map((node) => ({
-    booster: node.getAttribute("data-booster"),
-    active: node.getAttribute("data-active") === "true",
-    opacity: Number(getComputedStyle(node).opacity),
-    transition: getComputedStyle(node).transitionProperty,
-  })));
-  const entrant = pendant.find((s) => s.booster === "memes")!;
-  const sortant = pendant.find((s) => s.booster === "live")!;
-  expect(entrant.active).toBe(true);
-  // Pendant toute la bascule, aucun paquet n'est translucide.
-  for (const node of pendant) expect(node.opacity).toBe(1);
-  // Le z-index bascule à mi-course (délai dans la transition), l'opacité ne bouge jamais.
-  expect(entrant.transition).toContain("z-index");
-  expect(sortant.transition).toContain("z-index");
-  expect(entrant.transition).not.toContain("opacity");
-  // Le filtre du voisin change d'un coup : l'animer re-rastérise tout le sachet.
-  expect(sortant.transition).not.toContain("filter");
-
-  // Au repos, le paquet choisi est devant ; les voisins, opaques, restent en retrait par leur position 3D.
-  await page.locator(".booster-carousel").evaluate(async (node) => {
-    await Promise.all(node.getAnimations({ subtree: true })
-      .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
-      .map((animation) => animation.finished));
-  });
-  const repos = await slots.evaluateAll((nodes) => nodes.map((node) => ({
+  await expect(slots).toHaveCount(1);
+  const scene = await slots.evaluateAll((nodes) => nodes.map((node) => ({
     active: node.getAttribute("data-active") === "true",
     z: Number(getComputedStyle(node).zIndex),
     opacity: Number(getComputedStyle(node).opacity),
+    filter: getComputedStyle(node).filter,
   })));
-  expect(repos.filter((s) => s.active).map((s) => [s.z, s.opacity])).toEqual([[2, 1]]);
-  for (const voisin of repos.filter((s) => !s.active)) expect(voisin.opacity).toBe(1);
+  expect(scene).toHaveLength(1);
+  expect(scene[0].active).toBe(true);
+  expect(scene[0].opacity).toBe(1);
+  expect(scene[0].filter).toBe("none");
+  await expect(page.locator(".booster-carousel .pack-copy")).toHaveCount(0);
+  await expect(page.locator(".booster-carousel .booster-neighbor")).toHaveCount(0);
 });

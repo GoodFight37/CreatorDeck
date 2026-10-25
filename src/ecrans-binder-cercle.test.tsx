@@ -65,62 +65,62 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
   beforeEach(() => { banc = creerBanc(); banc.preparer(); });
   afterEach(() => { banc.nettoyer(); window.localStorage.clear(); });
 
-  async function home({ needsAccount = false } = {}) {
+  async function home({ needsAccount = false, onShowObjectives = vi.fn() } = {}) {
     const onEditCircle = vi.fn();
     const noop = () => {};
-    await banc.monter(<HomeView game={gameWith([])} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
-      now={NOW} serverReserve={false} needsAccount={needsAccount} onEditCircle={onEditCircle} />);
-    return onEditCircle;
+    await banc.monter(<HomeView game={gameWith([])}
+      onShowCollection={noop} onOpen={noop} onUseHourglass={noop} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={false} needsAccount={needsAccount} onEditCircle={onEditCircle}
+      onShowObjectives={onShowObjectives} />);
+    return { onEditCircle, onShowObjectives };
   }
 
-  it("un joueur sans cercle voit « Définir mes chaînes »", async () => {
-    const onEditCircle = await home();
-    expect(document.querySelector(".circle-invite h2")!.textContent).toBe("Quelles chaînes regardes-tu ?");
-    banc.appuyer(/Définir mes chaînes/);
-    expect(onEditCircle).toHaveBeenCalledOnce();
-  });
-
-  it("garde Définir mes chaînes sans cercle, même sans compte", async () => {
-    await home({ needsAccount: true });
-    expect(document.querySelector(".circle-invite")!.textContent).toContain("Définir mes chaînes");
-  });
-
-  it("avec un cercle : « Modifier » sur la rangée, et les jetons sur une seule ligne", async () => {
-    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
-    const onEditCircle = await home();
+  it("un joueur sans cercle voit « Choisir mes chaînes », et rien d'autre sous le sachet", async () => {
+    const { onEditCircle } = await home();
     expect(document.querySelector(".circle-invite")).toBeNull();
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
+    banc.appuyer(/Choisir mes chaînes/);
+    expect(onEditCircle).toHaveBeenCalledOnce();
+    // Sous le sachet : la réserve, le minuteur, l'accès unique. Rien d'empilé.
+    expect(document.querySelector(".open-panel .stock-row")).not.toBeNull();
+    expect(document.querySelector(".drop-timer")).not.toBeNull();
+    expect(document.querySelectorAll(".drop-hub-link")).toHaveLength(1);
+  });
+
+  it("garde « Choisir mes chaînes » sans cercle, même sans compte", async () => {
+    await home({ needsAccount: true });
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
+  });
+
+  it("avec un cercle : « Modifier » sur la rangée, et un seul accès aux objectifs", async () => {
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
+    const { onEditCircle, onShowObjectives } = await home();
+    expect(document.querySelector(".drop-circle-invite")).toBeNull();
     banc.appuyer("Modifier");
     expect(onEditCircle).toHaveBeenCalledOnce();
-    const tokens = document.querySelector(".drop-secondary .token-row, .token-row")!;
-    expect(tokens.closest("details.drop-token-details")).toBeNull();
+    banc.appuyer(/Objectifs et activités/);
+    expect(onShowObjectives).toHaveBeenCalledOnce();
   });
 
-  it("avec un cercle, MEMES est visible à droite dès le premier lancement", async () => {
+  it("un seul sachet : celui des créateurs, sans sélecteur ni voisin", async () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
-    const universes = () => [...document.querySelectorAll('[aria-label="Choisir un univers"] button')].map((b) => b.textContent?.trim());
-    const noop = () => {};
-    const mount = async (openings: number) => {
-      const state = { ...createInitialState(NOW), openings };
-      await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
-        now={NOW} serverReserve={false} needsAccount={false} />);
-    };
-    // Nuit de direct : MEMES puis IMGFLIP sont des paquets visibles dès le départ, Live devant.
-    await mount(0);
-    expect(universes()).toEqual(["Live Drop", "MEMES", "IMGFLIP"]);
+    await home();
+    // Un seul sachet, actif, et aucun autre univers à faire glisser.
+    expect(document.querySelectorAll("[data-booster]")).toHaveLength(1);
     expect(document.querySelector('[data-booster="live"]')!.getAttribute("data-active")).toBe("true");
-    expect(document.querySelector('[data-booster="memes"] .booster-neighbor')).not.toBeNull();
-    expect(document.querySelector('[data-booster="imgflip"] .booster-neighbor')).not.toBeNull();
-    expect(document.querySelector(".memes-unlock-note")).toBeNull();
+    expect(document.querySelector('[data-booster="memes"]')).toBeNull();
+    expect(document.querySelector('[data-booster="imgflip"]')).toBeNull();
+    expect(document.querySelector(".booster-switcher")).toBeNull();
+    expect(document.querySelector(".booster-neighbor")).toBeNull();
+    expect(document.querySelector('.booster-carousel')!.getAttribute("data-universe")).toBe("live");
   });
 
   it("0056 : l'accueil annonce le retour au classement seulement quand le cercle est complet", async () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
     const noop = () => {};
-    await banc.monter(<HomeView game={gameWith(CIRCLE)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
-      now={NOW} serverReserve={false} needsAccount={false} />);
+    await banc.monter(<HomeView game={gameWith(CIRCLE)}
+      onShowCollection={noop} onOpen={noop} onUseHourglass={noop} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={false} needsAccount={false} onShowObjectives={noop} />);
     expect(document.body.textContent).toContain("Ton cercle est complet. Les boosters s’ouvrent au classement.");
   });
 

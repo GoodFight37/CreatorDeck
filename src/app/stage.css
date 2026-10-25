@@ -202,17 +202,6 @@
 .circle-strip-edit:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 8px; }
 
 /* Étape 3 : un joueur sans cercle peut en définir un depuis l'accueil. */
-.circle-invite {
-  display: grid; gap: 10px; margin: 16px 0 0; padding: 14px;
-  border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .035);
-}
-.circle-invite h2 { margin: 0; font: 650 16px/1.25 var(--font-body); letter-spacing: 0; text-transform: none; }
-.circle-invite p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
-.circle-invite button {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px;
-  border: 1px solid var(--accent); border-radius: 999px; background: rgb(var(--accent-rgb) / .14); color: var(--text);
-  font: 650 14px/1 var(--font-body);
-}
 
 /* Étape 3 : l'objectif du Binder est le cercle. */
 .binder-circle-goal {
@@ -231,16 +220,9 @@
 .binder-circle-craft { padding: 8px 10px; border: 1px solid rgb(255 255 255 / .1); border-radius: 12px; background: rgb(255 255 255 / .03); }
 .binder-circle-craft strong { font: 600 14px/1.25 var(--font-body); }
 .binder-circle-booster { margin: 0; }
-.binder-circle-goal-main:focus-visible, .binder-circle-craft:focus-visible, .circle-invite button:focus-visible {
+.binder-circle-goal-main:focus-visible, .binder-circle-craft:focus-visible {
   outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 12px;
 }
-
-/* --------------------------------------------------- un seul panneau secondaire */
-.is-lean .drop-secondary {
-  margin-top: 8px; border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .03);
-}
-.is-lean .drop-secondary > summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 14px; color: var(--muted); font-size: 14px; }
-.is-lean .drop-secondary .text-link, .is-lean .drop-secondary .pity-row, .is-lean .drop-secondary .hourglass-action { min-height: 44px; }
 
 @media (prefers-reduced-motion: reduce) {
   .stage-halo, .circle-live-dot, .circle-strip li[data-live="true"] .circle-avatar { animation: none; }
@@ -307,7 +289,6 @@
 .binder-next-pages > button { min-height: 48px; }
 
 /* D-141 : le booster MEMES arrive après le seuil, dit dans le panneau Réserve. */
-.is-lean .memes-unlock-note { margin: 10px 14px 12px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 
 /* D-144 : bandeau de mise à jour de l'APK (absent sur le site). */
 .app-update-banner {
@@ -358,12 +339,6 @@
   text-shadow: 0 1px 8px rgb(0 0 0 / .8);
 }
 .home-view .booster-selector .pack-copy h2 { font-size: 13px; letter-spacing: .14em; }
-/* Le paquet voisin : visible à droite (ou à gauche), en retrait, derrière. */
-.home-view .booster-selector .booster-pack-slot {
-  transform: translateX(calc(-50% + var(--booster-offset) * 74%)) scale(.62) rotateY(calc(var(--booster-offset) * -16deg));
-  opacity: .5; filter: brightness(.6) saturate(.85);
-}
-.home-view .booster-selector .booster-pack-slot[data-active="true"] { transform: translateX(-50%); opacity: 1; filter: none; }
 /* Le paquet de devant : un objet qu'on presse. Pas de filtre sur le bouton :
    il aplatirait les faces 3D du sachet. L'ombre vit sur .pack-shadow. */
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 100ms var(--ease-out); }
@@ -373,16 +348,8 @@
 /* Pas d'opacité sur le sachet désactivé (réserve en lecture, plus de sachet) : translucide,
    il laissait voir ses voisins à travers et aplatissait sa 3D. Le texte dessous dit pourquoi. */
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
-/* Le choix d'univers : deux mots discrets, pas une seconde pilule rouge. */
-.home-view .booster-switcher { position: absolute; z-index: 5; top: 0; right: -6px; gap: 0; }
-.home-view .booster-switcher button {
-  min-height: 44px; padding: 6px 10px; border: 0; border-radius: 0; background: none;
-  color: rgb(255 255 255 / .55); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
-  text-shadow: 0 1px 8px rgb(0 0 0 / .8);
-}
-.home-view .booster-switcher button[aria-pressed="true"] { background: none; border: 0; color: #fff; box-shadow: inset 0 -2px #fff; }
 /* Les chaînes du joueur : des ronds qui chevauchent le bas du paquet. */
-.home-view .drop-circle-faces { position: relative; z-index: 4; margin-top: -54px; outline: none; }
+.home-view .drop-circle-faces { position: relative; z-index: 4; margin-top: 6px; outline: none; }
 .home-view .drop-circle-faces .circle-strip {
   display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; margin: 0; padding: 0 12px;
 }
@@ -422,7 +389,7 @@
 }
 .home-view .drop-circle-faces .circle-strip-edit::before { content: "+"; color: rgb(255 255 255 / .8); font-size: 22px; line-height: 42px; }
 /* La réserve : une seule ligne, petite, sous la pile. */
-.home-view .open-panel, .home-view .meme-booster-panel {
+.home-view .open-panel {
   margin: 10px 0 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .home-view .open-panel::before, .home-view .open-panel::after { content: none; display: none; }
@@ -547,19 +514,6 @@
   overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 
-/* Sélecteur d'univers : un interrupteur centré, au-dessus du sachet. */
-.home-view .booster-switcher {
-  top: 6px; right: auto; left: 50%; transform: translateX(-50%);
-  padding: 2px; gap: 2px; border-radius: 999px;
-  background: rgb(var(--bg-rgb) / .78); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09), 0 6px 18px rgb(0 0 0 / .35);
-}
-.home-view .booster-switcher button {
-  min-height: 44px; padding: 0 16px; border-radius: 999px;
-  color: rgb(255 255 255 / .62); font-size: 12px; font-weight: 600; letter-spacing: .1em;
-  text-shadow: none; transition: background-color 160ms ease, color 160ms ease;
-}
-.home-view .booster-switcher button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: none; }
-.home-view .booster-switcher button:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
 
 /* Le sachet monte d'un cran : le sélecteur occupe le haut du plateau. Sur un
    écran court, il rétrécit pour laisser le bouton et la réserve au-dessus de
@@ -572,13 +526,14 @@
     --drop-pack-size: min(78vw, 320px, calc(44dvh / 1.4667));
   }
 }
-.home-view .booster-switcher button { white-space: nowrap; }
 
 .home-view .open-panel .stock-row { justify-content: center; }
 
-/* Les chaînes du joueur : une rangée sous le statut, plus sur le sachet. */
-.home-view .drop-circle-faces { margin-top: 10px; }
-.home-view .drop-circle-faces .circle-strip-row { justify-content: center; }
+/* Les chaînes du joueur : une rangée sous le sachet, plus dessus. */
+.home-view .drop-circle-faces { margin-top: 6px; }
+/* Une rangée qui déborde se lit depuis la gauche : centrée, elle couperait la
+   première chaîne hors de portée (le débordement négatif ne se défile pas). */
+.home-view .drop-circle-faces .circle-strip-row { justify-content: flex-start; padding-inline: 16px; }
 
 /* Barre du bas : opaque, sans flou ; le contenu s'arrête au-dessus d'elle. */
 .bottom-nav {
@@ -589,7 +544,6 @@
 .app-content { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-view .booster-switcher button { transition: none; }
 }
 
 /* ------------------------------------------- trois objets (21 octobre 2026)
@@ -699,32 +653,20 @@
 .binder-modes-bar + .atelier-view { padding-top: 4px; }
 
 /* ------------------------------------------------------- Drop épuré (C2)
- * Le sachet est roi : plus grand, et plus rien au-dessus de lui. Le choix
- * d'univers passe dessous : le nom de l'univers actif, un point pour l'autre. */
+ * Un seul sachet, et sous lui trois choses : le cercle, la réserve, le minuteur.
+ * Le sachet garde la vedette, mais il laisse la place à cette rangée : sa
+ * hauteur est bornée en `dvh` pour que l'accès unique tienne sans défiler. */
 .home-view .booster-selector .pack-stage.stage-live.booster-carousel {
-  --drop-pack-size: min(84vw, 340px, calc(56dvh / 1.4667));
-  --drop-stage-pt: clamp(16px, calc(12dvh - 60px), 96px);
+  --drop-pack-size: min(72vw, 300px, calc(40dvh / 1.4667));
+  --drop-stage-pt: clamp(10px, calc(6dvh - 26px), 48px);
 }
 @media (max-height: 700px) {
-  .home-view .booster-selector .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(80vw, 320px, calc(48dvh / 1.4667)); }
+  .home-view .booster-selector .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(68vw, 280px, calc(36dvh / 1.4667)); }
 }
-.home-view .booster-switcher {
-  position: static; transform: none; display: flex; justify-content: center; align-items: center; gap: 4px;
-  margin: 4px auto 0; padding: 0; border-radius: 0; background: none; box-shadow: none;
+@media (max-height: 620px) {
+  .home-view .booster-selector .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(62vw, 240px, calc(30dvh / 1.4667)); }
+  .home-view .drop-hub-link { margin-top: 8px; }
 }
-.home-view .booster-switcher button {
-  display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px;
-  border: 0; border-radius: 999px; background: none; box-shadow: none;
-  color: transparent; font-size: 0; letter-spacing: 0;
-}
-.home-view .booster-switcher button::before {
-  content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgb(255 255 255 / .32);
-  transition: background-color 160ms ease-out;
-}
-.home-view .booster-switcher button[aria-pressed="true"] {
-  background: none; color: var(--text); font: 700 18px/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase;
-}
-.home-view .booster-switcher button[aria-pressed="true"]::before { content: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .bottom-nav .nav-object, .nav-object-art, .nav-object-label, .top-bar .level-badge, .top-bar .settings-button, .binder-modes button { transition: none; }

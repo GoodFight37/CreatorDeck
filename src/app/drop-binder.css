@@ -147,15 +147,7 @@
 .home-view .open-panel .pity-row { min-height: 34px; color: var(--ink); border-color: rgb(var(--ink-rgb) / .22); font-size: 12px; }
 .home-view .open-panel .pity-row svg { color: var(--accent-deep); }
 .home-view .open-panel .pity-row.now { font-weight: 600; }
-.home-view .hourglass-note { display: block; margin: 4px 0 0; color: color-mix(in srgb, var(--ink) 70%, transparent); font-size: 12px; line-height: 1.25; text-align: center; }
 .home-view .token-row, .home-view .token-row strong { color: var(--ink); }
-.home-view .drop-token-details { margin-top: 4px; color: rgb(var(--ink-rgb) / .72); font-size: 12px; text-align: center; }
-.home-view .drop-token-details summary { min-height: 28px; cursor: pointer; list-style-position: inside; }
-.home-view .drop-token-details summary strong { margin-left: 4px; color: var(--ink); }
-.home-view .drop-token-details .token-row { margin: 0; font-size: 12px; }
-.home-view .drop-secondary-details { margin-top: 2px; color: rgb(var(--ink-rgb) / .68); font-size: 12px; text-align: center; }
-.home-view .drop-secondary-details > summary { min-height: 30px; cursor: pointer; list-style-position: inside; }
-.home-view .open-panel:not([data-tutorial="true"]) .drop-secondary-details > summary { display: none; }
 .home-view .secondary-action { color: var(--ink); border-color: var(--muted); font-size: 12px; line-height: 1.5; padding-block: 9px; }
 
 .drop-activities { margin-top: 28px; }
@@ -663,34 +655,8 @@
 .home-view .stock-row > div:first-child > span,
 .home-view .stock-row strong small { color: var(--muted); font-size: 12px; }
 .home-view .stock-row strong { color: var(--paper); font: 600 18px/1 var(--font-display); }
-.home-view .drop-secondary-details { margin-top: 7px; color: var(--muted); text-align: center; }
-.home-view .drop-secondary-details > summary {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  padding: 2px 8px;
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: .02em;
-}
-.home-view .drop-secondary-details[open] {
-  padding: 0 12px 12px;
-  border-radius: 12px;
-  background: rgb(var(--paper-rgb) / .055);
-}
 .home-view .open-panel .pity-row,
-.home-view .hourglass-action,
-.home-view .drop-token-details { color: var(--muted); }
-.home-view .live-bar {
-  gap: 5px;
-  margin-top: 19px;
-  padding: 6px 0;
-  border-color: rgb(255 255 255 / .055);
-  color: var(--muted);
-  font-size: 12px;
-}
-.home-view .live-bar-tag { font-size: 12px; letter-spacing: .1em; }
-.home-view .live-bar-boost { border: 0; background: none; font-size: 12px; }
+.home-view .hourglass-action { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .home-view .pack-stage.stage-live .pack-artwork.pack-live,
   .home-view .pack-idle,
@@ -700,7 +666,6 @@
 [data-card-fx="off"] .home-view .pack-idle,
 [data-card-fx="off"] .home-view .pack-glint::after,
 [data-card-fx="off"] .home-view .pack-stage.stage-live .pack-shadow { animation: none; }
-.home-view .open-panel:not([data-tutorial="true"]) .drop-secondary-details > summary { display: inline-flex; }
 @media (max-width: 360px) {
   .app-shell[data-current-tab="home"] .currency-chip small,
   .app-shell[data-current-tab="home"] .level-chip small { display: none; }
@@ -737,13 +702,7 @@
 /* Cibles tactiles : tout ce qui se touche fait au moins 44 px (DESIGN.md). */
 .text-link,
 .hourglass-action,
-.home-view .live-bar,
-.home-view .open-panel .pity-row,
-.home-view .drop-token-details summary,
-.home-view .drop-secondary-details > summary { min-height: 44px; }
-.home-view .drop-token-details summary,
-.home-view .drop-secondary-details > summary { display: flex; align-items: center; }
-.home-view .live-bar { align-items: center; }
+.home-view .open-panel .pity-row { min-height: 44px; }
 
 /* Sur la planche, la variante Live se réduit à son point (le libellé reste lu par aria-label) : 12 cartes par page, 12 libellés de 8 px, c'était du bruit. */
 .creator-card.is-compact .card-live { gap: 0; padding: 3px 4px; font-size: 0; letter-spacing: 0; }

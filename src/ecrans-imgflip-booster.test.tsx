@@ -1,7 +1,7 @@
-import { act, useState } from "react";
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
+import { BoosterCarousel } from "@/components/booster-carousel";
 import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
 import { IMGFLIP_POOL } from "@/lib/imgflip-booster";
 import { CloudError } from "@/lib/cloud/api";
@@ -34,30 +34,27 @@ function Harness() {
 }
 
 function CarouselHarness() {
-  const [universe, select] = useState<BoosterUniverse>("live");
-  return <BoosterCarousel value={universe} onChange={select} disabled={false} canPrepare onPrepare={() => {}} />;
+  const onPrepare = vi.fn();
+  return <div><BoosterCarousel onPrepare={onPrepare} disabled={false} canPrepare /></div>;
 }
 
-describe("troisième sachet Imgflip : carrousel", () => {
+describe("le sachet du Drop n'a plus de carrousel d'univers", () => {
   let banc: Banc;
   beforeEach(() => { banc = creerBanc(); banc.preparer(); });
   afterEach(() => banc.nettoyer());
 
-  it("place Imgflip après MEMES et garde un seul sachet accessible", async () => {
+  it("ne montre que le sachet des créateurs", async () => {
     await banc.monter(<CarouselHarness />);
     expect([...document.querySelectorAll("[data-booster]")].map(node => node.getAttribute("data-booster")))
-      .toEqual(["live", "memes", "imgflip"]);
-    banc.appuyer("IMGFLIP");
-    expect(document.querySelector('[data-booster="imgflip"] img')?.getAttribute("src")).toContain("imgflip-opening.webp");
-    expect(document.querySelectorAll('.booster-pack-slot button:not([inert])')).toHaveLength(1);
-    expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("imgflip");
-    banc.appuyer("MEMES");
-    expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("memes");
+      .toEqual(["live"]);
+    expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("live");
+    expect(document.querySelector(".booster-switcher")).toBeNull();
+    expect(document.querySelectorAll(".booster-neighbor")).toHaveLength(0);
+    expect(document.querySelector(".pack-stage img")?.getAttribute("src")).toContain("live-opening.svg");
   });
 
-  it("glisse de MEMES à IMGFLIP et résiste au bout du carrousel sans ouvrir", async () => {
+  it("un glissé ne change plus d'univers et n'ouvre rien", async () => {
     await banc.monter(<CarouselHarness />);
-    banc.appuyer("MEMES");
     const stage = document.querySelector(".booster-carousel")!;
     function swipe(from: number, to: number) {
       act(() => {
@@ -69,11 +66,9 @@ describe("troisième sachet Imgflip : carrousel", () => {
       });
     }
     swipe(250, 100);
-    expect(stage.getAttribute("data-universe")).toBe("imgflip");
     swipe(250, 100);
-    expect(stage.getAttribute("data-universe")).toBe("imgflip");
-    swipe(100, 250);
-    expect(stage.getAttribute("data-universe")).toBe("memes");
+    expect(stage.getAttribute("data-universe")).toBe("live");
+    expect(document.querySelectorAll("[data-booster]")).toHaveLength(1);
   });
 });
 

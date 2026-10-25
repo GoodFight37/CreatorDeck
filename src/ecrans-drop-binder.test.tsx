@@ -115,42 +115,32 @@ describe("les sabliers du Drop en ligne", () => {
     const state = { ...createInitialState(NOW), packs, hourglasses };
     const onUseHourglass = vi.fn();
     const noop = () => {};
-    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowAtelier={noop} opening={false} usingHourglass={busy}
-      now={NOW} serverReserve={true} needsAccount={needsAccount} />);
-    const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
+    await banc.monter(<HomeView game={getGameView(state, NOW)}
+      onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} opening={false} usingHourglass={busy}
+      now={NOW} serverReserve={true} needsAccount={needsAccount} onShowObjectives={noop} />);
+    const button = document.querySelector<HTMLButtonElement>(".hourglass-action")!;
     return { button, onUseHourglass };
   }
 
-  it("range les jetons dans les détails, sans compteur de garantie ni lien vers les taux", async () => {
+  it("ne montre plus ni compteur de jetons ni lien vers les taux", async () => {
     await drop();
-    const tokens = document.querySelector(".token-row")!;
-    expect(tokens.closest("details")).not.toBeNull();
-    expect((tokens.closest("details") as HTMLDetailsElement).open).toBe(false);
-    expect(tokens.textContent).toMatch(/\d+ jetons · encore \d+ pour une carte/);
+    expect(document.querySelector(".token-row")).toBeNull();
+    expect(document.body.textContent).not.toContain("jetons");
     expect(document.querySelector(".pity-row.now")).toBeNull();
     expect(document.body.textContent).not.toContain("Taux officiels");
   });
 
-  it("replie les infos secondaires du tutoriel derrière un lien discret", async () => {
+  it("n'a plus d'accordéon anglais sur le sachet : le sablier est là, en clair", async () => {
     await drop({ needsAccount: true });
-    const details = document.querySelector<HTMLDetailsElement>(".drop-secondary-details")!;
-    expect(details.open).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("Réserve et sabliers");
-    expect(details.querySelector(".hourglass-action")).not.toBeNull();
-    act(() => details.querySelector("summary")!.click());
-    expect(details.open).toBe(true);
+    expect(document.querySelector("details")).toBeNull();
+    expect(document.body.textContent).not.toContain("More info");
+    expect(document.querySelector(".drop-reserve-row .hourglass-action")).not.toBeNull();
   });
 
-  it("le sablier reste visible pour un joueur et crée un booster bonus à 4/4", async () => {
+  it("le sablier avance le minuteur du prochain booster", async () => {
     const { button, onUseHourglass } = await drop({ packs: 4 });
     expect(button.disabled).toBe(false);
-    const details = button.closest<HTMLDetailsElement>("details.drop-secondary-details")!;
-    expect(details.open).toBe(false);
-    act(() => details.querySelector("summary")!.click());
-    expect(details.open).toBe(true);
     expect(button.textContent).toContain("2");
-    expect(button.textContent).toContain("ajouter un sachet bonus");
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
     expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");
@@ -160,24 +150,19 @@ describe("les sabliers du Drop en ligne", () => {
     cloudMock.current = { configured: true, userId: "malik", promoPacks: 50 };
     const state = { ...createInitialState(NOW), packs: 0 };
     const onOpen = vi.fn();
-    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onUseHourglass={vi.fn()} onShowAtelier={vi.fn()} opening={false} usingHourglass={false}
-      now={NOW} serverReserve={true} needsAccount={false} />);
+    const noop = () => {};
+    await banc.monter(<HomeView game={getGameView(state, NOW)}
+      onShowCollection={noop} onOpen={onOpen} onUseHourglass={vi.fn()} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={true} needsAccount={false} onShowObjectives={noop} />);
     const button = banc.boutons().find((entry) => entry.textContent?.includes("Ouvrir un booster de test"))!;
     const sachet = document.querySelector<HTMLButtonElement>(".pack-stage .pack-artwork")!;
     expect(button.disabled).toBe(false);
     expect(sachet.disabled).toBe(false);
-    expect(document.querySelector(".open-panel .stock-row")!.textContent).toMatch(/^50 sachets · prochain à \d\d h \d\d$/);
+    expect(document.querySelector(".open-panel .stock-row")!.textContent).toBe("50 sachets en réserve");
     act(() => sachet.click());
     expect(onOpen).toHaveBeenCalledOnce();
     act(() => button.click());
     expect(onOpen).toHaveBeenCalledTimes(2);
-  });
-
-  it("ne montre qu’une note contextuelle compacte pour la réserve", async () => {
-    await drop({ packs: 5 });
-    expect(document.querySelectorAll(".hourglass-note")).toHaveLength(1);
-    expect(document.querySelector(".hourglass-note")?.textContent).toContain("Ouvre le booster bonus");
   });
 
   it.each([{ packs: 5 }, { hourglasses: 0 }, { needsAccount: true }, { busy: true }])(

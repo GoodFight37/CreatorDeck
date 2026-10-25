@@ -40,9 +40,9 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
       variant: "standard" as const, obtainedAt: NOW - index, rareDrop: false }));
     const onUseHourglass = vi.fn();
     const noop = () => {};
-    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowAtelier={noop} opening={false} usingHourglass={busy}
-      now={NOW} serverReserve={false} needsAccount={false} onEditCircle={noop} />);
+    await banc.monter(<HomeView game={getGameView(state, NOW)}
+      onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} opening={false} usingHourglass={busy}
+      now={NOW} serverReserve={false} needsAccount={false} onEditCircle={noop} onShowObjectives={noop} />);
     return { onUseHourglass };
   }
   const moment = () => document.querySelector<HTMLElement>(".circle-live-moment");
@@ -97,7 +97,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(quiet.textContent).not.toContain("À trouver");
   });
 
-  it("réserve vide : ouvre le direct du cercle et garde le sablier dans les détails", async () => {
+  it("réserve vide : ouvre le direct du cercle, et le sablier reste à côté du minuteur", async () => {
     setLive({ streams: [stream("ibai", 100)] });
     const { onUseHourglass } = await home({ packs: 0, hourglasses: 3 });
     const card = moment()!;
@@ -106,19 +106,23 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(card.textContent).not.toContain("C’est le moment");
     // Un seul endroit mène au direct : le moment du cercle, pas une seconde action sous le sachet.
     expect(document.querySelector(".open-panel .reserve-action")).toBeNull();
-    expect(document.querySelector(".open-panel .stock-row")!.textContent).toMatch(/^Prochain sachet à \d\d h \d\d$/);
+    expect(document.querySelector(".open-panel .stock-row")!.textContent).toBe("Aucun sachet en réserve");
+    // Le minuteur bat à la seconde, et le sablier est là, sans accordéon.
+    expect(document.querySelector(".drop-timer")!.textContent).toMatch(/^Prochain sachet dans \d+:\d\d$/);
+    expect(document.querySelector(".drop-timer")!.getAttribute("data-state")).toBe("waiting");
     expect(card.querySelector(".circle-live-hourglass")).toBeNull();
     const button = document.querySelector<HTMLButtonElement>(".hourglass-action")!;
-    expect(button.closest("details")!.querySelector("summary")!.textContent).toContain("Réserve et sabliers");
+    expect(button.closest("details")).toBeNull();
+    expect(button.closest(".drop-reserve-row")).not.toBeNull();
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
   });
 
-  it("réserve vide sans direct : une seule ligne dit l'heure du prochain sachet", async () => {
+  it("réserve vide sans direct : la réserve se tait, le minuteur parle", async () => {
     await home({ packs: 0 });
     expect(document.querySelector(".open-panel .reserve-action")).toBeNull();
-    const line = document.querySelector(".open-panel .stock-row")!.textContent!;
-    expect(line).toMatch(/^Prochain sachet à \d\d h \d\d$/);
+    expect(document.querySelector(".open-panel .stock-row")!.textContent).toBe("Aucun sachet en réserve");
+    expect(document.querySelector(".drop-timer")!.textContent).toMatch(/^Prochain sachet dans \d+:\d\d$/);
     expect(document.body.textContent).not.toContain("Recharge en cours");
     expect(moment()).toBeNull();
   });
@@ -135,8 +139,8 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(moment()).toBeNull();
     expect(status()!.textContent).toMatch(/^Personne de ton cercle en direct · vérifié à \d\d:\d\d$/);
     expect(status()!.querySelector("button")).toBeNull();
-    // La barre générique du direct reste pour les autres créateurs.
-    expect(document.querySelector(".live-bar")).not.toBeNull();
+    // Plus de barre générique sur l'accueil : le sachet reste seul.
+    expect(document.querySelector(".live-bar")).toBeNull();
   });
 
   it("donnée périmée : aucun badge, et un nouvel essai possible", async () => {
@@ -168,16 +172,15 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(status()!.querySelector("button")).toBeNull();
   });
 
-  it("sans cercle : l'accueil d'avant, sans rangée ni moment", async () => {
+  it("sans cercle : même accueil, une ligne pour choisir ses chaînes", async () => {
     window.localStorage.removeItem("creatordeck.circle.v1");
     setLive({ streams: [stream("ibai", 100)] });
     await home();
-    expect(document.querySelector(".home-view.is-lean")).toBeNull();
     expect(document.querySelector(".circle-strip")).toBeNull();
     expect(moment()).toBeNull();
     expect(document.body.textContent).not.toContain("Tribunal");
     expect(document.body.textContent).not.toContain("Pas de Légendaire dans ce paquet");
     expect(document.querySelector(".scene-block, .arena-row")).toBeNull();
-    expect(document.querySelector(".circle-invite")!.textContent).toContain("Définir mes chaînes");
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
   });
 });

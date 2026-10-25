@@ -13,13 +13,17 @@ test("Drop garde le paquet-bouton accessible, sans débordement, en viewport mob
     const packRect = (await pack.boundingBox())!;
     expect(packRect.y).toBeGreaterThanOrEqual(0);
     expect(packRect.width).toBeGreaterThanOrEqual(packWidth(viewport.width, viewport.height) - 4);
-    await expect(page.locator(".pack-stage .pack-copy")).toBeVisible();
+    // Un seul sachet, nommé par son bouton ; rien d'empilé au-dessus.
+    await expect(page.locator(".pack-stage .pack-artwork")).toBeVisible();
     await expect(page.locator(".open-panel .primary-action")).toHaveCount(0);
     const stage = (await page.locator(".pack-stage").boundingBox())!;
     const ticket = (await page.locator(".open-panel").boundingBox())!;
     expect(ticket.y).toBeGreaterThanOrEqual(stage.y + stage.height - 1);
     await expect(page.getByRole("button", { name: /Essayer|Ouvrir le booster/ })).toBeVisible();
-    await expect(page.locator(".drop-secondary-details")).not.toHaveAttribute("open", "");
+    // Sous le sachet : la réserve, le minuteur et l'accès unique, en clair.
+    await expect(page.locator(".open-panel .stock-row")).toBeVisible();
+    await expect(page.locator(".drop-timer")).toBeVisible();
+    await expect(page.locator(".drop-hub-link")).toBeVisible();
     const nav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;
     // Le paquet se presse sans viser sous la barre du bas.
     expect(packRect.y + packRect.height * .6).toBeLessThanOrEqual(nav.y);
@@ -38,7 +42,6 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   // Posé dans la moitié basse : son centre est sous le milieu de l'écran utile.
   expect(box.y + box.height / 2).toBeGreaterThan(844 * .42);
   expect(box.y + box.height).toBeLessThanOrEqual(844);
-  await expect(page.locator(".pack-stage .pack-copy")).toContainText("· 5");
   await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
   await expect(page.locator(".primary-action")).toHaveCount(0);
   // La seule ligne de réserve : « N sachets · prochain à … », en texte simple.
@@ -72,17 +75,12 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(pack.locator(".pack-idle")).toHaveCSS("animation-name", "none");
   await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "none");
 
-  await page.locator(".open-panel").evaluate((panel) => {
-    panel.dataset.tutorial = "true";
-    panel.querySelector<HTMLDetailsElement>(".drop-secondary-details")!.open = false;
-  });
-  await expect(page.locator(".drop-secondary-details > summary")).toBeVisible();
-  // Le compteur de garantie a quitté l'interface : le détail replié ne porte
-  // plus que les actions de réserve (sablier, jetons), cachées tant qu'il est fermé.
+  await expect(page.locator(".open-panel")).toHaveAttribute("data-tutorial", "false");
+  // Le compteur de garantie a quitté l'interface, et le sablier n'est plus
+  // replié derrière un accordéon : il est dans la rangée du minuteur.
   await expect(page.locator(".pity-row.now")).toHaveCount(0);
-  await expect(page.locator(".drop-secondary-details .hourglass-action")).toBeHidden();
-  await page.locator(".drop-secondary-details > summary").click();
-  await expect(page.locator(".drop-secondary-details .hourglass-action")).toBeVisible();
+  await expect(page.locator(".drop-reserve-row .hourglass-action")).toBeVisible();
+  await expect(page.locator("details")).toHaveCount(0);
 });
 
 test("l'ombre suit le sachet et la pression ne relance pas son arrivée", async ({ page }) => {

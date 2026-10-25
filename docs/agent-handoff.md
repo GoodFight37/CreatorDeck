@@ -1,3 +1,23 @@
+# Checkpoint — un seul sachet sur le Drop, 25 octobre 2026
+
+L'accueil ne montre plus qu'un sachet, celui des créateurs. Le carrousel et ses
+trois univers disparaissent de l'accueil : plus de voisin, donc plus de sachets
+qui se trouent ni se croisent pendant la bascule. Sous le sachet, la rangée du
+cercle, la réserve et le minuteur ; tout le reste (missions, série, Tribunal,
+Paquet Scène, progression) derrière l'unique bouton « Objectifs et activités ».
+MEMES et Imgflip gardent leur classeur `/memes`, ouvert depuis Objectifs →
+Autres activités. Décision D-168.
+
+Les textes imprimés passent en français, les noms propres restent. Les WebP
+restent la source d'affichage : `scripts/build-pack-art.py` redessine les SVG,
+`scripts/build-pack-webp.mjs` les reconvertit (pas de retour au SVG à l'écran).
+Le bouton Imgflip s'appelle « OUVRIR LE SACHET IMGFLIP » pour ne plus préfixer
+le nom du bouton des créateurs.
+
+Portes : unitaires et écrans verts, `tsc`, `eslint`, jargon, build, et les trois
+tranches Playwright rejouées localement. Aucun SQL, taux, pity ni `open_pack`
+modifié.
+
 # Checkpoint Codex — tranches du carrousel, 25 octobre 2026
 
 Nouvelle demande : vidéo `D:/Download/Screenrecorder-2026-10-25-07-29-27-984.mp4`,

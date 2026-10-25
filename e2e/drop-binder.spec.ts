@@ -26,12 +26,12 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
   await expect(open).toBeEnabled();
   await expect(open).toBeInViewport();
   await expect(page.locator(".pack-stage .pack-artwork")).toBeInViewport();
+  // Le sablier vit à côté du minuteur, en clair : plus d'accordéon à ouvrir.
   const hourglass = page.getByRole("button", { name: /Utiliser 1 sablier/ });
-  await page.locator(".drop-secondary-details > summary").click();
   await expect(hourglass).toBeVisible();
   await hourglass.scrollIntoViewIfNeeded();
   await expect(hourglass).toBeInViewport();
-  await expect(page.locator(".drop-secondary-details")).toHaveAttribute("open", "");
+  await expect(page.locator(".drop-reserve-row .hourglass-action")).toBeVisible();
   await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
   await page.getByRole("button", { name: "Drop", exact: true }).click();

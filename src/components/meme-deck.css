@@ -131,3 +131,10 @@
 [data-card-fx="off"] .meme-pack-object, [data-card-fx="off"] .meme-pack-film::after { animation: none; }
 [data-card-fx="off"] .meme-card-foil { display: none; }
 @media (prefers-reduced-motion: reduce) { .meme-card-foil { display: none; } }
+
+/* Le sachet Imgflip : même classeur, même geste, un cran plus bas. */
+.meme-imgflip {
+  margin: 26px auto 0; padding-top: 18px; max-width: 460px;
+  border-top: 1px dashed rgb(255 255 255 / .16);
+}
+.meme-imgflip .meme-hero-line { margin-bottom: 10px; }

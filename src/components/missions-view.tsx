@@ -10,6 +10,7 @@
 import "./objectives.css";
 import type { PointsOutcome } from "@/hooks/use-points";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { BookOpen, Check, Gem, Gavel, Layers3, Radio, RotateCcw, Sparkles, Target, Trophy, Unlock, Zap } from "lucide-react";
 
@@ -390,6 +391,9 @@ export function MissionsView({
               {sceneBusy ? "Ouverture…" : sceneOpened ? "Déjà ouvert · demain matin" : cloud.configured && cloud.userId && !sceneReady ? "Vérifier la disponibilité" : "Ouvrir le Paquet Scène"}
             </button>
           </> : null}
+          {/* Les univers Mèmes et Imgflip ont quitté le carrousel du Drop : leur
+              classeur garde une porte, ici, à côté des autres activités. */}
+          <Link className="text-link" href="/memes">Univers Mèmes et Imgflip</Link>
           {onShowArena ? <button type="button" className="text-link" onClick={onShowArena}>Arène</button> : null}
           {cloud.configured && cloud.userId ? <>
             {onShowMarket ? <button type="button" className="text-link" onClick={onShowMarket}>Hôtel des ventes</button> : null}
