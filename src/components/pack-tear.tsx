@@ -213,7 +213,7 @@ export function PackTear({
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
     : "0% 15.45%, 100% 15.45%";
-  const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
+  const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.webp");
   // La palette de la scène et des dos de carte suit le sachet ouvert (booster-continuity.css).
   const universe = customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes" : customArtwork?.includes("imgflip") ? "imgflip"
     : kind === "live" ? "live" : undefined;

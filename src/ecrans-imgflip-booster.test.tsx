@@ -50,7 +50,7 @@ describe("le sachet du Drop n'a plus de carrousel d'univers", () => {
     expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("live");
     expect(document.querySelector(".booster-switcher")).toBeNull();
     expect(document.querySelectorAll(".booster-neighbor")).toHaveLength(0);
-    expect(document.querySelector(".pack-stage img")?.getAttribute("src")).toContain("live-opening.svg");
+    expect(document.querySelector(".pack-stage img")?.getAttribute("src")).toContain("live-opening.webp");
   });
 
   it("un glissé ne change plus d'univers et n'ouvre rien", async () => {

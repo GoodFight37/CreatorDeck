@@ -129,7 +129,7 @@ export function MemeDeck() {
       <p className="meme-credit">Cartes MyMemeCards et modèles Imgflip. Sources indiquées sur les fiches.</p>
     </section>
     <MemeBoosterOpening booster={booster} />
-    <MemeBoosterOpening booster={imgflipBooster} artwork="/packs/imgflip-opening.svg" />
+    <MemeBoosterOpening booster={imgflipBooster} artwork="/packs/imgflip-opening.webp" />
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
       aria-label={"Carte " + selected.name}>
       <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>
