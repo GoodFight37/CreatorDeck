@@ -70,6 +70,14 @@ du chantier portraits, reprendre les lectures générales correspondantes.
    `git fetch origin refs/heads/<branche>:refs/remotes/origin/<branche>`.
    Examiner les commits divergents avant de choisir la suite ; aucune reprise
    sur un ancien commit, aucune substitution silencieuse de branche.
+5. **Ponytail obligatoire à chaque début et reprise de session** (demande de
+   Malik, 25 octobre 2026) : après les lectures de reprise, avant toute
+   intervention, lire le `SKILL.md` du skill principal `ponytail` dans le
+   catalogue disponible et l'appliquer en mode **full** pour toute la session,
+   sauf instruction contraire de Malik. Ne pas attendre qu'il le redemande ou
+   mentionne le plugin dans son prompt. Utiliser aussi les autres skills et
+   outils pertinents, sans les multiplier inutilement. Si Ponytail est absent
+   ou inaccessible, le signaler clairement sans prétendre l'avoir activé.
 
 Si GitHub est inaccessible, noter l'opération refusée et poursuivre seulement
 les actions locales sûres ; ne jamais prétendre avoir vérifié la PR ou publié.
