@@ -1,4 +1,4 @@
-## Carrousel : zones de sachets manquantes pendant le geste — corrigé localement, 25 octobre 2026
+## Carrousel : zones de sachets manquantes pendant le geste — correctif publié, 25 octobre 2026
 
 **Suivi : `CreatorDeck-Codex-21e`, P1, correction D-166 sur `8278a57d` + diff.**
 Malik fournit une vidéo de 14,18 s et trois captures du 24 octobre à 16 h 40 :
@@ -17,7 +17,11 @@ défauts de budget ; événements résiduels conservés dans le rapport, sans pr
 à leur disparition totale. Nouvelle APK locale 881767 reconstruite et vérifiée :
 23 gestes natifs, 159 images inspectées pendant le mouvement et six images
 transitoires prioritaires, sans rectangle manquant observé ; E2E complet
-213 réussis/29 ignorés. Publication en préparation.
+213 réussis/29 ignorés. Correctif publié dans
+[`1f0f79a9`](https://github.com/GoodFight37/CreatorDeck/commit/1f0f79a9248e78bc2db788d3c60f23ba9debedae),
+Production Vercel du même SHA prête, CI entièrement verte ; APK officielle
+**881801 / `1f0f79a` publiée**, SHA du manifeste vérifié. La release 881040
+ne contient pas cette correction ; 881801 est la mise à jour concernée.
 Aucun contournement joueur demandé. Essais sans cloud, pas une validation Redmi.
 
 Preuves joueur : [haut](images/bugs/2026-10-25-carrousel-decoupe-haut.png),

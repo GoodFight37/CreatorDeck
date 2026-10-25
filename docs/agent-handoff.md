@@ -3,11 +3,24 @@
 Malik confirme le défaut persistant de découpe pendant IMGFLIP → MEMES puis
 MEMES → LIVE et fournit trois captures et une vidéo de 14,18 s, conservée dans
 `D:/Download/Screenrecorder-2026-10-24-16-40-44-590.mp4` (original non modifié).
-**Suivi `CreatorDeck-Codex-21e` réouvert et réclamé.** Reprise sur `main`
+**Suivi `CreatorDeck-Codex-21e`, correction D-166.** Reprise sur `main`
 `8278a57df69a645a85e7fa565a00ec3e99600dfe`, distant identique après fetch.
 CI du lot précédent `75ad0c8c` et APK `8278a57d` désormais réussies sur GitHub.
 
-**Correction locale validée, publication en préparation :** défaut reproduit sur
+**Publié et vérifié sur GitHub :** code et preuves dans
+[`1f0f79a9`](https://github.com/GoodFight37/CreatorDeck/commit/1f0f79a9248e78bc2db788d3c60f23ba9debedae),
+SHA `origin/main` vérifié après push normal. Production Vercel **READY**, même SHA
+dans les métadonnées : [déploiement](https://creator-deckk-16hxox1ku-hafsi37-2386.vercel.app),
+`dpl_7SAfKaNoDvfgSjfRrjDQUrW8F8N6`. [CI Vérification](https://github.com/GoodFight37/CreatorDeck/actions/runs/40167208302)
+**entièrement verte** (six jobs de vérification réussis). [Construction APK](https://github.com/GoodFight37/CreatorDeck/actions/runs/40167525853)
+réussie ; **APK officielle [v881801 / `1f0f79a`](https://github.com/GoodFight37/creatordeck-apk/releases/download/v881801/creatordeck.apk)
+publiée**, manifeste `latest.json` vérifié : SHA complet `1f0f79a9248e78bc2db788d3c60f23ba9debedae`,
+140 445 351 octets, SHA-256 `5014c0b466c6f7177cdbd8d1d874278ce9bcf49e6e1eb676cbc9240d25bfb26b`.
+La release 881040 / `75ad0c8c` ne contient pas D-166 ; la mise à jour utile est 881801.
+Les tests ci-dessous portent sur le code de `1f0f79a9` ; les seuls changements
+suivants de ce checkpoint sont documentaires.
+
+**Diagnostic et validation :** défaut reproduit sur
 APK locale/émulateur API 36, WebView 133, 412 × 842 CSS et DPR 2,625 : zone MEMES
 absente pendant un glissé, visible dans `android-avant-controle.mp4` vers 9,25 s.
 Les gestes sont envoyés par adb et chaque changement d'univers est vérifié.
@@ -44,14 +57,16 @@ Validation sur `8278a57d` + diff ciblé, le 25 octobre :
   `node scripts/check-jargon.mjs` et compilation/typecheck intégrée verts.
 - `apksigner verify --print-certs` : succès, certificat Android Debug ; empreinte
   APK SHA-256 `33c4204022c6292216c73b4f307e1e979aee6ca2e6728f2d380b662f3f37d73d`.
-Pas de validation physique sur Redmi, ni de validation cloud/SQL pour ce diff CSS.
+Pas de validation physique sur Redmi. Essais natifs locaux sans cloud ; les
+contrôles cloud simulés et SQL jetable de la CI sont verts, pas un essai de compte réel.
 Scripts, vidéos, contacts et traces : `reports/decoupe-carrousel-2026-10-25/`.
 Captures joueur copiées dans `docs/images/bugs/2026-10-25-carrousel-decoupe-*.png`.
 Captures natives : [avant](images/bugs/2026-10-25-carrousel-avant-emulateur.png),
 [après MEMES](images/bugs/2026-10-25-carrousel-apres-memes-emulateur.png),
 [après LIVE](images/bugs/2026-10-25-carrousel-apres-live-emulateur.png).
-Suite : commit ciblé et push normal sur main après nouvelle vérification des HEAD,
-puis relever CI, Vercel Production du SHA publié et génération de la nouvelle APK.
+Suivi `CreatorDeck-Codex-21e` fermé ; aucun contrôle long encore en attente sur
+le commit de code. La validation physique sur Redmi reste non faite. Aucun
+runner, surveillance ou nouvelle dépendance ajouté.
 Préserver les deux Gradle générés, quatre PNG pack-tear et le bloc Kyara préexistants.
 
 # Checkpoint Codex — récapitulatif du booster parfait (24 octobre 2026)
