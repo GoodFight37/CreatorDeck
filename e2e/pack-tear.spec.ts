@@ -493,7 +493,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   expect(panel?.height).toBeGreaterThan(500);
   await expect(page.locator(".opening-loader")).toHaveCount(0);
   await expect(dialog.locator(".foil-printed-art")).toHaveCount(2);
-  await expect(dialog.locator('.foil-printed-art[src="/packs/live-opening.webp"]')).toHaveCount(2);
+  await expect(dialog.locator('.foil-printed-art[src="/packs/live-opening.svg"]')).toHaveCount(2);
   await expect(dialog.locator("canvas")).toHaveCount(0);
   await expect(dialog.locator(".booster-tear-handle")).toHaveCount(0);
   await expect(dialog.locator(".booster-premium-gesture")).toHaveCount(0);

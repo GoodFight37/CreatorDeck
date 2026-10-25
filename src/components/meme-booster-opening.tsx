@@ -16,7 +16,7 @@ type OpeningControls = Pick<MemeBooster, "copies" | "presenting" | "prepared" | 
   commit: () => void | Promise<void>;
 };
 
-export function MemeBoosterOpening({ booster, artwork = "/packs/memes-opening.webp" }: { booster: OpeningControls; artwork?: string }) {
+export function MemeBoosterOpening({ booster, artwork = "/packs/memes-opening.svg" }: { booster: OpeningControls; artwork?: string }) {
   const { opening, copies, presenting, prepared, extracted } = booster;
   const cards = opening?.cards.map((id) => MEME_BY_ID.get(id)).filter((card): card is MemeCard => Boolean(card)) ?? [];
   const revealing = Boolean(opening && extracted && cards.length === 5);
