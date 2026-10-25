@@ -2371,3 +2371,28 @@ de canal réseau tant qu’un transport sans identifiant ni contenu, authentifi�
 contre les abus et démontrable sur l’APK n’est pas disponible. Une identité de
 compte ou un identifiant d’installation contredirait la contrainte de non-collecte
 personnelle. Aucun service, migration, coût ou upload distant n’est introduit.
+
+## D-166 — 25 octobre 2026 : dessiner les sachets à leur taille réelle
+
+Malik fournit une vidéo et trois captures montrant des rectangles manquants
+pendant IMGFLIP → MEMES puis MEMES → LIVE. Reproduction dans une vidéo native
+sur APK/émulateur API 36, WebView 133, DPR 2,625. Le passage aux WebP avait réduit
+le coût CPU sans supprimer le défaut graphique. Les traces Chromium signalent
+explicitement des tuiles manquantes et un budget mémoire insuffisant.
+
+Supprimer la face à 150 % réduite aux deux tiers : garder sa taille réelle et
+`translateZ(9px)`. Les WebP de 1 050 × 1 540 couvrent déjà les ~844 × 1 238 pixels
+du sachet dans cet essai. La pose 3D, le glissé et les reflets restent conservés.
+Sur le même scénario de 19 gestes natifs, tâches raster 5 201 → 2 638, événements
+de tuiles manquantes 1 245 → 241, défauts de budget 328 → 5. Somme des surfaces
+dessinées 140 → 78,5 Mio RGBA : estimation de surface, pas allocation GPU mesurée.
+Ces compteurs résiduels interdisent d'annoncer zéro événement de tuiles manquantes.
+
+Ne pas ajouter `will-change` sur les emplacements ou faces, masquer le reflet
+voisin, clipper la face ou réduire le film holographique : les essais ne justifient
+pas ces changements supplémentaires pour cette correction. Ni dépendance, ni
+nouveau moteur, ni désactivation globale de l'accélération graphique.
+La validation porte sur les images du mouvement dans une APK reconstruite,
+avec changements d'univers réellement vérifiés ; un état final correct ou un
+test de propriétés CSS ne suffit pas. Résultats et limites dans le premier
+checkpoint de la [passation](agent-handoff.md).

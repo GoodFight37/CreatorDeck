@@ -1,5 +1,14 @@
 # Roadmap CreatorDeck
 
+**Découpe des sachets, 25 octobre 2026 — D-166 :** défaut rouvert sur les preuves
+joueur, reproduit dans une vidéo native sur émulateur API 36. Face du carrousel
+ramenée à sa taille réelle pour réduire le manque de tuiles graphiques.
+Correction locale intégrée, APK 881767 reconstruite : 23 gestes natifs et images
+du mouvement inspectées sans découpe observée ; E2E complet 213 réussis,
+29 ignorés. Publication en préparation. Critère : sachets entiers pendant les gestes
+IMGFLIP ↔ MEMES ↔ LIVE, sans ouverture ni consommation ; vérifier les images
+pendant le mouvement. Pas encore validé sur le téléphone Redmi.
+
 **Booster parfait, 24 octobre 2026 — D-165 :** correction locale du récapitulatif
 encombré (`CreatorDeck-Codex-ohb`) : portraits dégagés, noms non répétés, titre et
 halos allégés, cinq cartes adaptées à la fenêtre. Implémenté et validé sur

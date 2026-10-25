@@ -603,12 +603,11 @@
   background: transparent;
   box-shadow: none;
   overflow: visible;
-  /* Chromium rastérise une face en perspective (et animée) en basse définition :
-     l'impression devenait crénelée ou floue. Dessinée à 150 % puis réduite,
-     elle reste nette sans quadrupler la texture. */
-  width: 150%;
-  height: 150%;
-  transform: translateZ(9px) scale(calc(2 / 3));
+  /* Le WebP suffit à la définition native : le suréchantillonnage à 150 %
+     épuisait le budget de tuiles Android pendant le glissé (D-166). */
+  width: 100%;
+  height: 100%;
+  transform: translateZ(9px);
   transform-origin: 0 0;
   /* Aucun `filter` sur la face ni sur son image : il en fait une surface aplatie
      que Chromium trie mal avec la tranche gauche, tracée alors en liseré clair

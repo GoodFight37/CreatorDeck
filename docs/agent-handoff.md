@@ -1,3 +1,59 @@
+# Checkpoint Codex — découpe du carrousel Android, reprise du 25 octobre 2026
+
+Malik confirme le défaut persistant de découpe pendant IMGFLIP → MEMES puis
+MEMES → LIVE et fournit trois captures et une vidéo de 14,18 s, conservée dans
+`D:/Download/Screenrecorder-2026-10-24-16-40-44-590.mp4` (original non modifié).
+**Suivi `CreatorDeck-Codex-21e` réouvert et réclamé.** Reprise sur `main`
+`8278a57df69a645a85e7fa565a00ec3e99600dfe`, distant identique après fetch.
+CI du lot précédent `75ad0c8c` et APK `8278a57d` désormais réussies sur GitHub.
+
+**Correction locale validée, publication en préparation :** défaut reproduit sur
+APK locale/émulateur API 36, WebView 133, 412 × 842 CSS et DPR 2,625 : zone MEMES
+absente pendant un glissé, visible dans `android-avant-controle.mp4` vers 9,25 s.
+Les gestes sont envoyés par adb et chaque changement d'univers est vérifié.
+Ne pas confondre les bords du viewport avec les rectangles manquants dans l'image.
+Les anciens tests de styles/état final ne prouvaient pas l'absence de ces trous.
+La conversion WebP a réduit le coût CPU, sans établir cette correction sur le Redmi.
+
+**Correction locale intégrée — D-166 :** supprimer le dessin à 150 % et sa
+réduction 2/3 dans `.pack-3d-front` ; les WebP de 1 050 × 1 540 suffisent à la
+définition native. Sur le même scénario de 19 gestes adb, traces Chromium :
+5 201 → 2 638 tâches raster ; 1 245 → 241 événements de tuiles manquantes ;
+328 → 5 défauts de budget mémoire. Surface des calques dessinés : 140 → 78,5 Mio
+en RGBA brut (estimation de surface, **pas** allocation GPU mesurée).
+Des événements résiduels restent : ne pas annoncer « zéro tuile manquante ».
+Les essais supplémentaires `will-change`, masque voisin caché et face clipsée
+n'apportent pas de gain décisif ; ils ne sont pas intégrés. Reflet plus petit
+également essayé, non retenu pour préserver son mouvement.
+Code modifié : `src/app/drop-binder.css` et nouveauté joueur dans
+`src/lib/release-notes.ts`. Aucune nouvelle dépendance ni logique de geste.
+`npm run android:sync` et Gradle `assembleDebug` réussis ; nouvelle APK installée,
+nom `8278a57d-carrousel-local`, reconstruite à partir du HEAD et du correctif.
+APK précédente `dev` 881021, release vérifiée 881040 / `75ad0c8c` : leurs bases
+ne diffèrent que par tests/docs, sans écart du code carrousel. La nouvelle APK
+locale reste un essai sans cloud, pas l'APK publiée signée.
+Validation sur `8278a57d` + diff ciblé, le 25 octobre :
+- `npm run e2e -- --workers=2` : **213 réussis, 29 ignorés, aucun échec**, 11,1 min,
+  variables Supabase explicitement vides ; les cas cloud ignorés ne sont pas validés.
+- APK locale **881767**, `8278a57d-carrousel-local` : **23 vrais gestes adb**,
+  changements d'univers vérifiés dans les deux sens, aucune ouverture involontaire
+  ni erreur JS ; 159 images à 4 images/s inspectées et six images transitoires
+  prioritaires issues d'un décodage à 30 images/s. Plus de rectangle manquant
+  observé sur ces preuves, contrairement à la vidéo native avant correction.
+- `npx vitest run src/lib/release-notes.test.ts` : **8/8** ; ESLint du TS touché,
+  `node scripts/check-jargon.mjs` et compilation/typecheck intégrée verts.
+- `apksigner verify --print-certs` : succès, certificat Android Debug ; empreinte
+  APK SHA-256 `33c4204022c6292216c73b4f307e1e979aee6ca2e6728f2d380b662f3f37d73d`.
+Pas de validation physique sur Redmi, ni de validation cloud/SQL pour ce diff CSS.
+Scripts, vidéos, contacts et traces : `reports/decoupe-carrousel-2026-10-25/`.
+Captures joueur copiées dans `docs/images/bugs/2026-10-25-carrousel-decoupe-*.png`.
+Captures natives : [avant](images/bugs/2026-10-25-carrousel-avant-emulateur.png),
+[après MEMES](images/bugs/2026-10-25-carrousel-apres-memes-emulateur.png),
+[après LIVE](images/bugs/2026-10-25-carrousel-apres-live-emulateur.png).
+Suite : commit ciblé et push normal sur main après nouvelle vérification des HEAD,
+puis relever CI, Vercel Production du SHA publié et génération de la nouvelle APK.
+Préserver les deux Gradle générés, quatre PNG pack-tear et le bloc Kyara préexistants.
+
 # Checkpoint Codex — récapitulatif du booster parfait (24 octobre 2026)
 
 Malik demande de corriger le dernier problème commité, avec Ponytail. Lot

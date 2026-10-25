@@ -1,3 +1,32 @@
+## Carrousel : zones de sachets manquantes pendant le geste — corrigé localement, 25 octobre 2026
+
+**Suivi : `CreatorDeck-Codex-21e`, P1, correction D-166 sur `8278a57d` + diff.**
+Malik fournit une vidéo de 14,18 s et trois captures du 24 octobre à 16 h 40 :
+IMGFLIP → MEMES (haut ou côté MEMES manquant), puis MEMES → LIVE (grand rectangle
+manquant). La portion revient brusquement, parfois avant le relâchement. Version
+exacte de son APK non établie par ces seules images. Ce nouveau constat remplace
+la conclusion de correction complète attachée au passage SVG → WebP.
+
+Reproduit sur APK/émulateur API 36, WebView 133, DPR 2,625, avec vrais gestes adb :
+zone MEMES absente dans l'enregistrement natif vers 9,25 s. Aucune erreur JS.
+Cause établie par trace et essai A/B : le suréchantillonnage de la face à 150 %
+multiplie les surfaces et dépasse le budget de tuiles pendant le geste.
+Correction locale D-166 : face à sa taille réelle, WebP et pose 3D conservés.
+Sur 19 gestes adb : 1 245 → 241 événements de tuiles manquantes et 328 → 5
+défauts de budget ; événements résiduels conservés dans le rapport, sans prétendre
+à leur disparition totale. Nouvelle APK locale 881767 reconstruite et vérifiée :
+23 gestes natifs, 159 images inspectées pendant le mouvement et six images
+transitoires prioritaires, sans rectangle manquant observé ; E2E complet
+213 réussis/29 ignorés. Publication en préparation.
+Aucun contournement joueur demandé. Essais sans cloud, pas une validation Redmi.
+
+Preuves joueur : [haut](images/bugs/2026-10-25-carrousel-decoupe-haut.png),
+[côté](images/bugs/2026-10-25-carrousel-decoupe-cote.png),
+[LIVE](images/bugs/2026-10-25-carrousel-decoupe-live.png).
+Preuves natives : [avant](images/bugs/2026-10-25-carrousel-avant-emulateur.png),
+[après MEMES](images/bugs/2026-10-25-carrousel-apres-memes-emulateur.png),
+[après LIVE](images/bugs/2026-10-25-carrousel-apres-live-emulateur.png).
+
 ## Booster parfait : récapitulatif encombré — corrigé et publié, 24 octobre 2026
 
 **Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), correction validée.**

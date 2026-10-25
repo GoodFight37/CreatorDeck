@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-25-sachets-entiers", date: "2026-10-25", title: "Des sachets entiers pendant le glissé",
+    summary: "Le carrousel utilise moins de mémoire graphique sur Android.",
+    sections: [{ title: "Le Drop", items: [
+      "Le dessin des sachets est allégé pour éviter les zones manquantes pendant le passage entre Live Drop, MEMES et IMGFLIP.",
+    ] }],
+  },
+  {
     id: "2026-10-24-booster-parfait-lisible", date: "2026-10-24", title: "Les cinq cartes du booster parfait au premier plan",
     summary: "Un récapitulatif plus léger pour profiter des portraits de ton booster parfait.",
     sections: [{ title: "Lisibilité", items: [
