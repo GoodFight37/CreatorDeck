@@ -173,7 +173,7 @@ for (const label of ["MEMES", "IMGFLIP"]) {
     await fakeAccount(page);
     await page.goto("/memes");
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-    await page.getByRole("button", { name: label === "MEMES" ? "OUVRIR UN BOOSTER" : "OUVRIR UN BOOSTER IMGFLIP", exact: true }).click();
+    await page.getByRole("button", { name: label === "MEMES" ? "OUVRIR UN BOOSTER" : "OUVRIR LE SACHET IMGFLIP", exact: true }).click();
     const scene = page.locator(".opening-continuum");
     // Capturer le dos dès son insertion : une capture PNG peut dépasser ses 148 ms.
     const revealedBack = scene.evaluate((node) => new Promise<{ width: number; surface: string; emblem: boolean }>((resolve) => {
@@ -208,7 +208,7 @@ test("avec le serveur : le sachet Imgflip se prépare sans consommation, puis un
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/memes");
   const imgflip = page.locator(".meme-imgflip");
-  const trigger = imgflip.getByRole("button", { name: "OUVRIR UN BOOSTER IMGFLIP", exact: true });
+  const trigger = imgflip.getByRole("button", { name: "OUVRIR LE SACHET IMGFLIP", exact: true });
   await expect(imgflip.locator(".meme-status")).toContainText("4 booster(s) prêts");
   await trigger.click();
   const scene = page.locator(".opening-continuum");

@@ -89,7 +89,7 @@ export function MemeDeck() {
         <p className="meme-hero-line">SACHET IMGFLIP · 5 CARTES</p>
         <button className="meme-open" type="button"
           disabled={!imgflipBooster.account || !imgflipBooster.status || imgflipBooster.status.stock < 1 || imgflipBooster.busy}
-          onClick={imgflipBooster.prepare}>{imgflipBooster.busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER IMGFLIP"}</button>
+          onClick={imgflipBooster.prepare}>{imgflipBooster.busy ? "OUVERTURE…" : "OUVRIR LE SACHET IMGFLIP"}</button>
         <p className="meme-status" aria-live="polite">{imgflipBooster.status
           ? <BoosterCountdown stock={imgflipBooster.status.stock} nextAt={imgflipBooster.status.nextAt} />
           : imgflipBooster.account ? "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
