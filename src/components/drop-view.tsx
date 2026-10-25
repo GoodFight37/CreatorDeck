@@ -147,7 +147,7 @@ export function HomeView({
         ) : onEditCircle ? (
           <button type="button" className="drop-circle-invite" onClick={onEditCircle}>
             <Users size={16} aria-hidden="true" />
-            <span>Choisir mes chaînes</span>
+            <span>Définir mes chaînes</span>
             <ChevronRight size={16} aria-hidden="true" />
           </button>
         ) : null}

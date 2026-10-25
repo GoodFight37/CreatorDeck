@@ -75,11 +75,11 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     return { onEditCircle, onShowObjectives };
   }
 
-  it("un joueur sans cercle voit « Choisir mes chaînes », et rien d'autre sous le sachet", async () => {
+  it("un joueur sans cercle voit « Définir mes chaînes », et rien d'autre sous le sachet", async () => {
     const { onEditCircle } = await home();
     expect(document.querySelector(".circle-invite")).toBeNull();
-    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
-    banc.appuyer(/Choisir mes chaînes/);
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Définir mes chaînes");
+    banc.appuyer(/Définir mes chaînes/);
     expect(onEditCircle).toHaveBeenCalledOnce();
     // Sous le sachet : la réserve, le minuteur, l'accès unique. Rien d'empilé.
     expect(document.querySelector(".open-panel .stock-row")).not.toBeNull();
@@ -87,9 +87,9 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(document.querySelectorAll(".drop-hub-link")).toHaveLength(1);
   });
 
-  it("garde « Choisir mes chaînes » sans cercle, même sans compte", async () => {
+  it("garde « Définir mes chaînes » sans cercle, même sans compte", async () => {
     await home({ needsAccount: true });
-    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Définir mes chaînes");
   });
 
   it("avec un cercle : « Modifier » sur la rangée, et un seul accès aux objectifs", async () => {

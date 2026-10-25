@@ -181,6 +181,6 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(document.body.textContent).not.toContain("Tribunal");
     expect(document.body.textContent).not.toContain("Pas de Légendaire dans ce paquet");
     expect(document.querySelector(".scene-block, .arena-row")).toBeNull();
-    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Choisir mes chaînes");
+    expect(document.querySelector(".drop-circle-invite")!.textContent).toContain("Définir mes chaînes");
   });
 });

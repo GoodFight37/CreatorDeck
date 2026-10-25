@@ -12,10 +12,11 @@ test("la préparation enregistre les chaînes et les conserve sans nouveau formu
   await page.screenshot({ path: testInfo.outputPath("avec-chaines.png") });
 });
 
-test("la préparation sans cercle garde l’accueil complet après rechargement", async ({ page }, testInfo) => {
+test("la préparation sans cercle garde le même accueil, sans rangée", async ({ page }, testInfo) => {
   await gotoDeck(page, true, { withoutCircle: true });
   await expect(page.locator(".home-view")).toBeVisible();
-  await expect(page.locator(".home-view.is-lean")).toHaveCount(0);
+  await expect(page.locator(".booster-pack-slot")).toHaveCount(1);
+  await expect(page.locator(".circle-strip")).toHaveCount(0);
   expect(await page.evaluate((key) => localStorage.getItem(key), CIRCLE_STORAGE_KEY)).toBeNull();
   await expect(page.getByRole("button", { name: "Définir mes chaînes", exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("sans-chaines.png") });

@@ -35,7 +35,10 @@ export async function gotoDeck(page: Page, tutorial = true, options: { withoutCi
     await page.evaluate(() => localStorage.removeItem("creatordeck.circle.v1"));
     await page.reload();
     await expect(page.locator(".home-view")).toBeVisible();
-    await expect(page.locator(".home-view.is-lean")).toHaveCount(0);
+    // D-164 : l'accueil est le même avec ou sans cercle — un sachet, et la
+    // rangée du cercle cède la place à la ligne « Définir mes chaînes ».
+    await expect(page.locator(".booster-pack-slot")).toHaveCount(1);
+    await expect(page.locator(".circle-strip")).toHaveCount(0);
   }
 }
 

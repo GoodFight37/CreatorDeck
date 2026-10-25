@@ -1,9 +1,13 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
-// Nuit de direct : le paquet EST le bouton, large (min(78vw, 320px)), posé
-// dans la moitié basse ; la réserve est une pile et une seule ligne dessous.
-// D-153 : sous 700 px de haut, le sachet laisse la place au bouton « Ouvrir » et à la réserve.
-const packWidth = (width: number, height: number) => Math.min(width * .78, 320, height * (height <= 700 ? .44 : .52) / 1.4667);
+// Un seul sachet, et sous lui le cercle, la réserve, le minuteur et l'accès
+// unique (D-164). Sa taille est donc bornée en hauteur d'écran : 40 dvh, 36 dvh
+// sous 700 px, 30 dvh sous 620 px — la même règle que `stage.css`.
+const packSize = (width: number, height: number) => height <= 620
+  ? Math.min(width * .62, 240, height * .30 / 1.4667)
+  : height <= 700
+    ? Math.min(width * .68, 280, height * .36 / 1.4667)
+    : Math.min(width * .72, 300, height * .40 / 1.4667);
 
 test("Drop garde le paquet-bouton accessible, sans débordement, en viewport mobile compact", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
@@ -12,7 +16,7 @@ test("Drop garde le paquet-bouton accessible, sans débordement, en viewport mob
     const pack = page.locator(".pack-stage .pack-artwork");
     const packRect = (await pack.boundingBox())!;
     expect(packRect.y).toBeGreaterThanOrEqual(0);
-    expect(packRect.width).toBeGreaterThanOrEqual(packWidth(viewport.width, viewport.height) - 4);
+    expect(packRect.width).toBeGreaterThanOrEqual(packSize(viewport.width, viewport.height) - 4);
     // Un seul sachet, nommé par son bouton ; rien d'empilé au-dessus.
     await expect(page.locator(".pack-stage .pack-artwork")).toBeVisible();
     await expect(page.locator(".open-panel .primary-action")).toHaveCount(0);
@@ -37,10 +41,11 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await page.setViewportSize({ width: 390, height: 844 });
   const pack = page.locator(".pack-stage .pack-artwork");
   const box = (await pack.boundingBox())!;
-  expect(box.width).toBeGreaterThanOrEqual(Math.min(390 * .78, 320) - 4);
+  expect(box.width).toBeGreaterThanOrEqual(packSize(390, 844) - 4);
   expect(box.y).toBeGreaterThanOrEqual(0);
-  // Posé dans la moitié basse : son centre est sous le milieu de l'écran utile.
-  expect(box.y + box.height / 2).toBeGreaterThan(844 * .42);
+  // Le sachet occupe le haut de l'écran : sous lui tiennent le cercle, la
+  // réserve, le minuteur et l'accès unique (D-164).
+  expect(box.y + box.height).toBeLessThan(844 * .62);
   expect(box.y + box.height).toBeLessThanOrEqual(844);
   await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
   await expect(page.locator(".primary-action")).toHaveCount(0);
