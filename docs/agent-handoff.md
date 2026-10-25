@@ -1,4 +1,41 @@
-# Checkpoint Codex — découpe du carrousel Android, reprise du 25 octobre 2026
+# Checkpoint Codex — tranches du carrousel, 25 octobre 2026
+
+Nouvelle demande : vidéo `D:/Download/Screenrecorder-2026-10-25-07-29-27-984.mp4`,
+bords qui se traversent pendant les changements. Malik demande un diagnostic
+ciblé et rapide. Suivi `CreatorDeck-Codex-3nq`, décision D-167.
+Base `main` / distant vérifiés `59becdd75149a6626b1db2a851afbd3966121b1d`.
+
+L'émulateur utilisait initialement l'ancienne APK locale de diagnostic. Après
+le signalement de Malik, installation réelle de l'APK publiée **881801 /
+`1f0f79a`**, version vérifiée par `dumpsys package`, empreinte SHA256
+`5014c0b466c6f7177cdbd8d1d874278ce9bcf49e6e1eb676cbc9240d25bfb26b`.
+Vidéo native de référence `android-bords-actuelle.mp4`, 11 gestes sans erreur JS.
+
+Correctif local dans `src/components/booster-carousel.{tsx,css}` : distance
+80 → 100 % pendant le geste et au repos ; chaque emplacement compose son
+sachet en un plan, rotation conservée. Aplatir seul ne suffit pas à séparer
+les tranches. Note joueur `2026-10-25-tranches-booster` ajoutée.
+`npm run android:sync` hors cloud réussi ; Gradle `assembleDebug
+-PcdVersionName=59becdd-bords-local` réussi (156 tâches, 33 exécutées).
+Présence du nouvel espacement vérifiée dans le CSS embarqué de l'APK.
+Essai natif final réussi sur APK locale **881885 / `59becdd-bords-local`** :
+11 gestes adb dans les deux sens, aucune ouverture ni erreur JS. Vidéo
+`android-bords-final.mp4`, 67 images à 4 images/s inspectées : bords séparés
+aux croisements, pas de découpe observée. Référence publiée et essai corrigé
+distincts ; pas de validation sur Redmi physique. ESLint ciblé réussi.
+Suite E2E complète exécutée : **207 réussis, 29 ignorés, 6 échecs** sur les
+Nouveautés (compteur attendu 60, réel 61 : la note joueur a été ajoutée après
+le chargement des tests). Relance ciblée `e2e/release-notes.spec.ts` : **8/8
+réussis en 50,5 s**, sans modifier les tests. Les six échecs sont résolus ;
+213 scénarios distincts réussis au total, 29 ignorés, pas un run complet vert unique.
+ESLint des deux fichiers TS et contrôle du jargon réussis.
+**Non publié à ce checkpoint.**
+Commandes : `node reports/decoupe-carrousel-2026-10-25/android-bascule.mjs bords-final`
+et `npm run e2e -- --workers=2`, journal `reports/decoupe-carrousel-2026-10-25/e2e-bords.log`.
+Conserver les modifications préexistantes Android, snapshots, et le bloc Kyara
+plus bas ; ne pas les indexer avec cette correction.
+
+# Checkpoint précédent — découpe du carrousel Android, reprise du 25 octobre 2026
 
 Malik confirme le défaut persistant de découpe pendant IMGFLIP → MEMES puis
 MEMES → LIVE et fournit trois captures et une vidéo de 14,18 s, conservée dans

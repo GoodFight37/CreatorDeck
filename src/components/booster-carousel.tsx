@@ -159,7 +159,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
     gesture.slots.forEach((slot, i) => {
       const o = i - index + gesture.drag;
       const a = Math.abs(o);
-      slot.style.transform = `translateX(calc(-50% + ${o * 80}%)) translateZ(${-Math.min(a, 1.2) * 190}px) rotateY(${o * -44}deg)`;
+      slot.style.transform = `translateX(calc(-50% + ${o * 100}%)) translateZ(${-Math.min(a, 1.2) * 190}px) rotateY(${o * -44}deg)`;
     });
   }
   // Le changement d'univers et la remise à zéro du glissé arrivent dans la même

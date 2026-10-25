@@ -1,3 +1,17 @@
+## D-167 — 25 octobre 2026 : séparer les tranches du carrousel
+
+La vidéo de Malik du 25 octobre à 07:29 montre un défaut distinct des tuiles
+manquantes D-166 : les sachets se croisent pendant la rotation. L'espacement
+de 80 % d'une largeur rapproche leurs surfaces inclinées ; les compositions
+3D imbriquées et le changement d'ordre rendent leur jonction instable.
+Porter cet espacement à une largeur dans le CSS et pendant le geste JS, et
+composer chaque emplacement en un seul plan (`transform-style: flat`). Les
+rotations et la profondeur du carrousel restent, les voisins sont plus discrets.
+L'aplatissement seul essayé sur Android ne suffit pas : retenir aussi
+l'espacement. Aucun nouveau moteur d'animation, aucune dépendance.
+Base `59becdd7`, suivi `CreatorDeck-Codex-3nq`. Validation et publication dans
+le premier checkpoint de la passation ; ne pas confondre avec un essai Redmi.
+
 ## D-165 — 24 octobre 2026 : laisser les portraits du booster parfait lisibles
 
 Malik demande de corriger le récapitulatif signalé dans `CreatorDeck-Codex-ohb`.

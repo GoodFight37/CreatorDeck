@@ -70,8 +70,10 @@
 .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) {
   --o: var(--booster-offset);
   --a: max(var(--o), calc(var(--o) * -1));
-  transform-style: preserve-3d;
-  transform: translateX(calc(-50% + var(--o) * 80%)) translateZ(calc(min(var(--a), 1.2) * -190px))
+  /* Chaque sachet forme un seul plan ; une largeur entre les centres évite
+     que leurs tranches se croisent pendant la rotation. */
+  transform-style: flat;
+  transform: translateX(calc(-50% + var(--o) * 100%)) translateZ(calc(min(var(--a), 1.2) * -190px))
     rotateY(calc(var(--o) * -44deg));
   /* Opaque en permanence : un paquet translucide se lit à travers l'autre pendant
      la bascule (couture verticale). La profondeur vient de la position 3D. */

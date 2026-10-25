@@ -1,3 +1,17 @@
+## Carrousel : tranches qui se croisent — correction vérifiée localement, 25 octobre 2026
+
+**Suivi `CreatorDeck-Codex-3nq`, P1, D-167, base `59becdd7`.** Vidéo joueur
+`Screenrecorder-2026-10-25-07-29-27-984.mp4` : glisser IMGFLIP ↔ MEMES ↔ LIVE,
+observer les bords pendant le croisement. L'espacement trop court des plans
+inclinés produit un chevauchement des tranches ; distinct des surfaces absentes
+traitées par D-166. Correctif : espacement 80 → 100 % et composition à plat de
+chaque sachet, en gardant sa rotation. Pas de contournement demandé au joueur.
+APK officielle 881801 / `1f0f79a` installée et vérifiée avant le nouvel essai.
+Sur APK corrigée 881885 : 11 gestes adb sans ouverture ni erreur JS,
+67 images du mouvement inspectées, tranches séparées aux croisements.
+Preuves dans `reports/decoupe-carrousel-2026-10-25/android-bords-final.mp4` ;
+état de publication dans la passation. Téléphone physique non connecté.
+
 ## Carrousel : zones de sachets manquantes pendant le geste — correctif publié, 25 octobre 2026
 
 **Suivi : `CreatorDeck-Codex-21e`, P1, correction D-166 sur `8278a57d` + diff.**

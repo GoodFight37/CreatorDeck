@@ -1,5 +1,13 @@
 # Roadmap CreatorDeck
 
+**Tranches du carrousel, 25 octobre 2026 — D-167 :** correction ciblée en
+validée localement sur la base `59becdd7` : sachets espacés d'une largeur et composés
+individuellement. Critère : bords continus pendant les passages dans les deux
+sens, rotation conservée et aucune ouverture involontaire. Suivi
+`CreatorDeck-Codex-3nq` : 11 gestes Android, 67 images inspectées ; 213 scénarios
+E2E distincts réussis après relance ciblée des nouveautés, 29 ignorés.
+État de publication dans la passation.
+
 **Découpe des sachets, 25 octobre 2026 — D-166 :** défaut rouvert sur les preuves
 joueur, reproduit dans une vidéo native sur émulateur API 36. Face du carrousel
 ramenée à sa taille réelle pour réduire le manque de tuiles graphiques.
