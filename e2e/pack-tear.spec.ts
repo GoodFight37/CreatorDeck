@@ -826,7 +826,11 @@ test("home drags never open a booster; an intentional tap opens its separate sce
 
 for (const selector of [".pack-stage", ".pack-artwork"]) {
   test(`touch scrolling from ${selector} does not open or consume a booster`, async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 800 });
+    // L'accueil tient désormais dans 360 × 800 : pour prouver que le geste
+    // vertical n'est pas capté par le sachet, il faut un écran qui défile
+    // vraiment. 320 × 568 est le plus petit téléphone pris en charge, et sa
+    // page dépasse l'écran d'une trentaine de pixels.
+    await page.setViewportSize({ width: 320, height: 568 });
     await gotoDeck(page);
     const stock = await stockOf(page);
     const touch = await page.context().newCDPSession(page);
