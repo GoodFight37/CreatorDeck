@@ -29,9 +29,21 @@ le chargement des tests). Relance ciblée `e2e/release-notes.spec.ts` : **8/8
 réussis en 50,5 s**, sans modifier les tests. Les six échecs sont résolus ;
 213 scénarios distincts réussis au total, 29 ignorés, pas un run complet vert unique.
 ESLint des deux fichiers TS et contrôle du jargon réussis.
-**Non publié à ce checkpoint.**
+**Publié et vérifié sur GitHub :**
+[`879196e2`](https://github.com/GoodFight37/CreatorDeck/commit/879196e2266c6d268c5cfcdd1be8e06c45c9902f),
+push normal sur `main`, SHA distant vérifié. Production Vercel **READY** avec
+le même SHA : [déploiement](https://creator-deckk-meobz1rey-hafsi37-2386.vercel.app),
+`dpl_3xcvKuMjmKNbpUWgSBtRYN4EFK4f`.
+[CI 40173633079](https://github.com/GoodFight37/CreatorDeck/actions/runs/40173633079)
+encore en cours au relevé ; APK officielle corrigée pas encore publiée.
+L'émulateur reste sur l'APK locale corrigée 881885, plus récente que la version
+officielle précédente 881801. Ne pas présenter cette APK locale comme publiée.
+Prochaine vérification si nécessaire : état de cette CI puis workflow APK
+associé à `879196e2`, manifeste de version et mise à jour depuis 881801.
 Commandes : `node reports/decoupe-carrousel-2026-10-25/android-bascule.mjs bords-final`
 et `npm run e2e -- --workers=2`, journal `reports/decoupe-carrousel-2026-10-25/e2e-bords.log`.
+Relance des nouveautés : `npm run e2e -- e2e/release-notes.spec.ts --workers=2`,
+journal `e2e-bords-nouveautes.log` dans le même répertoire.
 Conserver les modifications préexistantes Android, snapshots, et le bloc Kyara
 plus bas ; ne pas les indexer avec cette correction.
 
