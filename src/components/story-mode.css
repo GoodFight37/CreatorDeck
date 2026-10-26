@@ -26,6 +26,13 @@
 .story-meter-energie { background: var(--action); }
 .story-meter-argent { background: var(--gold); }
 .story-meter-confiance { background: var(--green); }
+.story-impact:empty { display: none; }
+.story-impact { margin: -8px 0 16px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.story-impact-label { display: block; color: var(--muted-2); font-size: 10px; font-weight: 800; letter-spacing: .11em; margin-bottom: 7px; }
+.story-impact-values { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.story-impact-value { font-size: 12px; font-weight: 700; color: var(--text); }
+.story-impact-value[data-trend="up"] { color: var(--green); }
+.story-impact-value[data-trend="down"] { color: var(--danger); }
 .story-progress { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .12em; font-weight: 800; color: var(--muted); }
 .story-progress-track { height: 4px; background: var(--panel-3); border-radius: 5px; margin: 9px 0 15px; overflow: hidden; }
 .story-progress-track span { display: block; height: 100%; background: var(--accent); transition: width .25s ease; }
