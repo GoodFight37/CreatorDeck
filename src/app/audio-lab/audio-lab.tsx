@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import briefs from "@/data/audio-briefs.json";
 import type { Rarity } from "@/lib/catalog";
 import {
@@ -12,7 +13,7 @@ import {
   isMusicMuted,
   isMuted,
   isExperimentalPackOpeningEnabled,
-  useExperimentalPackOpening,
+  setExperimentalPackOpeningFile,
   disableExperimentalPackOpening,
   playBang,
   playGavel,
@@ -393,7 +394,7 @@ export function AudioLab() {
                   onChange={(event) => {
                     const fichier = event.currentTarget.files?.[0];
                     if (!fichier) return;
-                    void useExperimentalPackOpening(fichier).then((ok) => {
+                    void setExperimentalPackOpeningFile(fichier).then((ok) => {
                       setEssaiBooster(ok);
                       setRetourBooster(ok ? "Tu peux maintenant ouvrir un booster réel." : "Fichier invalide ou stockage indisponible (512 Ko maximum).");
                     });
@@ -405,7 +406,7 @@ export function AudioLab() {
                 setEssaiBooster(false);
                 setRetourBooster("Le son d'origine est rétabli.");
               }}>Revenir au son original</button>
-              <a href="/">Tester dans le jeu</a>
+              <Link href="/">Tester dans le jeu</Link>
             </div>
           </div>
         ) : null}
