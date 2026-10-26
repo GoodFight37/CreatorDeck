@@ -1,3 +1,25 @@
+## D-168 — 25 octobre 2026 : la carte comme objet, sans modifier l'accueil
+
+Malik annule le chantier d'accueil et demande uniquement le lot carte.
+Le nom occupe un cartouche sous la photo, sans trame ni demi-teinte sur le
+visage. La Commune garde un carton mat ; les niveaux suivants gagnent des
+bords satinés, métalliques, facettés puis un cadre et un cartouche dorés.
+Les reflets sont limités aux bords, coupés par le réglage et le mouvement
+réduit. Une seule matière sert la révélation, la fiche et les miniatures.
+Les longs noms peuvent prendre deux lignes dans les miniatures.
+
+Un tap sur la carte révélée ouvre la fiche existante, le glissé et le bouton
+suivant continuent le booster. Le lien Twitch et les exemplaires restent
+hors de la carte, dans la fiche. Provenance Direct et statut actuel restent
+distincts. Les doublons gardent leur pile et leur absence de cérémonial visuel.
+Aucun changement de tirage, de valeur, de serveur, de sachet ni de son.
+Pas d'artwork ajouté ni de dépendance. Le halo identique par écran et la
+surimpression du nom sont remplacés par la matière partagée.
+
+Suivi `CreatorDeck-Codex-p62`, base `2c8367cd`. Preuves et limites des essais
+dans la passation ; validation physique Redmi non revendiquée. Les lots
+suivants nécessitent une nouvelle demande de Malik.
+
 ## D-167 — 25 octobre 2026 : séparer les tranches du carrousel
 
 La vidéo de Malik du 25 octobre à 07:29 montre un défaut distinct des tuiles

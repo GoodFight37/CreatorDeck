@@ -41,13 +41,12 @@ describe("provenance Live et direct actuel restent distincts", () => {
       liveStream={stream} onClose={() => {}} />);
 
     const provenance = document.querySelector(".card-live");
-    const actualLive = document.querySelector<HTMLAnchorElement>(".card-on-air");
+    const actualLive = document.querySelector<HTMLElement>(".card-on-air");
     const link = document.querySelector<HTMLAnchorElement>(".inspect-twitch-link");
     expect(provenance?.textContent).toContain("Obtenue en direct");
-    expect(actualLive?.getAttribute("aria-label")).toContain("Ouvrir la chaîne Twitch");
-    expect(actualLive?.getAttribute("target")).toBe("_blank");
-    expect(actualLive?.getAttribute("rel")).toBe("noopener noreferrer");
-    expect(actualLive?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
+    expect(actualLive?.getAttribute("aria-label")).toContain("en direct maintenant");
+    expect(actualLive?.tagName).toBe("SPAN");
+    expect(document.querySelector(".creator-card a")).toBeNull();
     expect(link?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
     expect(link?.getAttribute("target")).toBe("_blank");
     expect(link?.getAttribute("rel")).toBe("noopener noreferrer");

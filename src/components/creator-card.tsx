@@ -1,29 +1,26 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
 import {
   creatorImage,
-  formatFollowersCount,
   RARITY_META,
   type CardVariant,
   type Creator,
 } from "@/lib/catalog";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { isRetired } from "@/lib/retired";
-import { regionLabel } from "@/lib/regions";
-import { viewersLabel, type LiveStream } from "@/lib/live";
+import { type LiveStream } from "@/lib/live";
 
 type CreatorCardProps = {
   creator: Creator;
   variant?: CardVariant;
-  count?: number;
   locked?: boolean;
   compact?: boolean;
   /** Reflet au geste de la carte agrandie du Binder, sans changer les autres vues. */
   interactiveFoil?: boolean;
   className?: string;
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   /**
    * La diffusion en cours du créateur, quand l'app la connaît et qu'elle est
    * fraîche (`liveFor`). Rien n'est affiché si `null` : un badge « en direct »
@@ -37,12 +34,10 @@ type CreatorCardProps = {
  *
  * Ce qui fait une carte de TCG, et qui manquait ici :
  *
- *   * le **portrait plein cadre** : le carré Twitch est rogné (`object-fit:
- *     cover`, CSS), jamais rétréci au milieu d'un cadre noir ;
- *   * le **nom en affiche**, énorme et condensé, en bas ; le rang petit en haut ;
+ *   * le portrait dégagé, sans trame, entre le rang et le cartouche du nom ;
  *   * la **rareté comme cadre** — épaisseur, teinte et texture du bord — au lieu
  *     d'une lettre dans une pastille : ça se lit à deux mètres ;
- *   * une **nameplate opaque** en bas, barre pleine, nom en display condensée ;
+ *   * un cartouche opaque sous la photo, nom en display condensée ;
  *   * le **rang tamponné** (#022), comme un numéro de série ;
  *   * les variantes comme **matière** : le dos de la carte est un vrai dos, la
  *     led rouge pulse sur une Live, le foil suit le doigt sur une Holo ou une
@@ -53,7 +48,6 @@ type CreatorCardProps = {
 export function CreatorCard({
   creator,
   variant = "standard",
-  count = 1,
   locked = false,
   compact = false,
   interactiveFoil = false,
@@ -75,7 +69,7 @@ export function CreatorCard({
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
     const foil = foilRef.current;
-    if (!foil || !shiny || (interactiveFoil && !cardEffectsAllowed())) return;
+    if (!foil || !shiny || !cardEffectsAllowed()) return;
     const box = event.currentTarget.getBoundingClientRect();
     foil.style.setProperty("--px", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
     foil.style.setProperty("--py", `${(((event.clientY - box.top) / box.height) * 100).toFixed(1)}%`);
@@ -104,7 +98,7 @@ export function CreatorCard({
   if (locked) {
     return (
       <article
-        className={`creator-card rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
+        className={`creator-card creator-print rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
         style={style}
         aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}, non obtenue`}
       >
@@ -119,7 +113,7 @@ export function CreatorCard({
 
   return (
     <article
-      className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
+      className={`creator-card creator-print rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
       style={style}
       aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", carte obtenue pendant un direct" : ""}${liveStream ? ", en direct sur Twitch maintenant" : ""}`}
       onPointerMove={trackPointer}
@@ -170,16 +164,12 @@ export function CreatorCard({
               confondre avec la variante Live : la variante est une matière de
               carte, le direct est un fait. Deux endroits, deux formes. */}
           {liveStream ? (
-            <a
+            <span
               className={`card-on-air${compact ? " is-dot" : ""}`}
-              href={`https://www.twitch.tv/${encodeURIComponent(creator.login)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={`Ouvrir la chaîne Twitch de ${creator.displayName}${liveStream.title ? ` : ${liveStream.title}` : ""}`}
-              aria-label={`Ouvrir la chaîne Twitch de ${creator.displayName}, en direct maintenant${liveStream.title ? ` : ${liveStream.title}` : ""}`}>
+              aria-label={`${creator.displayName}, en direct maintenant`}>
               <i aria-hidden="true" />
               {compact ? null : "Direct"}
-            </a>
+            </span>
           ) : null}
         </div>
         {variant === "live" ? (
@@ -191,21 +181,10 @@ export function CreatorCard({
       </div>
 
       <div className="card-nameplate">
-        {liveStream && !compact ? (
-          <p className="card-broadcast">
-            <i aria-hidden="true" />
-            {`En direct · ${liveStream.viewers > 0 ? viewersLabel(liveStream.viewers) : "à l'antenne"}`}
-          </p>
-        ) : null}
         <div className="card-identity">
           <span className="card-rarity-label">{rarity.label}</span>
-          <span className="card-region">{regionLabel(creator.region)}</span>
         </div>
         <h3>{creator.displayName}</h3>
-        <div className="card-footerline">
-          <span>{formatFollowersCount(creator.followers)}</span>
-          {count > 1 ? <strong>×{count}</strong> : null}
-        </div>
       </div>
       {inspectButton}
     </article>

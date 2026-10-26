@@ -578,11 +578,6 @@ html:has(.booster-presentation) { overflow: hidden; }
   58% { transform: translateY(-18px) translateZ(42px) scale(1.09) rotateZ(1.8deg); }
   100% { transform: translateZ(22px) scale(1); }
 }
-.reveal-game .reveal-stage .reveal-card .card-foil { opacity: .72; }
-.reveal-game .reveal-stage .reveal-card.variant-standard .card-foil {
-  background: radial-gradient(circle at var(--px, 32%) var(--py, 18%),
-    rgb(255 255 255 / .48), rgb(225 210 255 / .17) 22%, transparent 64%);
-}
 .reveal-game .reveal-stage .reveal-flip { transform-style: preserve-3d; }
 @keyframes scene-card-arrive {
   from { opacity: .85; transform: translateZ(0) rotateY(-1deg) rotateX(.6deg); }
@@ -761,7 +756,6 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 
 .reveal-game > .fx-flash { animation-delay: var(--rare-delay, 0ms); }
 
-.reveal-game .reveal-flip.rarity-common .card-foil { opacity: .2; }
 
 /* Le sachet accompagne le reveal, puis laisse la collection occuper le récap. */
 .opening-continuum:has(.reveal-summary-open) .booster-opening-stage { visibility: hidden; }

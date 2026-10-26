@@ -72,7 +72,6 @@ export function CardInspectModal({
             <CreatorCard
               creator={creator}
               variant={shownVariant}
-              count={shownCount || 1}
               interactiveFoil={binder}
               className={binder ? "binder-feature-card" : ""}
               locked={!isOwned}

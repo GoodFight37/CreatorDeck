@@ -1,5 +1,16 @@
 # Roadmap CreatorDeck
 
+**Lot 1 — la carte seulement, 25 octobre 2026 (D-168) :** implémenté et vérifié sur émulateur
+sur `2c8367cd`, suivi `CreatorDeck-Codex-p62`. Portrait sans trame, cartouche
+sous la photo, matières partagées par rareté et tap d'agrandissement.
+Critères : même objet dans révélation/fiche/classeur, nom lisible sur petit
+écran, reflets désactivables, glissé distinct du tap, tests et preuves Android.
+L'accueil reste inchangé ; son, album, Last Pack et autres écrans ne démarrent
+que sur nouvelle demande. Publication et état réel : passation.
+APK locale 882813, 390×844 et 320×568, gestes adb ; 97 tests ciblés,
+215 E2E réussis / 29 ignorés, derniers contrôles ciblés verts. Attente du retour
+de Malik ; aucune validation sur son Redmi revendiquée.
+
 **Tranches du carrousel, 25 octobre 2026 — D-167 :** correction ciblée en
 validée localement sur la base `59becdd7` : sachets espacés d'une largeur et composés
 individuellement. Critère : bords continus pendant les passages dans les deux

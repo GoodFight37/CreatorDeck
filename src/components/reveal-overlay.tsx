@@ -14,6 +14,9 @@ import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
+import { CardInspectModal } from "@/components/card-inspect-modal";
+import { useBackHandler } from "@/hooks/use-back-handler";
+import { gameStore } from "@/lib/game-store";
 import { EffectFlash } from "@/components/effect-burst";
 import { NextPackLine, PackEndLive } from "@/components/pack-end-live";
 import { useNow } from "@/hooks/use-game";
@@ -92,6 +95,11 @@ export function RevealOverlay({
   const [summaryReady, setSummaryReady] = useState(false);
   const summaryLocked = showSummary && !summaryReady;
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const [inspected, setInspected] = useState<DrawnCard | null>(null);
+  useBackHandler(inspected !== null, () => setInspected(null));
+  const inspectedCreator = inspected ? creatorFor(inspected.creatorSlug) : undefined;
+  const inspectedCopies = inspected ? (gameStore.getSnapshot()?.cards ?? [])
+    .filter(item => item.creatorSlug === inspected.creatorSlug) : [];
   const anchorRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
@@ -232,9 +240,8 @@ export function RevealOverlay({
     // Détection d'un swipe franc (horizontal, vertical haut, ou diagonale)
     if (Math.abs(dx) >= 36 || dy <= -36 || dist >= 42) {
       advance();
-    } else if (dist < 8) {
-      // Un tap direct sur la carte avance également sans obliger à viser le bouton
-      advance();
+    } else if (dist < 8 && !overlay && !tutorial) {
+      setInspected(card);
     }
   }
 
@@ -349,6 +356,7 @@ export function RevealOverlay({
                     compact={!overlay}
                     className={`reveal-card rarity-${item.rarity}`}
                     liveStream={liveFor(live, dotCard.login, now)}
+                    onClick={!overlay && !locked ? () => setInspected(item) : undefined}
                   />
                   <span className="reveal-dos" aria-hidden="true">
                     <span className="reveal-back-sigil"><CardBackEmblem /></span>
@@ -415,6 +423,10 @@ export function RevealOverlay({
                   variant={card.variant}
                   className={`reveal-card rarity-${card.rarity}`}
                   liveStream={onAir}
+                  onClick={!overlay && !tutorial && flippedCardId === cardId ? (event) => {
+                    // Le tap est traité au relâché ; ici, seule l'activation clavier.
+                    if (event.detail === 0) setInspected(card);
+                  } : undefined}
                 />
                 <span className="reveal-dos" aria-hidden="true">
                   <span className="reveal-back-sigil"><CardBackEmblem /></span>
@@ -494,6 +506,14 @@ export function RevealOverlay({
           <ChevronRight size={15} />
         )}
       </button>
+      {inspected && inspectedCreator ? <CardInspectModal
+        presentation="binder" creator={inspectedCreator} variant={inspected.variant}
+        ownedCount={inspectedCopies.length}
+        copies={(["standard", "live", "holo", "gold"] as const)
+          .map(variant => ({ variant, count: inspectedCopies.filter(copy => copy.variant === variant).length }))
+          .filter(copy => copy.count > 0)}
+        liveStream={liveFor(live, inspectedCreator.login, now)} onClose={() => setInspected(null)}
+      /> : null}
     </div>
   );
   return overlay || embedded ? content : createPortal(content, document.body);

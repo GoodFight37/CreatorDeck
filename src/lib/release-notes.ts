@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-25-carte-objet", date: "2026-10-25", title: "La carte laisse la place au portrait",
+    summary: "Un nom sous la photo, des matières différentes selon la rareté, et la même carte du booster au classeur.",
+    sections: [{ title: "Tes cartes", items: [
+      "Les visages restent dégagés, sans trame : le nom et la rareté ont leur place sous le portrait.",
+      "Du carton mat à la bordure dorée, chaque rareté a sa matière. Les reflets restent sur les bords.",
+      "Touche une carte révélée pour la regarder en grand. Glisse-la ou utilise Carte suivante pour continuer.",
+      "Les liens vers Twitch et le nombre d’exemplaires restent dans la fiche, hors de la carte.",
+    ] }],
+  },
+  {
     id: "2026-10-25-tranches-booster", date: "2026-10-25", title: "Des boosters mieux espacés",
     summary: "Les sachets gardent davantage de place pendant la rotation du carrousel.",
     sections: [{ title: "Le Drop", items: [

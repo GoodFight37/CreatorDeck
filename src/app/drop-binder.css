@@ -323,13 +323,6 @@
 .collection-view .binder-pocket:has(.rarity-legendary:not(.is-locked)) { --finish-strength: .29; }
 .collection-view .binder-pocket:has(.variant-holo) { --finish-strength: .26; }
 .collection-view .binder-pocket:has(.variant-gold) { --finish-strength: .34; }
-.collection-view .binder-card-slot .card-foil {
-  opacity: var(--finish-strength);
-  background: radial-gradient(ellipse at 32% 22%,
-    rgb(var(--paper-rgb) / .65), color-mix(in srgb, var(--pocket-rarity) 30%, transparent) 30%, transparent 68%);
-  mask-image: linear-gradient(#000 0% 58%, transparent 86%);
-  mix-blend-mode: screen;
-}
 .collection-view .binder-card-slot:has(.rarity-rare),
 .collection-view .binder-card-slot:has(.rarity-epic),
 .collection-view .binder-card-slot:has(.rarity-legendary) {
@@ -398,28 +391,8 @@
   }
 }
 @keyframes card-vault-ink {
-  from { opacity: .45; filter: brightness(.76); }
-  to { opacity: 1; filter: brightness(1); }
-}
-.card-vault .binder-feature-card .card-foil {
-  opacity: var(--finish-strength, 0);
-  background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%),
-    rgb(var(--paper-rgb) / .7), color-mix(in srgb, var(--rarity) 25%, transparent) 25%, transparent 65%);
-  mask-image: linear-gradient(#000 0% 55%, transparent 87%); mix-blend-mode: screen;
-}
-.card-vault.vault-uncommon { --finish-strength: .08; }
-.card-vault.vault-rare { --finish-strength: .23; }
-.card-vault.vault-epic { --finish-strength: .32; }
-.card-vault.vault-legendary { --finish-strength: .4; }
-.card-vault .binder-feature-card.variant-holo .card-foil {
-  opacity: .35; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff9e6a6,
-    #a3edeb55 20%, #d18adc44 40%, transparent 68%);
-}
-.card-vault .binder-feature-card.variant-gold .card-foil {
-  opacity: .42; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff4c2bb, #dda44a66 30%, transparent 68%);
-}
-.card-vault .binder-feature-card.variant-live .card-foil {
-  opacity: .25; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #ffc4dd99, #d54bab55 30%, transparent 68%);
+  from { opacity: .45; }
+  to { opacity: 1; }
 }
 .card-vault .inspect-variants { display: flex; flex-wrap: wrap; gap: 8px; }
 .card-vault .inspect-variants button {

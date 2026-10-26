@@ -4768,6 +4768,91 @@ input:focus-visible {
   box-shadow: 0 0 0 1px rgb(255 214 130 / .9), 0 0 18px rgb(255 189 69 / .6), 0 0 46px rgb(255 189 69 / .28), 0 14px 26px -16px rgb(0 0 0 / .95);
 }
 
+/* Carte créateur : portrait sans surimpression, cartouche et matière communs à toutes les vues. */
+.creator-card.creator-print:not(.is-locked) {
+  --card-edge: 2%;
+  --card-finish: 0;
+  background: #25282e;
+  box-shadow: 0 1px 0 #657080, 0 3px 0 #101216, 0 12px 22px -12px #000;
+}
+.creator-card.creator-print .card-photo-wrap { inset: 8% var(--card-edge) 18%; }
+.creator-card.creator-print .card-photo { object-position: center 32%; filter: none; }
+.creator-card.creator-print .card-photo-shade { background: none; box-shadow: none; }
+.creator-card.creator-print .card-topline {
+  top: 1%; left: 5%; right: 5%; height: 6%; align-items: center;
+}
+.creator-card.creator-print .card-rank { font-size: clamp(8px, 4.6cqw, 13px); }
+.creator-card.creator-print .card-live,
+.creator-card.creator-print .card-on-air,
+.creator-card.creator-print .card-retired {
+  padding: 0; font-size: clamp(7px, 3.6cqw, 11px); line-height: 1;
+  color: #fff4e2; text-shadow: 0 1px 3px #000; pointer-events: none;
+}
+.creator-card.creator-print .card-nameplate {
+  height: 18%; padding: 2% 6%; display: flex; flex-direction: column;
+  justify-content: center; gap: 1cqw;
+  background: #202329; border: 0; box-shadow: inset 0 1px rgb(255 255 255 / .14);
+}
+.creator-card.creator-print .card-nameplate h3 {
+  margin: 0; font-size: clamp(12px, min(11cqw, calc(145cqw / var(--name-len, 8))), 32px);
+  line-height: 1.05; text-shadow: none; text-overflow: ellipsis;
+  color: #fff4e2;
+}
+.creator-card.creator-print .card-rarity-label {
+  color: #d0d5df; font-size: clamp(8px, 4cqw, 12px); line-height: 1;
+  letter-spacing: .12em; text-shadow: none;
+}
+.creator-card.creator-print.is-compact .card-photo-wrap { bottom: 22%; }
+.creator-card.creator-print.is-compact .card-nameplate { height: 22%; padding-block: 0; }
+.creator-card.creator-print.is-compact .card-nameplate h3 {
+  font-size: clamp(9px, min(20cqw, calc(150cqw / var(--name-len, 8))), 18px);
+  white-space: normal; overflow-wrap: anywhere; line-height: 1;
+}
+.creator-card.creator-print::after {
+  border: 1px solid rgb(255 255 255 / .24);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .45);
+}
+.creator-card.creator-print.rarity-uncommon:not(.is-locked) {
+  --card-finish: .1;
+  background: linear-gradient(135deg, #253f38, #8ba99a 22%, #28463e 50%, #4f7e69);
+}
+.creator-card.creator-print.rarity-rare:not(.is-locked) {
+  --card-finish: .22;
+  background: linear-gradient(135deg, #e0f4ff, #537a9d 19%, #d8f2ff 23%, #1d3854 48%, #b1dbf6 76%, #3d6584);
+}
+.creator-card.creator-print.rarity-epic:not(.is-locked) {
+  --card-edge: 3%; --card-finish: .32;
+  background: linear-gradient(125deg, #ecdbff, #68558f 18%, #baa1e1 20%, #322745 46%, #d6c1f4 48%, #514067 72%, #e2cdff);
+}
+.creator-card.creator-print.rarity-epic::after { border: 2px double #c2aadf; }
+.creator-card.creator-print.rarity-legendary:not(.is-locked) {
+  --card-edge: 3.5%; --card-finish: .45;
+  background: linear-gradient(130deg, #ffedb2, #8a5c20 16%, #ffe3a0 24%, #b58235 46%, #fff0bf 53%, #83501a 75%, #edc475);
+  box-shadow: 0 1px 0 #ffe8ad, 0 4px 0 #62421f, 0 14px 24px -12px #000;
+}
+.creator-card.creator-print.rarity-legendary::after {
+  border: 3px double #e9c987; box-shadow: inset 0 0 0 1px #795322;
+}
+.creator-card.creator-print.rarity-legendary .card-nameplate {
+  background: linear-gradient(110deg, #efd39a, #fff0c4 42%, #c79545);
+}
+.creator-card.creator-print.rarity-legendary .card-nameplate :is(h3, .card-rarity-label) { color: #30200f; }
+.creator-card.creator-print .card-foil {
+  opacity: var(--card-finish); mix-blend-mode: screen;
+  background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff9e6a6, #a3edeb55 22%, #d18adc44 42%, transparent 72%);
+  /* Le reflet touche les bords et le cartouche, jamais le centre du visage. */
+  mask-image: linear-gradient(90deg, #000, transparent 12% 88%, #000), linear-gradient(0deg, #000, transparent 20% 93%, #000);
+}
+.creator-card.creator-print.variant-holo { --card-finish: .4; }
+.creator-card.creator-print.variant-gold { --card-finish: .5; }
+.creator-card.creator-print.variant-live { --card-finish: .3; }
+.creator-card.creator-print.variant-gold .card-foil {
+  background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff4c2a0, #dda44a66 30%, transparent 72%);
+}
+.creator-card.creator-print.variant-live .card-foil {
+  background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #ffc4dd99, #d54bab55 30%, transparent 72%);
+}
+
 @media (pointer: coarse) {
   .search-field input, .account-field input, .arena-search input,
   .tribunal-search input, .trade-search input, .sort-field select, .save-editor textarea { font-size: 16px; }

@@ -1,3 +1,64 @@
+# Checkpoint Codex — lot 1, la carte seulement, 25 octobre 2026
+
+Demande active Malik : carte comme objet, portrait dégagé, nom lisible,
+matières par rareté, rendu commun révélation/fiche/classeur, tap pour agrandir.
+Ne pas toucher à l'accueil des boosters, aux valeurs, tirages ni au SQL.
+Lots son/classeur/Last Pack/autres écrans uniquement sur nouvelle demande.
+Lot A précédent annulé avant modification du jeu ; PR Arena 23 fermée sans
+fusion et cinq branches arena supprimées à sa demande. Main conservé.
+
+Suivi `CreatorDeck-Codex-p62`, base locale et distante `2c8367cd`.
+Changements locaux : CreatorCard, CardInspectModal, RevealOverlay, matière
+partagée dans globals.css ; suppression des reflets spécifiques dans
+drop-binder.css et booster-continuity.css (aucune règle de sachet modifiée).
+Nom et rareté sous la photo ; trame supprimée ; lien Twitch hors carte.
+Tap révélation vers la fiche existante, Retour ferme la fiche, glissé avance.
+Note joueur `2026-10-25-carte-objet`, tests provenance/tactile adaptés et
+nouveau `src/ecrans-carte-objet.test.tsx` ; e2e/binder-finitions complété.
+
+Validation locale terminée, publication à vérifier après le commit : 67 tests écrans et
+30 tests logique ciblés réussis ; typecheck, ESLint ciblé et jargon réussis.
+E2E ciblés isolés : 25 réussis / 1 ignoré. Suite complète isolée : **215 réussis,
+29 ignorés (18,8 min)**. Après le dernier réglage du nom : 21 ciblés réussis,
+4 interrompus par l'arrêt du serveur local, puis les 4 relancés réussis.
+Le contrôle de la fiche de révélation couvre aussi deux variantes possédées
+avec leurs vrais compteurs : 2 tests carte rejoués après cet ajustement.
+Première suite complète non concluante :
+140 réussis / 89 échecs / 15 ignorés, environnement cloud mêlé au local et
+disque C saturé lors du rapport. Rapports préservés sur
+`D:/CreatorDeck-preuves/lot-1-carte-premier-run/`. Ne pas annoncer ce run vert.
+Relance complète avec variables Supabase explicitement espace (la chaîne
+vide laisse Windows recharger `.env.local`) et serveur webpack réussie.
+APK finale isolée **882813 / `2c8367c-carte-verifie`**, installée et testée
+(156 tâches / 33 exécutées, Gradle réussi en 43 s).
+10 fiches et deux classeurs capturés, tap/Retour/glissé adb réussis, sans erreur
+JS ; modes Reflets coupés et mouvement réduit vérifiés. Dimensions Android
+390×844 et 320×568 vérifiées après redimensionnement natif `wm size` :
+l'émulation CDP seule recadrait la capture sans changer la WebView.
+Avant : APK 881885 / `59becdd-bords-local`, viewport réel 412×842
+(les noms historiques des fichiers avant portent 390/320, ne pas les confondre).
+La revue visuelle à 320 px a montré un nom long trop haut en miniature :
+taille adaptée, contrôle vertical ajouté et captures finales revues avec le nom entier.
+Preuves locales non commitées : `reports/lot-1-carte/`, notamment
+`avant-390-legendary.png`, `apres-390-legendary.png`, `apres-320-classeur.png`,
+`apres-tap-retour-glisse.mp4` et `apres-resultats.json` (dimensions et version).
+Commandes : `npm run typecheck`, ESLint sur les composants/tests modifiés,
+`node scripts/check-jargon.mjs` ; `npm run ecrans --` avec les six fichiers
+effets, tactile, live-provenance, drop-binder, binder-cercle et carte-objet ;
+`npm test -- src/lib/card-fx.test.ts src/lib/reveal.test.ts src/lib/tilt.test.ts src/lib/release-notes.test.ts`.
+Navigateur : `npm run e2e -- --workers=2 --reporter=list`, puis
+`e2e/binder-finitions.spec.ts` et `e2e/binder-feuilletage.spec.ts` ciblés.
+Android : `npm run android:sync`, `node scripts/android-gradle.mjs assembleDebug
+-PcdVersionName=2c8367c-carte-verifie`, `node reports/lot-1-carte/android-carte.mjs apres`.
+Code testé : base `2c8367cd` + diff du présent lot. Les instantanés Windows
+préexistants des sachets sont conservés localement, exclus du commit.
+Prochaine action : commit ciblé et push normal sur main, vérifier le SHA
+distant, les contrôles GitHub et le déploiement Production. Puis attendre Malik.
+Redmi non connecté au relevé, aucune validation physique revendiquée.
+Préserver les modifications préexistantes de cette passation et snapshots
+sachets ; ne pas les indexer avec le lot. L'accueil et les lots suivants
+restent hors du chantier.
+
 # Checkpoint Codex — tranches du carrousel, 25 octobre 2026
 
 Nouvelle demande : vidéo `D:/Download/Screenrecorder-2026-10-25-07-29-27-984.mp4`,

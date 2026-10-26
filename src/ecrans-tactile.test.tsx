@@ -133,7 +133,7 @@ describe("les gestes qui se sentent", () => {
     expect(document.querySelector(".card-photo-placeholder")?.textContent?.trim()).toBeTruthy();
   });
 
-  it("sépare l’action d’inspection du lien Twitch de la carte", async () => {
+  it("la carte ne propose que l’inspection ; le direct est un indicateur", async () => {
     const [{ CreatorCard }, { CREATORS }] = await Promise.all([
       import("@/components/creator-card"),
       import("@/lib/catalog"),
@@ -146,12 +146,11 @@ describe("les gestes qui se sentent", () => {
     }} />);
 
     const card = document.querySelector<HTMLElement>(".creator-card")!;
-    const link = document.querySelector<HTMLAnchorElement>(".card-on-air")!;
+    const live = document.querySelector<HTMLElement>(".card-on-air")!;
     const inspectButton = document.querySelector<HTMLButtonElement>(".creator-card-inspect")!;
     expect(card.getAttribute("role")).not.toBe("button");
-    expect(link.closest("button")).toBeNull();
-    act(() => link.click());
-    expect(inspect).not.toHaveBeenCalled();
+    expect(live.tagName).toBe("SPAN");
+    expect(card.querySelectorAll("button, a")).toHaveLength(1);
     act(() => inspectButton.click());
     expect(inspect).toHaveBeenCalledOnce();
   });

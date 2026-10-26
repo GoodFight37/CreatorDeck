@@ -1,3 +1,16 @@
+## Carte : portrait tramé et nom superposé — corrigé sur émulateur, 25 octobre 2026
+
+P2, base `2c8367cd`, suivi `CreatorDeck-Codex-p62`. Reproduction : ouvrir une
+fiche de carte puis comparer sa miniature et sa révélation. Le voile à points
+et le grand nom recouvrent la photo ; trois couches CSS différentes imposent
+un reflet selon l'écran. Correction locale : portrait sans voile, cartouche
+séparé, matière partagée et lien Twitch dans la fiche uniquement.
+Un débordement des noms longs à 320 px détecté par les E2E est corrigé par
+deux lignes et une taille adaptée en miniature ; contrôle vertical ajouté.
+APK finale 882813 : noms entiers à 320 px, dix fiches aux deux tailles,
+tap/Retour/glissé vérifiés. Suite complète 215 réussis / 29 ignorés ; dernières
+relances ciblées vertes. Captures et publication dans la passation. Redmi non testé.
+
 ## Carrousel : tranches qui se croisent — correction vérifiée localement, 25 octobre 2026
 
 **Suivi `CreatorDeck-Codex-3nq`, P1, D-167, base `59becdd7`.** Vidéo joueur

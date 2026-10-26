@@ -315,6 +315,16 @@ Du papier ou du rouge, jamais de dégradé dans la version de base (`globals.css
 - **Pagination :** boutons ronds de 44 px ; libellé masqué sous 520 px de large mais conservé pour le lecteur d'écran.
 
 ### La carte créateur (signature)
+
+**Lot carte du 25 octobre 2026 (D-168, remplace le relevé ci-dessous pour
+les créateurs uniquement).** Le portrait garde sa propre surface, sans
+trame ni texte superposé. Nom et rareté sont imprimés sous la photo ; les
+noms longs prennent deux lignes en miniature. Commune mate, Peu commune
+satinée, Rare métallisée, Épique à cadre facetté, Légendaire à bord et
+cartouche or. La matière est commune aux trois vues et son reflet reste
+sur les bords. Pas de lien ni de compteur d'exemplaires sur l'objet : un tap
+ouvre sa fiche, qui porte les informations et le lien Twitch. L'accueil,
+les sachets, les règles et le son ne changent pas avec ce lot.
 « Une planche TCG, pas une vignette » (`globals.css`) : portrait plein cadre au ratio 0,715 ; la rareté est le cadre (filet, épaisseur, reflet) ; une nameplate opaque en bas, nom en display condensée ; la variante est une matière (foil qui suit le doigt, led qui pulse, chrome). Le portrait est assombri en haut et en bas pour porter le rang et la nameplate. La rareté se lit à la lumière du bord, pas dans une pastille. La carte reste la même affiche partout. Le code garde deux mentions en rouge sur la planche : « Obtenue en direct » (variante Live, `.card-live`) et le lien « Direct » d'une chaîne réellement en ligne (`.card-on-air`), à réduire dans le balayage cg8.2. Sans photo, un placeholder affiche jusqu'à deux initiales dans un cercle teinté de la rareté.
 
 ### Le bandeau du direct (signature)

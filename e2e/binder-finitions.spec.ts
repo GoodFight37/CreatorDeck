@@ -70,6 +70,39 @@ test("la fiche présente les variantes possédées et leurs vrais compteurs", as
   await expect(trigger).toBeFocused();
 });
 
+test("le portrait et le nom ne se chevauchent pas, la matière reste la même dans la fiche", async ({ page }) => {
+  await binder(page);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
+    for (const creator of [common, rare, epic, legendary]) {
+      const card = page.locator(`.collection-grid .rarity-${creator.rarity}:not(.is-locked)`);
+      const material = await card.evaluate(n => {
+        const photo = n.querySelector('.card-photo-wrap')!.getBoundingClientRect();
+        const name = n.querySelector('.card-nameplate')!.getBoundingClientRect();
+        const title = n.querySelector('h3')!;
+        return { separated: photo.bottom <= name.top + 1,
+          nameFits: title.scrollHeight <= title.clientHeight + 1 && title.getBoundingClientRect().bottom <= name.bottom + 1,
+          foil: getComputedStyle(n.querySelector('.card-foil')!).backgroundImage };
+      });
+      expect(material.separated).toBe(true);
+      expect(material.nameFits).toBe(true);
+      await card.locator('button').click();
+      const dialog = page.locator('.card-vault');
+      const enlarged = dialog.locator('.creator-card');
+      await expect(enlarged.locator('a')).toHaveCount(0);
+      await expect(enlarged.locator('.card-photo-shade')).toHaveCSS('background-image', 'none');
+      await expect(enlarged.locator('.card-foil')).toHaveCSS('background-image', material.foil);
+      expect(await enlarged.evaluate(n => {
+        const photo = n.querySelector<HTMLElement>('.card-photo-wrap')!;
+        const name = n.querySelector<HTMLElement>('.card-nameplate')!;
+        // Mesurer avant la perspective : les rectangles englobants inclinés se recouvrent.
+        return photo.offsetTop + photo.offsetHeight <= name.offsetTop + 1;
+      })).toBe(true);
+      await dialog.getByRole('button', { name: 'Fermer', exact: true }).first().click();
+    }
+  }
+});
+
 test("les dos et la fiche manquante restent anonymes et consultables", async ({ page }) => {
   await binder(page);
   // Les quatre obtenues ouvrent l'album ; la page suivante n'a que des dos.
