@@ -819,6 +819,7 @@ export function isExperimentalPackOpeningEnabled(): boolean {
 }
 
 export function disableExperimentalPackOpening(): void {
+  cancelExperimentalPackGesture();
   experimentalPackBuffer = null;
   experimentalPackPending = null;
   if (typeof window === "undefined") return;
@@ -867,28 +868,91 @@ export async function useExperimentalPackOpening(file: File): Promise<boolean> {
   }
 }
 
-function playExperimentalPackOpening(): boolean {
-  if (!isExperimentalPackOpeningEnabled()) return false;
-  if (!experimentalPackBuffer) {
-    preloadExperimentalPackOpening();
-    return false; // Chargement non terminé : son original pour cette ouverture.
-  }
-  if (isMuted()) return true;
+// La déchirure doit suivre le doigt : de petits grains de l'enregistrement
+// jouent quand la soudure progresse, un claquement à son seuil, puis une
+// courte fin au relâchement. C'est un prototype LOCAL, sans nouveaux sons IA.
+type PackGestureSound = { progress: number; lastGrainAt: number; snapped: boolean };
+let packGestureSound: PackGestureSound | null = null;
+
+/** Joue un petit segment du véritable échantillon B Confort, avec micro-fondus. */
+function playExperimentalPackSegment(offset: number, seconds: number, level: number): boolean {
+  if (!isExperimentalPackOpeningEnabled() || isMuted() || !experimentalPackBuffer) return false;
   const ctx = audioContext();
   if (!ctx) return false;
+  const duration = Math.min(seconds, experimentalPackBuffer.duration - offset);
+  if (duration <= 0) return false;
   try {
     if (ctx.state === "suspended") void ctx.resume();
+    const start = ctx.currentTime + 0.004;
     const source = ctx.createBufferSource();
-    source.buffer = experimentalPackBuffer;
     const gain = ctx.createGain();
-    // B Confort est déjà atténué. On ajoute une marge pour le mix du jeu.
-    gain.gain.value = 0.42;
+    source.buffer = experimentalPackBuffer;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(level, start + Math.min(0.008, duration / 5));
+    gain.gain.setValueAtTime(level, start + duration * 0.65);
+    gain.gain.linearRampToValueAtTime(0.0001, start + duration);
     source.connect(gain).connect(masterBus(ctx));
-    source.start(ctx.currentTime + 0.005);
+    source.start(start, offset, duration);
     return true;
   } catch {
     return false;
   }
+}
+
+/** Début de glissement, sans bruit au simple toucher. */
+export function beginExperimentalPackGesture(): void {
+  if (!isExperimentalPackOpeningEnabled()) return;
+  preloadExperimentalPackOpening();
+  packGestureSound = { progress: 0, lastGrainAt: -Infinity, snapped: false };
+}
+
+/** La texture dépend de la DISTANCE parcourue, pas d'une animation chronométrée. */
+export function moveExperimentalPackGesture(progress: number): void {
+  const state = packGestureSound;
+  if (!state || !isExperimentalPackOpeningEnabled() || isMuted()) return;
+  const current = Math.max(0, Math.min(100, progress));
+  const ctx = audioContext();
+  if (!ctx || current < 5 || current - state.progress < 8 || ctx.currentTime - state.lastGrainAt < 0.055) return;
+  state.progress = current;
+  state.lastGrainAt = ctx.currentTime;
+  // Trois régions de froissement du fichier, légèrement alternées, sans rafale.
+  const offsets = [0.245, 0.295, 0.325];
+  const offset = offsets[Math.floor(current / 13) % offsets.length];
+  playExperimentalPackSegment(offset, 0.07, 0.60);
+}
+
+/** Rupture de la soudure : le seuil visuel et la vibration arrivent ensemble. */
+export function snapExperimentalPackGesture(): void {
+  const state = packGestureSound;
+  if (!state || state.snapped) return;
+  state.snapped = true;
+  playExperimentalPackSegment(0.035, 0.095, 0.70);
+}
+
+/** Repli du sachet : aucun claquement de validation. */
+export function cancelExperimentalPackGesture(): void {
+  packGestureSound = null;
+}
+
+function playExperimentalPackOpening(): boolean {
+  if (!isExperimentalPackOpeningEnabled()) return false;
+  if (!experimentalPackBuffer) {
+    preloadExperimentalPackOpening();
+    packGestureSound = null;
+    return false; // Son original si le fichier local n'est pas prêt.
+  }
+  // Fin de la déchirure déjà commencée : ne PAS rejouer tout l'enregistrement.
+  const previous = packGestureSound;
+  packGestureSound = null;
+  if (isMuted()) return true;
+  if (previous) {
+    if (!previous.snapped) playExperimentalPackSegment(0.035, 0.095, 0.60);
+    playExperimentalPackSegment(0.285, 0.19, 0.50);
+    return true;
+  }
+  // Clavier / ouverture sans glissé : un seul bruitage court accessible.
+  playExperimentalPackSegment(0.03, 0.45, 0.42);
+  return true;
 }
 
 export function playPackOpening(): void {
