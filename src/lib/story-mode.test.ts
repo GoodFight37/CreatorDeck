@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory,
+  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue,
   validateStoryScript, type StoryDirection,
 } from "./story-mode";
 
@@ -95,6 +95,18 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, nox)?.id).toBe("nox_duo_final");
     const isolated = play(["left", "right", "right", "left", "left", "right", "left", "right", "left", "left"]);
     expect(currentStoryScene(script, isolated)?.id).toBe("course");
+  });
+
+  it("personnalise le bilan avec les décisions de Flo, Nox, Mona et l'agence", () => {
+    const base = { ...startStory(script), ending: "survivant" as const };
+    expect(storyEpilogue(startStory(script))).toEqual([]);
+    const loyal = storyEpilogue({ ...base, flags: ["flo_protegee", "respect_nox", "sponsor_clair", "libre"] });
+    const hostile = storyEpilogue({ ...base, flags: ["rupture_flo", "guerre_nox", "double_mensonge", "agence"] });
+    expect(loyal).toHaveLength(4);
+    expect(hostile).toHaveLength(4);
+    expect(loyal.join(" ")).toContain("Flo");
+    expect(hostile.join(" ")).toContain("Nox");
+    expect(loyal).not.toEqual(hostile);
   });
 
   it("protège de la double décision après une fin de saison", () => {
