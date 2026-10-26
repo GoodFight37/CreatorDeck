@@ -10,6 +10,20 @@ import {
 import "./story-mode.css";
 
 const SCRIPT = STORY_PROLOGUE;
+const STORY_ACTS = [
+  { start: 0, number: "I" },
+  { start: 12, number: "II" },
+  { start: 20, number: "III" },
+  { start: 28, number: "IV" },
+  { start: 36, number: "V" },
+] as const;
+
+function storyActNumber(step: number): string {
+  for (let index = STORY_ACTS.length - 1; index >= 0; index--) {
+    if (step >= STORY_ACTS[index].start) return STORY_ACTS[index].number;
+  }
+  return "I";
+}
 const STAT_LABELS: Record<StoryStat, { name: string }> = {
   public: { name: "Public" },
   energie: { name: "Énergie" },
@@ -222,7 +236,7 @@ export function StoryMode() {
             ) : scene ? (
               <>
                 <div ref={progressRef} className="story-progress" aria-label={`Décision ${run.step + 1} sur ${SCRIPT.totalSteps}`}>
-                  <span>CHAPITRE {String(run.step + 1).padStart(2, "0")}</span>
+                  <span>ACTE {storyActNumber(run.step)} · CHAPITRE {String(run.step + 1).padStart(2, "0")}</span>
                   <span>{run.step + 1} / {SCRIPT.totalSteps}</span>
                 </div>
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
