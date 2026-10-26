@@ -1,12 +1,13 @@
 import type { StoryScript } from "../lib/story-mode";
+import { STORY_SEASON_SCENES } from "./story-season";
 
 /** Scénario écrit et contrôlé en amont. Aucune requête IA pendant la partie. */
 export const STORY_PROLOGUE: StoryScript = {
   id: "zero-spectateur",
-  version: 2,
+  version: 3,
   title: "Zéro spectateur",
-  subtitle: "Douze décisions pour lancer une chaîne. Chaque raccourci a une facture.",
-  totalSteps: 12,
+  subtitle: "Quarante décisions. Tes raccourcis ont une facture, tes promesses une mémoire.",
+  totalSteps: 40,
   initialStats: { public: 35, energie: 65, argent: 55, confiance: 55 },
   scenes: [
     {
@@ -171,7 +172,7 @@ export const STORY_PROLOGUE: StoryScript = {
     },
     {
       id: "flo_alliee_final", step: 10, requiresFlags: ["flo_protegee", "communaute_saine"], title: "Le message épinglé", speaker: "FLO · modératrice", emoji: "🛡️", channel: "CHAT",
-      text: "Pendant que tu prépares la dernière semaine, Flo épingle les règles que vous avez écrites ensemble. « Tu m'as laissé souffler quand j'en avais besoin. Cette fois, je peux tenir le chat. Mais toi, tu dois aussi tenir debout. »",
+      text: "Pendant que tu prépares le premier bilan, Flo épingle les règles que vous avez écrites ensemble. « Tu m'as laissé souffler quand j'en avais besoin. Cette fois, je peux tenir le chat. Mais toi, tu dois aussi tenir debout. »",
       choices: {
         left: { label: "Lui confier le direct et te reposer", effects: { energie: 13, confiance: 7, public: -5 }, addFlags: ["flo_pilier"] },
         right: { label: "Assurer le direct à deux", effects: { public: 10, energie: -8, confiance: 6 }, addFlags: ["duo_flo"] },
@@ -179,14 +180,14 @@ export const STORY_PROLOGUE: StoryScript = {
     },
     {
       id: "nox_duo_final", step: 10, requiresFlags: ["duo_nox"], title: "La proposition de Nox", speaker: "NOX · en appel", emoji: "🎧", channel: "DM",
-      text: "Nox te propose un dernier duo avant le bilan. Il se souvient du clip que tu avais choisi de ne pas transformer en humiliation. « On peut partager la scène sans se voler la lumière. »",
+      text: "Nox te propose un duo avant le bilan. Il se souvient du clip que tu avais choisi de ne pas transformer en humiliation. « On peut partager la scène sans se voler la lumière. »",
       choices: {
         left: { label: "Partager le direct avec Nox", effects: { public: 11, energie: -7, confiance: 8 }, addFlags: ["nox_allie_final"] },
         right: { label: "Le remercier et préserver ta pause", effects: { energie: 12, confiance: 4, public: -4 }, addFlags: ["nox_respecte_final"] },
       },
     },
     {
-      id: "course", step: 10, title: "La dernière semaine", speaker: "TOI", emoji: "⏰", channel: "LIVE",
+      id: "course", step: 10, title: "La semaine du premier bilan", speaker: "TOI", emoji: "⏰", channel: "LIVE",
       text: "Ton téléphone vibre même quand personne n'écrit. Tu peux tenir une semaine de plus, ou laisser une soirée sans caméra.",
       choices: {
         left: { label: "Couper un soir et retrouver tes proches", effects: { energie: 17, public: -7, confiance: 6 }, addFlags: ["pause"] },
@@ -210,8 +211,8 @@ export const STORY_PROLOGUE: StoryScript = {
       },
     },
     {
-      id: "finale_collective", step: 11, requiresFlags: ["communaute_saine"], title: "Le dernier bouton", speaker: "FLO · équipe de modération", emoji: "🫶", channel: "LIVE",
-      text: "Le jour du bilan, Flo lance le chat : « On ne vient plus seulement pour les chiffres. On vient pour ce qu'on construit ici. » La caméra est prête.",
+      id: "finale_collective", step: 11, requiresFlags: ["communaute_saine"], title: "Le premier bilan", speaker: "FLO · équipe de modération", emoji: "🫶", channel: "LIVE",
+      text: "Le soir du premier bilan, Flo lance le chat : « On ne vient plus seulement pour les chiffres. On vient pour ce qu'on construit ici. » La caméra est prête.",
       choices: {
         left: { label: "Faire un live tranquille avec eux", effects: { confiance: 12, energie: 8, public: 4 }, addFlags: ["final_humain"] },
         right: { label: "Transformer la soirée en show", effects: { public: 17, energie: -11, argent: -6 }, addFlags: ["final_spectacle"] },
@@ -219,11 +220,12 @@ export const STORY_PROLOGUE: StoryScript = {
     },
     {
       id: "finale", step: 11, title: "Tout est en direct", speaker: "TOI", emoji: "🔴", channel: "LIVE",
-      text: "Tu es seul devant le bouton « Démarrer ». Tu as de l'audience, des factures et quelques regrets. Quel sera le ton de ton dernier live de cette saison ?",
+      text: "Tu es seul devant le bouton « Démarrer ». Tu as de l'audience, des factures et quelques regrets. Quel sera le ton de ton premier bilan public ?",
       choices: {
         left: { label: "Dire la vérité sur cette année", effects: { confiance: 15, energie: 5, public: -5 }, addFlags: ["final_humain"] },
         right: { label: "Faire le plus gros show possible", effects: { public: 19, energie: -13, argent: -8 }, addFlags: ["final_spectacle"] },
       },
     },
+    ...STORY_SEASON_SCENES,
   ],
 };
