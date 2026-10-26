@@ -71,6 +71,17 @@ test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
     await page.waitForTimeout(470);
   }
   await expect(page.getByRole("button", { name: /Recommencer l’histoire/ })).toBeVisible();
+  const recap = page.locator(".story-recap");
+  await expect(recap).not.toHaveAttribute("open", "");
+  await recap.locator("summary").click();
+  await expect(recap).toHaveAttribute("open", "");
+  await expect(recap.locator("li").first()).toContainText("Le grand départ");
+  await expect(recap.locator("li").first()).toContainText("Rester avec le téléphone");
+  const decisions = await recap.locator("li").count();
+  expect(decisions).toBeGreaterThan(0);
+  expect(decisions).toBeLessThanOrEqual(12);
+  await page.reload();
+  await expect(page.locator(".story-recap")).toBeVisible();
   await page.getByRole("button", { name: /Recommencer l’histoire/ }).click();
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
 });

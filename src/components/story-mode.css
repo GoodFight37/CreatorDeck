@@ -126,3 +126,16 @@
   .story-play-card { transform: none !important; }
   .story-scene-art { animation: none !important; }
 }
+
+/* Le bilan reste discret jusqu'à l'ouverture volontaire par le joueur. */
+.story-recap { width: 100%; max-width: 390px; margin-top: 22px; border-top: 1px solid var(--line-strong); color: var(--text); text-align: left; }
+.story-recap summary { position: relative; display: flex; align-items: center; min-height: 48px; padding: 10px 30px 10px 0; cursor: pointer; font-size: 14px; font-weight: 800; list-style: none; -webkit-tap-highlight-color: transparent; }
+.story-recap summary::-webkit-details-marker { display: none; }
+.story-recap summary::after { content: ""; position: absolute; right: 10px; top: 19px; width: 8px; height: 8px; border-right: 2px solid var(--action); border-bottom: 2px solid var(--action); transform: rotate(45deg); }
+.story-recap[open] summary::after { transform: translateY(4px) rotate(225deg); }
+.story-recap summary:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+.story-recap ol { margin: 0; padding: 0 0 6px 26px; list-style: decimal-leading-zero; }
+.story-recap li { padding: 10px 4px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.story-recap li::marker { color: var(--accent-light); font-weight: 800; font-variant-numeric: tabular-nums; }
+.story-recap-scene { display: block; margin-bottom: 3px; color: var(--muted); }
+.story-recap li strong { display: block; color: var(--text); font-size: 14px; }

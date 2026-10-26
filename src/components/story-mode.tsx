@@ -199,6 +199,20 @@ export function StoryMode() {
                 <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
                 <h2>{STORY_ENDINGS[run.ending].title}</h2>
                 <p>{STORY_ENDINGS[run.ending].text}</p>
+                <details className="story-recap" aria-live="off">
+                  <summary>Revoir mes {run.history.length} décisions</summary>
+                  <ol>
+                    {run.history.map((entry, index) => {
+                      const chapter = SCRIPT.scenes.find((candidate) => candidate.id === entry.sceneId);
+                      return (
+                        <li key={index}>
+                          <span className="story-recap-scene">{chapter?.title ?? `Chapitre ${index + 1}`}</span>
+                          <strong>{chapter?.choices[entry.direction].label ?? (entry.direction === "left" ? "Choix gauche" : "Choix droit")}</strong>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </details>
                 <button className="story-replay" onClick={(event) => replay(event.detail === 0)}>↻ Recommencer l’histoire</button>
               </section>
             ) : scene ? (
