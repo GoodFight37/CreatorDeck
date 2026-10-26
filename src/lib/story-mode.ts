@@ -1,5 +1,5 @@
 /** Moteur autonome du mode Histoire : aucune dépendance cloud, carte ou IA. */
-export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v1";
+export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v2";
 export const STORY_STATS = ["public", "energie", "argent", "confiance"] as const;
 export type StoryStat = (typeof STORY_STATS)[number];
 export type StoryStats = Record<StoryStat, number>;
