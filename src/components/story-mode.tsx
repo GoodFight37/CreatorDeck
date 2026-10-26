@@ -31,6 +31,26 @@ const STAT_LABELS: Record<StoryStat, { name: string }> = {
   confiance: { name: "Confiance" },
 };
 
+/** Journal consultable pendant la partie ou après la fin, sans scènes futures ni spoilers. */
+function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: boolean }) {
+  return (
+    <details className={completed ? "story-recap" : "story-recap story-recap-live"} aria-live="off">
+      <summary>{completed ? `Revoir mes ${run.history.length} décisions` : `Journal de bord · ${run.history.length} décisions`}</summary>
+      <ol>
+        {run.history.map((entry, index) => {
+          const chapter = SCRIPT.scenes.find((candidate) => candidate.id === entry.sceneId);
+          return (
+            <li key={index}>
+              <span className="story-recap-scene">{chapter?.title ?? `Chapitre ${index + 1}`}</span>
+              <strong>{chapter?.choices[entry.direction].label ?? (entry.direction === "left" ? "Choix gauche" : "Choix droit")}</strong>
+            </li>
+          );
+        })}
+      </ol>
+    </details>
+  );
+}
+
 export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
   const [drag, setDrag] = useState(0);
@@ -222,20 +242,7 @@ export function StoryMode() {
                   <h3>CE QUE TU LAISSES DERRIÈRE TOI</h3>
                   {storyEpilogue(run).map((memory, index) => <p key={index}>{memory}</p>)}
                 </div>
-                <details className="story-recap" aria-live="off">
-                  <summary>Revoir mes {run.history.length} décisions</summary>
-                  <ol>
-                    {run.history.map((entry, index) => {
-                      const chapter = SCRIPT.scenes.find((candidate) => candidate.id === entry.sceneId);
-                      return (
-                        <li key={index}>
-                          <span className="story-recap-scene">{chapter?.title ?? `Chapitre ${index + 1}`}</span>
-                          <strong>{chapter?.choices[entry.direction].label ?? (entry.direction === "left" ? "Choix gauche" : "Choix droit")}</strong>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </details>
+                <StoryJournal run={run} completed />
                 <button className="story-replay" onClick={(event) => replay(event.detail === 0)}>↻ Recommencer l’histoire</button>
               </section>
             ) : scene ? (
@@ -302,6 +309,7 @@ export function StoryMode() {
                     </span>
                   </button>
                 </div>
+                {run.history.length > 0 && <StoryJournal run={run} />}
                 {run.step > 0 && (
                   <div className="story-restart">
                     {!restartPending ? (
