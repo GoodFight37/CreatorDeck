@@ -170,3 +170,12 @@ test("Histoire : le clavier conserve le focus sans présélection forcée", asyn
   expect(await left.evaluate((element) => document.activeElement === element)).toBe(true);
   await expect(left).toBeFocused();
 });
+
+test("Histoire : les jauges privilégient la lecture aux émojis", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await expect(page.locator(".story-stat-top > span")).toHaveText(["Public", "Énergie", "Argent", "Confiance"]);
+  for (const name of ["Public", "Énergie", "Argent", "Confiance"]) {
+    await expect(page.getByRole("progressbar", { name })).toHaveAttribute("aria-valuemin", "0");
+  }
+});

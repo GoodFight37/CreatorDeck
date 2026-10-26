@@ -10,11 +10,11 @@ import {
 import "./story-mode.css";
 
 const SCRIPT = STORY_PROLOGUE;
-const STAT_LABELS: Record<StoryStat, { name: string; icon: string }> = {
-  public: { name: "Public", icon: "👥" },
-  energie: { name: "Énergie", icon: "⚡" },
-  argent: { name: "Argent", icon: "🪙" },
-  confiance: { name: "Confiance", icon: "🤝" },
+const STAT_LABELS: Record<StoryStat, { name: string }> = {
+  public: { name: "Public" },
+  energie: { name: "Énergie" },
+  argent: { name: "Argent" },
+  confiance: { name: "Confiance" },
 };
 
 export function StoryMode() {
@@ -111,7 +111,7 @@ export function StoryMode() {
               {STORY_STATS.map((key) => (
                 <div key={key} className="story-stat" data-low={run.stats[key] <= 20}>
                   <div className="story-stat-top">
-                    <span>{STAT_LABELS[key].icon} {STAT_LABELS[key].name}</span>
+                    <span>{STAT_LABELS[key].name}</span>
                     <strong>{run.stats[key]} <span>/ 100</span></strong>
                   </div>
                   <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]} aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
