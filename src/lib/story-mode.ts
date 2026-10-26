@@ -248,6 +248,12 @@ export function storyEpilogue(run: StoryRun): string[] {
   else if (flags.has("saison_spectacle")) memories.push("Le final bat un record d'audience. Les questions sans réponse défilent encore sous la vidéo.");
   else if (flags.has("saison_vedette")) memories.push("L'équipe était derrière toi, mais le générique n'affichait qu'un seul visage.");
   else if (flags.has("saison_ambigue")) memories.push("Tu as raconté une version défendable de l'histoire. D'autres détiennent encore les pièces manquantes.");
+  if (flags.has("archives_exposees")) memories.push("Tu as autorisé la diffusion des anciennes images sans consulter Flo. Le souvenir ne t'appartenait pourtant pas seul.");
+  else if (flags.has("consentement_archives")) memories.push("Tu as demandé leur accord aux personnes filmées avant de partager les archives. Chacune garde le choix de son image.");
+  if (flags.has("sam_expose")) memories.push("La vidéo sur Sam a fait des vues. Elle a aussi exposé publiquement quelqu'un qui voulait simplement s'excuser.");
+  else if (flags.has("adresse_protegee")) memories.push("Tu as fait retirer les images de ton quartier. La vie privée de ta communauté compte aussi hors du direct.");
+  if (flags.has("direct_scripte")) memories.push("Le dernier annonceur avait validé chaque question. Tu as pu diffuser, mais certains silences étaient écrits à l'avance.");
+  else if (flags.has("questions_libres")) memories.push("Tu as gardé les questions spontanées pour le dernier direct. Certaines réponses ont été difficiles, mais elles étaient les tiennes.");
   return memories;
 }
 
