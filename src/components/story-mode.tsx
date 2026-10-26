@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, typ
 import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative,
+  STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative, storyChoiceSignals,
   restoreStory, startStory, storyEpilogue, storyActInterlude, type StoryDirection, type StoryRun, type StoryStat,
 } from "../lib/story-mode";
 import "./story-mode.css";
@@ -282,10 +282,24 @@ export function StoryMode() {
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
+                    <span className="story-choice-signals" aria-label="Jauges concernées">
+                      {storyChoiceSignals(run.stats, scene.choices.left.effects).map(({ stat, direction: trend }) => (
+                        <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
+                          <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
+                        </span>
+                      ))}
+                    </span>
                   </button>
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "right")}>
                     <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
+                    <span className="story-choice-signals" aria-label="Jauges concernées">
+                      {storyChoiceSignals(run.stats, scene.choices.right.effects).map(({ stat, direction: trend }) => (
+                        <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
+                          <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
+                        </span>
+                      ))}
+                    </span>
                   </button>
                 </div>
                 {run.step > 0 && (
