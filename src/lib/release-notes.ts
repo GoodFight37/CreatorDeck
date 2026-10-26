@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-26-boosters-session", date: "2026-10-26", title: "Tes boosters prêts à s’ouvrir",
+    summary: "Les réserves MEMES et IMGFLIP suivent mieux ta connexion, et le sachet à déchirer est recentré.",
+    sections: [{ title: "Corrections", items: [
+      "Le renouvellement de ta connexion ne bloque plus la lecture des réserves MEMES et IMGFLIP.",
+      "Une lecture échouée n’est plus affichée comme un chargement sans fin. Réessayer retire le message précédent pendant la nouvelle lecture.",
+      "Le sachet prêt à déchirer se place au milieu de l’écran et garde la taille de celui choisi sur l’accueil.",
+    ] }],
+  },
+  {
     id: "2026-10-26-activites-lecture", date: "2026-10-26", title: "Des activités plus claires",
     summary: "Last Pack et l’hôtel distinguent une lecture en cours d’une lecture indisponible.",
     sections: [{ title: "Corrections", items: [

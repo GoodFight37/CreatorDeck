@@ -133,11 +133,11 @@ export function HomeView({
     : promoPacks > 0 ? "Ouvrir un booster de test" : nextAt !== null ? `Prochain sachet à ${formatClock(nextAt)}` : "Prochain sachet bientôt";
   const memeNextAt = memes.status?.nextAt ? Date.parse(memes.status.nextAt) : null;
   const memeLabel = !memes.account ? "Connecte-toi pour ouvrir MEMES" : memes.busy ? "Ouverture…"
-    : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1
+    : !memes.status ? memes.problem && !memes.loading ? "Réserve MEMES indisponible" : "Lecture de ta réserve…" : memes.status.stock < 1
       ? memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt" : "Ouvrir le booster MEMES";
   const imgflipNextAt = imgflip.status?.nextAt ? Date.parse(imgflip.status.nextAt) : null;
   const imgflipLabel = !imgflip.account ? "Connecte-toi pour ouvrir IMGFLIP" : imgflip.busy ? "Ouverture…"
-    : !imgflip.status ? "Lecture de ta réserve…" : imgflip.status.stock < 1
+    : !imgflip.status ? imgflip.problem && !imgflip.loading ? "Réserve IMGFLIP indisponible" : "Lecture de ta réserve…" : imgflip.status.stock < 1
       ? imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt" : "Ouvrir le booster IMGFLIP";
   // Un seul geste ouvre : le sachet. Dessous, une ligne dit ce qu'on a et quand revient le prochain.
   const packs = stock + promoPacks;
@@ -248,7 +248,7 @@ export function HomeView({
           {memes.status ? memes.status.stock > 0
             ? `${memes.status.stock} MEMES${memeNextAt !== null ? ` · prochain à ${formatClock(memeNextAt)}` : ""}`
             : memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt"
-            : memes.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}
+            : memes.account ? memes.problem && !memes.loading ? "Réserve MEMES indisponible." : "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}
         </p>
         {memes.notice ? <p role="status">{memes.notice}</p> : null}
         {memes.problem ? <div role="alert"><p>{memes.problem}</p>
@@ -262,7 +262,7 @@ export function HomeView({
           {imgflip.status ? imgflip.status.stock > 0
             ? `${imgflip.status.stock} IMGFLIP${imgflipNextAt !== null ? ` · prochain à ${formatClock(imgflipNextAt)}` : ""}`
             : imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt"
-            : imgflip.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes Imgflip."}
+            : imgflip.account ? imgflip.problem && !imgflip.loading ? "Réserve IMGFLIP indisponible." : "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes Imgflip."}
         </p>
         {imgflip.notice ? <p role="status">{imgflip.notice}</p> : null}
         {imgflip.problem ? <div role="alert"><p>{imgflip.problem}</p>

@@ -1,3 +1,23 @@
+## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — corrigés localement, 26 octobre 2026
+
+P1, base `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. Malik observe Live fonctionnel
+mais MEMES/IMGFLIP temporairement bloqués avec « Lecture de ta réserve… », réessai
+et demande de connexion. Reproduction : session expirée, réponses concurrentes
+de renouvellement espacées ; les deux clients indépendants perdent face au
+client principal, leurs résultats obsolètes deviennent un faux no_session.
+Cause prouvée de cette reproduction, sans journal permettant de confirmer
+l'incident exact sur le téléphone de Malik. Contournement ancien : relire une
+fois la session renouvelée ; cela ne garantit pas la résolution d'une vraie panne.
+
+Client unique réutilisé, validation de session conservée ; panne et lecture
+distinguées, ancien message retiré dès réessai. Sachet : centre à 58 % reproduit
+(47 px trop bas en 320×568), corrigé à 50dvh ; largeur alignée sur l'accueil.
+Deux scénarios téléphone échouent avant correction, 38 E2E cloud passent après.
+APK : préparations/retours des trois sachets et deux tirages MEMES/IMGFLIP jusqu'au
+bilan, un renouvellement, un tirage par univers, zéro erreur JS ; API36 en
+390×844 et 320×568, réseau simulé. Captures relues sous
+`D:/CreatorDeck-preuves/booster-reserve-position/`. Publication : passation.
+
 ## Carte : portrait tramé et nom superposé — corrigé sur émulateur, 25 octobre 2026
 
 P2, base `2c8367cd`, suivi `CreatorDeck-Codex-p62`. Reproduction : ouvrir une

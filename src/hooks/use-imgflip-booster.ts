@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCloud } from "@/hooks/use-cloud";
-import { CloudApi, CloudError } from "@/lib/cloud/api";
+import { type CloudApi, CloudError } from "@/lib/cloud/api";
 import type { ImgflipOpening, ImgflipStatus } from "@/lib/cloud/api/imgflip";
-import { cloudConfig } from "@/lib/cloud/config";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { deviceStorage } from "@/lib/storage";
 
@@ -44,6 +43,7 @@ export function useImgflipBooster() {
     if (!api || !owner || api.session()?.userId !== owner) return;
     const ticket = ++statusTicket.current;
     setLoading(true);
+    setState((value) => ({ ...value, problem: "" }));
     try {
       const status = await api.imgflipStatus();
       if (revision.current === version && statusTicket.current === ticket && cloudStore.getSnapshot().userId === owner) {
@@ -58,8 +58,7 @@ export function useImgflipBooster() {
 
   useEffect(() => {
     const version = ++revision.current;
-    const config = cloudConfig();
-    apiRef.current = config && cloud.userId ? new CloudApi(config, deviceStorage()) : null;
+    apiRef.current = cloud.userId ? cloudStore.getApi() : null;
     pending.current = false;
     queueMicrotask(() => {
       if (revision.current !== version) return;

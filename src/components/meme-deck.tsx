@@ -77,7 +77,7 @@ export function MemeDeck() {
         onClick={booster.prepare}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
       <p className="meme-status" aria-live="polite">{status
         ? <BoosterCountdown stock={status.stock} nextAt={status.nextAt} />
-        : account ? "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
+        : account ? booster.problem && !booster.loading ? "Réserve MEMES indisponible." : "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
       {booster.notice ? <p role="status">{booster.notice}</p> : null}
       {problem ? <div className="meme-problem" role="alert"><p>{problem}</p>
         <button type="button" disabled={booster.loading} onClick={() => void booster.refresh()}>Réessayer la lecture</button></div> : null}

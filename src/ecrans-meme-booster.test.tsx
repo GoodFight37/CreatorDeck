@@ -8,7 +8,10 @@ const { identity, statusRpc, drawRpc } = vi.hoisted(() => ({
   identity: { userId: "compte-a" }, statusRpc: vi.fn(), drawRpc: vi.fn(),
 }));
 vi.mock("@/hooks/use-cloud", () => ({ useCloud: () => ({ configured: true, userId: identity.userId }) }));
-vi.mock("@/lib/cloud/cloud-store", () => ({ cloudStore: { getSnapshot: () => ({ userId: identity.userId }) } }));
+vi.mock("@/lib/cloud/cloud-store", () => ({ cloudStore: {
+  getSnapshot: () => ({ userId: identity.userId }),
+  getApi: () => ({ session: () => ({ userId: identity.userId }), memeStatus: statusRpc, openMemePack: drawRpc }),
+} }));
 vi.mock("@/lib/cloud/config", () => ({ cloudConfig: () => ({ url: "https://example.invalid", anonKey: "test" }) }));
 vi.mock("@/lib/cloud/api", () => ({
   CloudApi: class { session() { return { userId: identity.userId }; } memeStatus = statusRpc; openMemePack = drawRpc; },

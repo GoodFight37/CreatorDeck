@@ -550,6 +550,8 @@ export function createCloudStore(deps: CloudDeps) {
       return () => listeners.delete(listener);
     },
     getSnapshot: snapshot,
+    // Les trois réserves partagent aussi le renouvellement de la session.
+    getApi: resolve,
     getServerSnapshot: () => EMPTY_CLOUD_STATE,
     /** Branche la synchronisation automatique sur les écritures de la partie. */
     attach() {

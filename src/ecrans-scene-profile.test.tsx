@@ -19,6 +19,7 @@ vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
 vi.mock("@/hooks/use-live", () => ({ useLive: () => ({ byLogin: new Map(), count: 0, stale: true, configured: false }) }));
 vi.mock("@/lib/cloud/cloud-store", async (original) => ({ ...await original<object>(), cloudStore: {
   packStatus: mocked.packStatus, loadWishlist: vi.fn(), loadProfile: vi.fn(),
+  getApi: () => null,
 } }));
 
 describe("statut Scène et identité de collectionneur", () => {
