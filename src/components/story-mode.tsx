@@ -35,7 +35,7 @@ const STAT_LABELS: Record<StoryStat, { name: string }> = {
 function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: boolean }) {
   return (
     <details className={completed ? "story-recap" : "story-recap story-recap-live"} aria-live="off">
-      <summary>{completed ? `Revoir mes ${run.history.length} décisions` : `Journal de bord · ${run.history.length} décisions`}</summary>
+      <summary>{completed ? `Revoir mes ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}` : `Journal de bord · ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}`}</summary>
       <ol>
         {run.history.map((entry, index) => {
           const chapter = SCRIPT.scenes.find((candidate) => candidate.id === entry.sceneId);
