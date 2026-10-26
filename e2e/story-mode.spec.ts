@@ -28,7 +28,7 @@ test("Histoire : un double-tap ne saute pas la scène suivante", async ({ page }
   // choisissait à tort deux fois, et sautait directement au chapitre 3.
   await page.locator(".story-actions .story-choice").first().dblclick();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
-  await expect(page.locator(".story-progress")).toContainText("2 / 12");
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
 });
 
 test("Histoire : le geste vertical ne décide rien, l'horizontal choisit", async ({ page }) => {
@@ -63,11 +63,11 @@ test("Histoire : le geste vertical ne décide rien, l'horizontal choisit", async
 test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.locator(".story-play-card")).toBeVisible();
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 40; i++) {
     if (await page.getByRole("button", { name: /Recommencer l’histoire/ }).isVisible()) break;
     await page.locator(".story-actions .story-choice").first().click();
     // La garde anti-double-tap protège le joueur pendant 450 ms entre deux scènes.
-    // Ce test joue volontairement douze décisions distinctes, pas un multi-clic.
+    // Ce test joue volontairement des décisions distinctes, pas un multi-clic.
     await page.waitForTimeout(470);
   }
   await expect(page.getByRole("button", { name: /Recommencer l’histoire/ })).toBeVisible();
@@ -81,7 +81,7 @@ test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
   await expect(recap.locator("li").first()).toContainText("Rester avec le téléphone");
   const decisions = await recap.locator("li").count();
   expect(decisions).toBeGreaterThan(0);
-  expect(decisions).toBeLessThanOrEqual(12);
+  expect(decisions).toBeLessThanOrEqual(40);
   await page.reload();
   await expect(page.locator(".story-recap")).toBeVisible();
   await page.getByRole("button", { name: /Recommencer l’histoire/ }).click();
@@ -169,7 +169,7 @@ test.describe("Histoire : interactions sur écran tactile", () => {
     await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
     await expect(left).toHaveCSS("background-color", restingBackground);
     expect(await left.evaluate((element) => document.activeElement === element)).toBe(false);
-    await expect(page.locator(".story-progress")).toContainText("2 / 12");
+    await expect(page.locator(".story-progress")).toContainText("2 / 40");
   });
 });
 
@@ -196,10 +196,10 @@ test("Histoire : la barre de progression représente le chapitre en cours", asyn
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
   const bar = page.locator(".story-progress-track span");
-  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(100 / 12, 4);
+  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(100 / 40, 4);
   await page.locator(".story-actions .story-choice").first().click();
-  await expect(page.locator(".story-progress")).toContainText("2 / 12");
-  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(200 / 12, 4);
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(200 / 40, 4);
 });
 
 test("Histoire : le support narratif suit la scène et n'affiche LIVE que pour un direct", async ({ page }) => {
@@ -281,7 +281,7 @@ test("Histoire : après Entrée le focus suit la scène et les flèches restent 
   await expect(page.locator(".story-play-card")).toBeFocused();
   await page.waitForTimeout(470);
   await page.keyboard.press("ArrowLeft");
-  await expect(page.locator(".story-progress")).toContainText("3 / 12");
+  await expect(page.locator(".story-progress")).toContainText("3 / 40");
   await expect(page.locator(".story-play-card")).toBeFocused();
 });
 
@@ -311,7 +311,7 @@ test("Histoire : aperçu au glissement, annulation et validation au seuil", asyn
   await page.mouse.up();
   await expect(preview).toHaveAttribute("data-active", "false");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
-  await expect(page.locator(".story-progress")).toContainText("1 / 12");
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
 
   await page.mouse.move(x, y);
   await page.mouse.down();
@@ -319,5 +319,5 @@ test("Histoire : aperçu au glissement, annulation et validation au seuil", asyn
   await expect(preview).toHaveAttribute("data-ready", "true");
   await page.mouse.up();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
-  await expect(page.locator(".story-progress")).toContainText("2 / 12");
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
 });
