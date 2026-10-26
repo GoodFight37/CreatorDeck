@@ -76,3 +76,12 @@ Le contrôle du code a mis en évidence un cas narratif concret : la scène `dou
 Autre défaut : les jauges ≤ 20 n'étaient signalées que par une couleur de bordure. Un libellé visible « NIVEAU CRITIQUE » et `aria-valuetext` explicitent la situation, indépendamment de la perception des couleurs. Les boutons évitent la répétition de chevrons et le titre ne force plus `white-space: nowrap` à 320 px ; les colonnes passent en une seule colonne à 280 px ou moins, pour le reflow et le zoom. Références : W3C WCAG 2.2, 1.4.1 (couleur), 1.4.4 (agrandissement), 2.5.7 (glissé), 2.5.8 (cibles).
 
 Deux scénarios Playwright ajoutés : (1) le chemin Nox/Mona jusqu'au chapitre 10, avec alerte de confiance à 11/100 ; (2) le reflow à 240 px. **Les tests ont été écrits mais ne sont pas exécutés localement dans cette session** : le checkout complet et le serveur Next ne sont pas disponibles dans l'environnement de l'agent. Seule la vérification statique des remplacements et du code source a été faite ; attendre la CI du SHA correspondant. Ni test Android ni téléphone réel. 
+
+## Passe anti-interface générique et correction des choix (26 octobre 2026)
+
+Référence lue : skill **Impeccable** de Paul Bakaus (`pbakaus/impeccable`, `SKILL.md`, `reference/craft-floor.md` et `reference/polish.md`). Le lanceur CLI livré avec ce skill n'était pas disponible dans le contexte connecté ; ses règles ont été appliquées manuellement sur le périmètre Histoire. Les choix de la DA Pocket de `DESIGN.md` prévalent sur une palette générique.
+
+- Retrait des halos et dégradés décoratifs, cercles arbitraires et cadrages pseudo-techniques : une carte d'histoire couleur papier/crème contraste désormais avec un moniteur noir estampillé « LIVE », issu de l'univers CreatorDeck.
+- Jauges moins encartées, choix sobrement matérialisés et hiérarchie renforcée sans copier Reigns.
+- Correction du **survol tactile persistant** : la surbrillance `:hover` n'est activée que pour `hover:hover` et `pointer:fine`, les boutons suppriment leur focus programmatique lors d'un clic sur écran sans survol. Les clics clavier (`event.detail === 0`) gardent leur focus visible. Le verrou contre le double-tap reste inchangé. Vérifier par test Playwright sur navigateur tactile et contrôle sur appareil Android avant validation finale.
+- Tous les changements sont limités à `story-mode.tsx`, `story-mode.css`, tests du mode et documentation du mode ; aucun thème global, moteur de cartes, économie ou route d'accueil modifiés.

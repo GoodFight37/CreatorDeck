@@ -102,7 +102,6 @@ export function StoryMode() {
       </header>
       <div className="story-shell">
         <div className="story-intro">
-          <p className="story-kicker">SAISON 01 / LE PROLOGUE</p>
           <h1>{SCRIPT.title}</h1>
           <p>{SCRIPT.subtitle}</p>
         </div>
@@ -172,7 +171,6 @@ export function StoryMode() {
                     <span className="story-card-meta-mark">● EN COURS</span>
                   </div>
                   <div className="story-scene-art" aria-hidden="true">
-                    <div className="story-scene-art-orbit" />
                     <div className="story-face">{scene.emoji}</div>
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
@@ -182,11 +180,11 @@ export function StoryMode() {
                   <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
                 </section>
                 <div className="story-actions">
-                  <button className="story-choice" onClick={() => decide("left")}>
+                  <button className="story-choice" onClick={(event) => { if (event.detail > 0 && window.matchMedia("(hover: none)").matches) event.currentTarget.blur(); decide("left"); }}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
                   </button>
-                  <button className="story-choice" onClick={() => decide("right")}>
+                  <button className="story-choice" onClick={(event) => { if (event.detail > 0 && window.matchMedia("(hover: none)").matches) event.currentTarget.blur(); decide("right"); }}>
                     <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
                   </button>
