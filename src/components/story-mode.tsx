@@ -247,7 +247,7 @@ export function StoryMode() {
                 </div>
                 <p className="story-footnote">Les conséquences ne sont pas toujours immédiates. Sauvegarde automatique sur cet appareil.</p>
               </>
-            ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={replay}>recommencer</button>.</p>}
+            ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={() => replay()}>recommencer</button>.</p>}
           </>
         )}
       </div>
