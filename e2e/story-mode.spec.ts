@@ -66,6 +66,9 @@ test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
   for (let i = 0; i < 12; i++) {
     if (await page.getByRole("button", { name: /Recommencer l’histoire/ }).isVisible()) break;
     await page.locator(".story-actions .story-choice").first().click();
+    // La garde anti-double-tap protège le joueur pendant 450 ms entre deux scènes.
+    // Ce test joue volontairement douze décisions distinctes, pas un multi-clic.
+    await page.waitForTimeout(470);
   }
   await expect(page.getByRole("button", { name: /Recommencer l’histoire/ })).toBeVisible();
   await page.getByRole("button", { name: /Recommencer l’histoire/ }).click();
