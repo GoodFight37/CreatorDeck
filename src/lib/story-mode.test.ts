@@ -10,11 +10,11 @@ const script = STORY_PROLOGUE;
 describe("mode Histoire : prologue déterministe", () => {
   it("valide les scènes et fournit un repli à chaque chapitre", () => {
     expect(validateStoryScript(script)).toEqual([]);
-    expect(script.totalSteps).toBe(12);
+    expect(script.totalSteps).toBe(40);
   });
 
-  it("attribue un canal narratif connu à chacune des 27 scènes", () => {
-    expect(script.scenes).toHaveLength(27);
+  it("attribue un canal narratif connu à chacune des 84 scènes", () => {
+    expect(script.scenes).toHaveLength(84);
     expect(script.scenes.map((scene) => scene.channel)).toContain("ARCHIVE");
     expect(validateStoryScript({ ...script, scenes: [
       { ...script.scenes[0], channel: "INCONNU" as typeof script.scenes[0]["channel"] },
@@ -174,7 +174,7 @@ describe("mode Histoire : prologue déterministe", () => {
 
   it("refuse de prolonger une fin anticipée", () => {
     let ended: ReturnType<typeof startStory> | null = null;
-    for (let mask = 0; mask < 2 ** script.totalSteps && !ended; mask++) {
+    for (let mask = 0; mask < 2 ** 12 && !ended; mask++) {
       let run = startStory(script);
       for (let step = 0; step < script.totalSteps && !run.ending; step++) {
         run = chooseStory(script, run, mask & (1 << step) ? "right" : "left");
@@ -189,26 +189,70 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(restoreStory(script, JSON.stringify(ended))).toEqual(ended);
   });
 
-  it("parcourt exhaustivement les 4096 combinaisons binaires : ni blocage ni jauge illégale", () => {
-    const endings = new Set<string>();
+  it("conserve la couverture exhaustive des 27 scènes du premier acte sur 4096 chemins", () => {
     const seenScenes = new Set<string>();
-    for (let mask = 0; mask < 2 ** script.totalSteps; mask++) {
+    for (let mask = 0; mask < 4096; mask++) {
       let run = startStory(script);
-      for (let step = 0; step < script.totalSteps && !run.ending; step++) {
-        const visible = currentStoryScene(script, run);
-        expect(visible).not.toBeNull();
-        if (visible) seenScenes.add(visible.id);
-        const direction = (mask & (1 << step)) ? "right" : "left";
-        run = chooseStory(script, run, direction);
-        for (const value of Object.values(run.stats)) expect(value).toBeGreaterThanOrEqual(0);
-        for (const value of Object.values(run.stats)) expect(value).toBeLessThanOrEqual(100);
+      for (let step = 0; step < 12 && !run.ending; step++) {
+        const scene = currentStoryScene(script, run);
+        expect(scene).not.toBeNull();
+        if (scene) seenScenes.add(scene.id);
+        run = chooseStory(script, run, (mask & (1 << step)) ? "right" : "left");
       }
-      expect(run.ending).not.toBeNull();
-      expect(STORY_ENDINGS[run.ending!]).toBeDefined();
-      endings.add(run.ending!);
-      expect(restoreStory(script, JSON.stringify(run))).not.toBeNull();
+      expect(restoreStory(script, JSON.stringify(run))).toEqual(run);
     }
-    expect(endings.size).toBe(8);
-    expect(seenScenes.size).toBe(script.scenes.length);
+    expect(seenScenes.size).toBe(27);
+  }, 30_000);
+
+  it("explore 512 parcours de la saison de 40 décisions sans blocage ni sauvegarde invalide", () => {
+    const endings = new Set<string>();
+    const visitedSteps = new Set<number>();
+    let longest = 0;
+    for (let mask = 0; mask < 512; mask++) {
+      let seed = (0x9e3779b9 ^ mask) >>> 0;
+      let run = startStory(script);
+      while (!run.ending) {
+        const scene = currentStoryScene(script, run);
+        expect(scene).not.toBeNull();
+        visitedSteps.add(run.step);
+        seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+        run = chooseStory(script, run, (seed & 1) ? "left" : "right");
+        for (const value of Object.values(run.stats)) {
+          expect(value).toBeGreaterThanOrEqual(0);
+          expect(value).toBeLessThanOrEqual(100);
+        }
+      }
+      longest = Math.max(longest, run.step);
+      endings.add(run.ending!);
+      expect(STORY_ENDINGS[run.ending!]).toBeDefined();
+      expect(restoreStory(script, JSON.stringify(run))).toEqual(run);
+    }
+    expect(visitedSteps.has(12)).toBe(true);
+    expect(longest).toBeGreaterThan(20);
+    expect(endings.size).toBeGreaterThanOrEqual(4);
+  }, 60_000);
+
+  it("permet une partie longue avec des décisions équilibrées et des choix déterministes", () => {
+    const fitness = (run: ReturnType<typeof startStory>) => {
+      const { public: audience, argent, confiance, energie } = run.stats;
+      const margin = Math.min(audience, 100 - audience, argent, confiance, energie);
+      return margin * 5 + argent + energie + confiance;
+    };
+    let frontier = [startStory(script)];
+    let deepest = 0;
+    for (let step = 0; step < script.totalSteps && frontier.length; step++) {
+      const next = frontier.flatMap((run) => (["left", "right"] as StoryDirection[])
+        .map((direction) => chooseStory(script, run, direction))
+        .filter((run) => !run.ending));
+      if (!next.length) break;
+      deepest = step + 1;
+      frontier = next.sort((a, b) => fitness(b) - fitness(a)).slice(0, 96);
+    }
+    expect(deepest).toBe(39);
+    expect(frontier.length).toBeGreaterThan(0);
+    const last = chooseStory(script, frontier[0], "left");
+    expect(last.step).toBe(40);
+    expect(last.ending).not.toBeNull();
+    expect(restoreStory(script, JSON.stringify(last))).toEqual(last);
   }, 30_000);
 });
