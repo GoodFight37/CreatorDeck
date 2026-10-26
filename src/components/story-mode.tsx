@@ -282,7 +282,7 @@ export function StoryMode() {
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
-                    <span className="story-choice-signals" aria-label="Jauges concernées">
+                    <span className="story-choice-signals" aria-label="Deux principales variations">
                       {storyChoiceSignals(run.stats, scene.choices.left.effects).map(({ stat, direction: trend }) => (
                         <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
                           <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
@@ -293,7 +293,7 @@ export function StoryMode() {
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "right")}>
                     <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
-                    <span className="story-choice-signals" aria-label="Jauges concernées">
+                    <span className="story-choice-signals" aria-label="Deux principales variations">
                       {storyChoiceSignals(run.stats, scene.choices.right.effects).map(({ stat, direction: trend }) => (
                         <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
                           <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
@@ -317,7 +317,7 @@ export function StoryMode() {
                     )}
                   </div>
                 )}
-                <p className="story-footnote">Les conséquences ne sont pas toujours immédiates. Sauvegarde automatique sur cet appareil.</p>
+                <p className="story-footnote">Les flèches indiquent jusqu’à deux effets immédiats. D’autres conséquences surgiront plus tard. Sauvegarde automatique sur cet appareil.</p>
               </>
             ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={() => replay()}>recommencer</button>.</p>}
           </>
