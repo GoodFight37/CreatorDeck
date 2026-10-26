@@ -3,7 +3,7 @@ import type { StoryScript } from "../lib/story-mode";
 /** Scénario écrit et contrôlé en amont. Aucune requête IA pendant la partie. */
 export const STORY_PROLOGUE: StoryScript = {
   id: "zero-spectateur",
-  version: 1,
+  version: 2,
   title: "Zéro spectateur",
   subtitle: "Douze décisions pour lancer une chaîne. Chaque raccourci a une facture.",
   totalSteps: 12,
@@ -119,6 +119,14 @@ export const STORY_PROLOGUE: StoryScript = {
       choices: {
         left: { label: "Rester propriétaire de la chaîne", effects: { confiance: 8, argent: -7, energie: 3 }, addFlags: ["libre"] },
         right: { label: "Signer les yeux ouverts", effects: { argent: 23, energie: -11, confiance: -8, public: 9 }, addFlags: ["agence"] },
+      },
+    },
+    {
+      id: "double_crise", step: 9, requiresFlags: ["guerre_nox", "preuve_effacee"], title: "Deux affaires, une caméra", speaker: "NOX · live / MONA · téléphone", emoji: "⚠️",
+      text: "Nox ouvre un direct sur votre conflit. Au même instant, le contrat publicitaire que tu avais fait disparaître réapparaît. Flo t'envoie : « Les gens méritent mieux que deux mensonges. »",
+      choices: {
+        left: { label: "Tout reconnaître et couper le direct", effects: { confiance: 20, public: -15, argent: -10, energie: 2 }, addFlags: ["aveu_double"] },
+        right: { label: "Accuser Nox d'avoir truqué le contrat", effects: { public: 14, confiance: -22, energie: -10 }, addFlags: ["double_mensonge"] },
       },
     },
     {
