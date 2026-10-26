@@ -753,6 +753,7 @@ export function preloadSamples(names: SampleName[]): void {
   if (isMuted()) return;
   const ctx = audioContext();
   if (!ctx) return;
+  preloadExperimentalPackOpening();
   for (const name of names) {
     if (buffers.has(name) || loading.has(name)) continue;
     loading.add(name);
@@ -805,7 +806,93 @@ export function playTear(): void {
   playSample("card-draw");
 }
 
+// Démo locale : un bruitage de booster choisi dans le laboratoire et conservé sur cet appareil.
+// Aucun changement en production, aucun fichier source du jeu remplacé.
+const EXPERIMENTAL_PACK_AUDIO_KEY = "creatordeck.audio-lab.experimental-pack-wav";
+let experimentalPackBuffer: AudioBuffer | null = null;
+let experimentalPackPending: Promise<void> | null = null;
+
+export function isExperimentalPackOpeningEnabled(): boolean {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return false;
+  try { return Boolean(window.localStorage.getItem(EXPERIMENTAL_PACK_AUDIO_KEY)); }
+  catch { return false; }
+}
+
+export function disableExperimentalPackOpening(): void {
+  experimentalPackBuffer = null;
+  experimentalPackPending = null;
+  if (typeof window === "undefined") return;
+  try { window.localStorage.removeItem(EXPERIMENTAL_PACK_AUDIO_KEY); } catch { /* Stockage refusé. */ }
+}
+
+/** Décode le son local avant la première ouverture, pour ne pas retarder le geste. */
+export function preloadExperimentalPackOpening(): void {
+  if (!isExperimentalPackOpeningEnabled() || experimentalPackBuffer || experimentalPackPending) return;
+  const ctx = audioContext();
+  if (!ctx) return;
+  experimentalPackPending = (async () => {
+    try {
+      const encoded = window.localStorage.getItem(EXPERIMENTAL_PACK_AUDIO_KEY);
+      if (!encoded) return;
+      const raw = atob(encoded);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+      experimentalPackBuffer = await ctx.decodeAudioData(bytes.buffer);
+    } catch {
+      // Mauvais fichier : le jeu conserve son son de pack habituel.
+      experimentalPackBuffer = null;
+    }
+  })().finally(() => { experimentalPackPending = null; });
+}
+
+/** Importe un WAV court sur l'appareil de test, uniquement en développement. */
+export async function useExperimentalPackOpening(file: File): Promise<boolean> {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined" || file.size > 512_000 || !file.size) return false;
+  const ctx = audioContext();
+  if (!ctx) return false;
+  try {
+    const data = await file.arrayBuffer();
+    const decoded = await ctx.decodeAudioData(data.slice(0));
+    if (decoded.duration > 5) return false;
+    const bytes = new Uint8Array(data);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    window.localStorage.setItem(EXPERIMENTAL_PACK_AUDIO_KEY, btoa(binary));
+    experimentalPackBuffer = decoded;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function playExperimentalPackOpening(): boolean {
+  if (!isExperimentalPackOpeningEnabled()) return false;
+  if (!experimentalPackBuffer) {
+    preloadExperimentalPackOpening();
+    return false; // Chargement non terminé : son original pour cette ouverture.
+  }
+  if (isMuted()) return true;
+  const ctx = audioContext();
+  if (!ctx) return false;
+  try {
+    if (ctx.state === "suspended") void ctx.resume();
+    const source = ctx.createBufferSource();
+    source.buffer = experimentalPackBuffer;
+    const gain = ctx.createGain();
+    // B Confort est déjà atténué. On ajoute une marge pour le mix du jeu.
+    gain.gain.value = 0.42;
+    source.connect(gain).connect(masterBus(ctx));
+    source.start(ctx.currentTime + 0.005);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function playPackOpening(): void {
+  if (playExperimentalPackOpening()) return;
   play(packOpeningPlan());
   playSample("pop");
 }
