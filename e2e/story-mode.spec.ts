@@ -11,6 +11,24 @@ test("Histoire : les choix persistent après un rechargement", async ({ page }) 
   await expect(page.getByRole("progressbar", { name: "Argent" })).toHaveAttribute("aria-valuenow", "64");
 });
 
+test("Histoire : les indices expliquent les enjeux sans révéler les nombres", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const left = page.locator(".story-actions .story-choice").first();
+  const right = page.locator(".story-actions .story-choice").last();
+  await expect(left.locator(".story-choice-signal")).toHaveCount(2);
+  await expect(left.getByLabel("Argent en hausse")).toBeVisible();
+  await expect(left.getByLabel("Énergie en hausse")).toBeVisible();
+  await expect(right.getByLabel("Argent en baisse")).toBeVisible();
+  await expect(right.getByLabel("Public en hausse")).toBeVisible();
+  await expect(right).not.toContainText("+17");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+
+  await left.click();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(left.getByLabel("Confiance en hausse")).toBeVisible();
+});
+
 test("Histoire : nouvelle partie confirmée sans perdre une partie par erreur", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
