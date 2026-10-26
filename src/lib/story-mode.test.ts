@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue, storyActInterlude, storyEndingNarrative,
+  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyChoiceSignals, restoreStory, startStory, storyEpilogue, storyActInterlude, storyEndingNarrative,
   validateStoryScript, type StoryDirection,
 } from "./story-mode";
 
@@ -13,6 +13,24 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(script.totalSteps).toBe(40);
   });
 
+  it("déduit les enjeux visibles à partir des effets réellement possibles", () => {
+    const base = startStory(script);
+    expect(storyChoiceSignals(base.stats, script.scenes[0].choices.left.effects)).toEqual([
+      { stat: "argent", direction: "up" },
+      { stat: "energie", direction: "up" },
+    ]);
+    expect(storyChoiceSignals(base.stats, script.scenes[0].choices.right.effects)).toEqual([
+      { stat: "argent", direction: "down" },
+      { stat: "public", direction: "up" },
+    ]);
+    expect(storyChoiceSignals({ public: 99, energie: 65, argent: 10, confiance: 55 },
+      { public: 20, argent: -20, energie: 5 })).toEqual([
+      { stat: "argent", direction: "down" },
+      { stat: "energie", direction: "up" },
+    ]);
+    expect(storyChoiceSignals({ public: 100, energie: 0, argent: 100, confiance: 0 },
+      { public: 20, energie: -10, argent: 7, confiance: -6 })).toEqual([]);
+  });
   it("attribue un canal narratif connu à chacune des 84 scènes", () => {
     expect(script.scenes).toHaveLength(84);
     expect(script.scenes.map((scene) => scene.channel)).toContain("ARCHIVE");
