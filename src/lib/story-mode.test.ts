@@ -83,10 +83,13 @@ describe("mode Histoire : prologue déterministe", () => {
 
   it("parcourt exhaustivement les 4096 combinaisons binaires : ni blocage ni jauge illégale", () => {
     const endings = new Set<string>();
+    const seenScenes = new Set<string>();
     for (let mask = 0; mask < 2 ** script.totalSteps; mask++) {
       let run = startStory(script);
       for (let step = 0; step < script.totalSteps && !run.ending; step++) {
-        expect(currentStoryScene(script, run)).not.toBeNull();
+        const visible = currentStoryScene(script, run);
+        expect(visible).not.toBeNull();
+        if (visible) seenScenes.add(visible.id);
         const direction = (mask & (1 << step)) ? "right" : "left";
         run = chooseStory(script, run, direction);
         for (const value of Object.values(run.stats)) expect(value).toBeGreaterThanOrEqual(0);
@@ -97,6 +100,7 @@ describe("mode Histoire : prologue déterministe", () => {
       endings.add(run.ending!);
       expect(restoreStory(script, JSON.stringify(run))).not.toBeNull();
     }
-    expect(endings.size).toBeGreaterThanOrEqual(4);
+    expect(endings.size).toBe(8);
+    expect(seenScenes.size).toBe(script.scenes.length);
   });
 });
