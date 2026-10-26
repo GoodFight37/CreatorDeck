@@ -174,6 +174,13 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(storyActInterlude({ ...base, step: 20, flags: ["collecte_personnelle"] })?.text).toContain("dons");
     expect(storyActInterlude({ ...base, step: 28, flags: ["charte_collectif"] })?.text).toContain("Flo");
     expect(storyActInterlude({ ...base, step: 36, flags: ["source_protegee"] })?.text).toContain("source");
+    expect(storyActInterlude({ ...base, step: 20, flags: ["defi_algo"] })?.text).toContain("cadence");
+    expect(storyActInterlude({ ...base, step: 20, flags: ["formation_modo"] })?.text).toContain("modérateurs");
+    expect(storyActInterlude({ ...base, step: 28, flags: ["nuit_blanche"] })?.text).toContain("montage");
+    expect(storyActInterlude({ ...base, step: 28, flags: ["archives_exposees"] })?.text).toContain("Flo");
+    expect(storyActInterlude({ ...base, step: 36, flags: ["vote_trahi"] })?.text).toContain("collectif");
+    expect(storyActInterlude({ ...base, step: 36, flags: ["dette_nox_refusee"] })?.text).toContain("Nox");
+    expect(storyActInterlude({ ...base, step: 36, flags: ["reprise_voix"] })?.text).toContain("agence");
     expect(storyActInterlude({ ...flo, step: 13 })).toBeNull();
     expect(storyActInterlude({ ...flo, ending: "survivant" })).toBeNull();
     expect(base.step).toBe(0);
