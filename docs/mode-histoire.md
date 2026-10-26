@@ -49,3 +49,11 @@ La mécanique à conserver vient des quatre pressions lisibles, du geste simple 
 Avant d'intégrer des scènes créées avec une IA, les **réviser hors partie** : cohérence des personnages, drapeaux utiles, ramifications croisées, variété de ton, lisibilité mobile, absence d'emprunt à Reigns, puis simulation et tests. Le runtime ne sollicite aucune IA, aucune API et aucun service payant. Pour une future production de plusieurs centaines de scènes, étudier le langage ouvert Ink (conditions, « knots », embranchements rejoignables et suivi d'état), mais ne pas ajouter sa dépendance au pilote sans gain vérifié.
 
 Références consultées : François Alliot, « Creating an adaptive narrative in Reigns », Game Developer (2016) ; W3C/WAI, « Understanding WCAG 2.5.7 Dragging Movements » ; inkle, documentation « Writing with Ink ».
+
+### Régressions ciblées identifiées pendant les contrôles
+
+La CI du SHA `91bc1ac` a exécuté 1 227 tests unitaires, dont 1 226 réussis : le test de parcours exhaustif a dépassé le délai Vitest de 5 secondes, avec une durée constatée supérieure à 6,9 secondes. La vérification reste exhaustive (4096 parcours et restauration) mais dispose désormais de **30 secondes**, sans allègement des assertions. Ce réglage n'est pas une preuve de réussite : attendre le job du SHA qui contient le correctif.
+
+Un double-tap rapide sur le même bouton pouvait valider deux scènes successives : la position des boutons est conservée d'un chapitre à l'autre. Un verrou bref de 450 ms et une vérification du numéro d'étape empêchent le second choix involontaire. Un scénario Playwright `dblclick` vérifie que le chapitre 2 reste affiché après le double-tap. Le défaut a été reproduit dans la démo HTML autonome ; **la confirmation dans Next.js reste soumise au Playwright de la branche**, et la démo ne vaut pas preuve de rendu de production.
+
+Les commits du pilote restent sur une PR brouillon non fusionnée ; ni la production ni l'économie du jeu de cartes ne sont modifiées.
