@@ -9,6 +9,7 @@ import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { isPeelOpenable, PEEL_MIN_APERTURE, PEEL_MIN_COVERAGE, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 import { buzz } from "@/lib/haptics";
+import { beginExperimentalPackGesture, moveExperimentalPackGesture, snapExperimentalPackGesture, cancelExperimentalPackGesture } from "@/lib/sfx";
 import { PACK_TEAR_MS, TEAR_HAPTIC } from "@/lib/reveal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
@@ -190,9 +191,11 @@ export function PackTear({
     if (timer.current !== null) window.clearTimeout(timer.current);
     if (slowTimer.current !== null) window.clearTimeout(slowTimer.current);
     cancelScheduledCut();
+    cancelExperimentalPackGesture();
   }, []);
 
   const retract = () => {
+    cancelExperimentalPackGesture();
     start.current = null;
     cancelScheduledCut();
     if (done.current) return;
@@ -329,6 +332,7 @@ export function PackTear({
                 points: [point],
                 percent: point.x,
               };
+              beginExperimentalPackGesture();
               setReturning(false);
               setReleaseReady(false);
               setTrace([point]);
@@ -376,6 +380,8 @@ export function PackTear({
                 seamCoverage / PEEL_MIN_COVERAGE, aperture / PEEL_MIN_APERTURE,
               ) * 100));
               pullProgress.current = progress / 100;
+              // La texture sonore suit la distance réellement parcourue.
+              moveExperimentalPackGesture(Math.max(progress, Math.min(100, seamCoverage * 0.65)));
 
               scheduleCut({
                 trace: [...gesture.points],
@@ -404,6 +410,7 @@ export function PackTear({
                 // hand still guides the seam and foil until pointerUp.
                 gesture.ready = true;
                 setReleaseReady(true);
+                snapExperimentalPackGesture();
                 buzz(TEAR_HAPTIC);
               }
 
