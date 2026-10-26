@@ -227,18 +227,20 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(seenScenes.size).toBe(27);
   }, 30_000);
 
-  it("explore 512 parcours de la saison de 40 décisions sans blocage ni sauvegarde invalide", () => {
+  it("explore 1024 parcours de la saison de 40 décisions sans blocage ni sauvegarde invalide", () => {
     const endings = new Set<string>();
     const visitedSteps = new Set<number>();
+    const visitedScenes = new Set<string>();
     let longest = 0;
     let completed = 0;
     const lengths: number[] = [];
-    for (let mask = 0; mask < 512; mask++) {
+    for (let mask = 0; mask < 1024; mask++) {
       let seed = (0x9e3779b9 ^ mask) >>> 0;
       let run = startStory(script);
       while (!run.ending) {
         const scene = currentStoryScene(script, run);
         expect(scene).not.toBeNull();
+        if (scene) visitedScenes.add(scene.id);
         visitedSteps.add(run.step);
         seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
         run = chooseStory(script, run, (seed & 1) ? "left" : "right");
@@ -258,8 +260,9 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(longest).toBeGreaterThan(20);
     expect(endings.size).toBeGreaterThanOrEqual(4);
     lengths.sort((a, b) => a - b);
-    expect(lengths[256]).toBeGreaterThanOrEqual(26);
-    expect(completed).toBeGreaterThanOrEqual(150);
+    expect(lengths[512]).toBeGreaterThanOrEqual(26);
+    expect(completed).toBeGreaterThanOrEqual(300);
+    expect(script.scenes.filter((scene) => !visitedScenes.has(scene.id)).map((scene) => scene.id)).toEqual([]);
   }, 60_000);
 
   it("permet une partie longue avec des décisions équilibrées et des choix déterministes", () => {
