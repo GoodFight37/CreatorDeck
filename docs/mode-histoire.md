@@ -66,3 +66,5 @@ Deux tests Playwright ciblés ont été ajoutés : identité de la carte pour To
 
 Ressources : `DESIGN.md` et les tokens du thème Pocket dans `src/app/globals.css` ; guide des pratiques React de Vercel ; W3C/WAI WCAG 2.2 (Dragging Movements, Target Size Minimum). Inspirations de présentation : mécanique du choix binaire de Reigns, sans reprise d'illustration ni de dialogue.
 
+
+Complément exploratoire au contrôle visuel : une maquette HTML locale dérivée du prototype (et non l'application Next) a été chargée dans Chromium via `set_content`, car les navigations fichier/localhost étaient bloquées par l'environnement. À 320×568 et 390×844, aucun débordement horizontal détecté, boutons ~83 px de hauteur, aucun `pageerror`. La maquette a révélé deux petites retouches intégrées : titre sur une ligne à 320 px et libellé narratif « Ton point de vue » à la place d'un double « Toi ». Ces constats restent **des preuves de composition approximative** ; les vrais tests E2E et une inspection visuelle du déploiement demeurent indispensables.

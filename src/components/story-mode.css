@@ -102,6 +102,7 @@
   .story-card { min-height: 290px; }
 }
 @media (max-width: 370px) {
+  .story-intro h1 { font-size: 36px; white-space: nowrap; }
   .story-card-meta, .story-scene-art-label { font-size: 12px; }
   .story-scene-art { height: 100px; }
   .story-scene-art .story-face { width: 56px; height: 56px; font-size: 34px; margin-bottom: 11px; }

@@ -174,7 +174,7 @@ export function StoryMode() {
                     <div className="story-face">{scene.emoji}</div>
                     <span className="story-scene-art-label">{scene.speaker.split(" · ")[0]}</span>
                   </div>
-                  <div className="story-speaker">{scene.speaker}</div>
+                  <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
                   <h2 aria-live="polite">{scene.title}</h2>
                   <p>{scene.text}</p>
                   <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
