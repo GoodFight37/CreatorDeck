@@ -5,7 +5,7 @@ import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
   STORY_ENDINGS, STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects,
-  restoreStory, startStory, type StoryDirection, type StoryRun, type StoryStat,
+  restoreStory, startStory, storyEpilogue, type StoryDirection, type StoryRun, type StoryStat,
 } from "../lib/story-mode";
 import "./story-mode.css";
 
@@ -199,6 +199,10 @@ export function StoryMode() {
                 <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
                 <h2>{STORY_ENDINGS[run.ending].title}</h2>
                 <p>{STORY_ENDINGS[run.ending].text}</p>
+                <div className="story-epilogue" aria-label="Ce que tes choix ont changé">
+                  <h3>CE QUE TU LAISSES DERRIÈRE TOI</h3>
+                  {storyEpilogue(run).map((memory, index) => <p key={index}>{memory}</p>)}
+                </div>
                 <details className="story-recap" aria-live="off">
                   <summary>Revoir mes {run.history.length} décisions</summary>
                   <ol>
