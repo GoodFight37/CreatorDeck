@@ -1,5 +1,5 @@
 /** Moteur autonome du mode Histoire : aucune dépendance cloud, carte ou IA. */
-export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v3";
+export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v4";
 export const STORY_STATS = ["public", "energie", "argent", "confiance"] as const;
 export type StoryStat = (typeof STORY_STATS)[number];
 export type StoryStats = Record<StoryStat, number>;
@@ -188,6 +188,58 @@ export function storyEpilogue(run: StoryRun): string[] {
   return memories;
 }
 
+/** Transition d'acte personnalisée, dérivée de la partie sans inventer de choix. */
+export interface StoryActInterlude { title: string; text: string }
+
+export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
+  if (run.ending) return null;
+  const flags = new Set(run.flags);
+  switch (run.step) {
+    case 12:
+      return {
+        title: "ACTE II · LE PRIX DES VUES",
+        text: flags.has("collectif_autonome")
+          ? "Flo a désormais sa place à la table des décisions. L'équipe a grandi ; reste à savoir comment la faire vivre."
+          : flags.has("pacte_brise")
+            ? "Le bilan est passé, pas la trahison. Nox garde le silence et le studio ouvre une nouvelle page."
+            : "Le premier grand direct est derrière toi. Les applaudissements s'effacent, mais les factures et les promesses restent.",
+      };
+    case 20:
+      return {
+        title: "ACTE III · LES COMPTES À RENDRE",
+        text: flags.has("collecte_personnelle")
+          ? "Tu as encaissé toi-même les dons de la collecte. Il faudra bientôt montrer ce que les chiffres ne disent pas."
+          : flags.has("limites_vie_privee")
+            ? "Tu as posé une limite entre ta chaîne et ta porte d'entrée. À présent, Lina attend des réponses."
+            : "L'audience ne regarde plus seulement tes vidéos. Elle commence à regarder ce que tu fais quand le direct est coupé.",
+      };
+    case 28:
+      return {
+        title: "ACTE IV · CEUX QUI RESTENT",
+        text: flags.has("audit_dons")
+          ? "Les comptes de la collecte ont été ouverts. Tu as payé le prix de la transparence ; d'autres questions arrivent."
+          : flags.has("dons_opacite")
+            ? "Le montant des dons n'est toujours pas clair. Même les personnes qui te soutiennent commencent à demander des preuves."
+            : flags.has("charte_collectif")
+              ? "Flo a mis vos règles par écrit. Les appliquer quand elles te dérangent sera une autre épreuve."
+              : "Les gens reviennent dans ta vie avec leurs souvenirs. Aucun compteur ne te dit ce qu'ils ont retenu.",
+      };
+    case 36:
+      return {
+        title: "ACTE V · DERNIER DIRECT",
+        text: flags.has("source_protegee")
+          ? "Tu as protégé l'anonymat d'une source. Pour le dernier direct, il reste une vérité à raconter : la tienne."
+          : flags.has("source_menacee")
+            ? "À force de chercher un nom, tu as exposé quelqu'un d'autre. Le direct final approche et la question demeure."
+            : flags.has("vraie_pause")
+              ? "Tu t'es accordé une soirée sans écran. Il reste quatre décisions pour choisir ce que le public emportera."
+              : "Le direct final est proche. Quatre décisions pour découvrir si ta chaîne ressemble encore à ton premier soir.",
+      };
+    default:
+      return null;
+  }
+}
+
 export function chooseStory(script: StoryScript, run: StoryRun, direction: StoryDirection): StoryRun {
   if (direction !== "left" && direction !== "right") throw new Error("Direction invalide");
   if (run.scriptId !== script.id || run.scriptVersion !== script.version) throw new Error("Version de partie incompatible");
@@ -215,7 +267,7 @@ export function chooseStory(script: StoryScript, run: StoryRun, direction: Story
  * Variations réellement appliquées par le dernier choix.
  * Les effets déclarés dans le scénario sont des intentions : à 100 ou à 0,
  * une jauge est plafonnée et l'affichage ne doit pas inventer des points.
- * Les sauvegardes V3 conservent les effets bruts pour être rejouées et validées.
+ * Les sauvegardes V4 conservent les effets bruts pour être rejouées et validées.
  */
 export function lastStoryAppliedEffects(script: StoryScript, run: StoryRun): Partial<StoryStats> | null {
   if (!run.history.length) return null;
