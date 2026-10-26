@@ -13,7 +13,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     id: "2026-10-26-histoire-pilote", date: "2026-10-26", title: "Une histoire à choisir",
     summary: "Prototype indépendant : pars de zéro comme streamer et découvre les conséquences de tes choix.",
     sections: [{ title: "Mode Histoire (pilote)", items: [
-      "Sur la route expérimentale /histoire, prends douze décisions avec quatre jauges à équilibrer.",
+      "Sur la route expérimentale /histoire, traverse jusqu'à quarante décisions en cinq actes, avec quatre jauges à équilibrer.",
       "Retrouve Flo, Nox et Mona : certains choix refont surface plusieurs chapitres plus tard.",
       "Ta progression se conserve localement sur cet appareil. Aucun point ni jeton de ta collection ne change.",
       "Chaque rencontre se présente comme une carte-événement, dans un décor de studio aux couleurs de son personnage.",
