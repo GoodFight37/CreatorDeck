@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue,
+  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue, storyActInterlude,
   validateStoryScript, type StoryDirection,
 } from "./story-mode";
 
@@ -135,6 +135,20 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, nox)?.id).toBe("finale_pacte");
   });
 
+  it("annonce les actes avec un rappel de conséquences, sans modifier la partie", () => {
+    const base = startStory(script);
+    expect(storyActInterlude(base)).toBeNull();
+    const flo = { ...base, step: 12, flags: ["collectif_autonome"] };
+    expect(storyActInterlude(flo)?.text).toContain("Flo");
+    expect(storyActInterlude({ ...base, step: 12, flags: ["pacte_brise"] })?.text).toContain("Nox");
+    expect(storyActInterlude({ ...base, step: 20, flags: ["collecte_personnelle"] })?.text).toContain("dons");
+    expect(storyActInterlude({ ...base, step: 28, flags: ["charte_collectif"] })?.text).toContain("Flo");
+    expect(storyActInterlude({ ...base, step: 36, flags: ["source_protegee"] })?.text).toContain("source");
+    expect(storyActInterlude({ ...flo, step: 13 })).toBeNull();
+    expect(storyActInterlude({ ...flo, ending: "survivant" })).toBeNull();
+    expect(base.step).toBe(0);
+  });
+
   it("la rencontre avec les abonnés n'est pas masquée par les deux variantes de crise", () => {
     const atConvention = { ...startStory(script), step: 32, flags: ["limites_vie_privee"] };
     const protectedCommunity = { ...atConvention, flags: ["limites_vie_privee", "communaute_saine"] };
@@ -217,6 +231,8 @@ describe("mode Histoire : prologue déterministe", () => {
     const endings = new Set<string>();
     const visitedSteps = new Set<number>();
     let longest = 0;
+    let completed = 0;
+    const lengths: number[] = [];
     for (let mask = 0; mask < 512; mask++) {
       let seed = (0x9e3779b9 ^ mask) >>> 0;
       let run = startStory(script);
@@ -232,6 +248,8 @@ describe("mode Histoire : prologue déterministe", () => {
         }
       }
       longest = Math.max(longest, run.step);
+      lengths.push(run.step);
+      if (run.step === script.totalSteps) completed++;
       endings.add(run.ending!);
       expect(STORY_ENDINGS[run.ending!]).toBeDefined();
       expect(restoreStory(script, JSON.stringify(run))).toEqual(run);
@@ -239,6 +257,9 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(visitedSteps.has(12)).toBe(true);
     expect(longest).toBeGreaterThan(20);
     expect(endings.size).toBeGreaterThanOrEqual(4);
+    lengths.sort((a, b) => a - b);
+    expect(lengths[256]).toBeGreaterThanOrEqual(26);
+    expect(completed).toBeGreaterThanOrEqual(150);
   }, 60_000);
 
   it("permet une partie longue avec des décisions équilibrées et des choix déterministes", () => {
