@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { STORY_PROLOGUE } from "../src/data/story-prologue";
+import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
 test("Histoire : les choix persistent après un rechargement", async ({ page }) => {
   await page.goto("/histoire");
@@ -27,6 +29,33 @@ test("Histoire : les indices expliquent les enjeux sans révéler les nombres", 
   await left.click();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
   await expect(left.getByLabel("Confiance en hausse")).toBeVisible();
+});
+
+test("Histoire : les nouveaux intervenants ont une identité visuelle propre", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  const directions = "LRRLLLRLLRRRLRRLRRLLLRRRRLRRLRRRLLLRRRRL";
+  const expectations = new Map([
+    [13, { identity: "platform", name: "PLATEFORME" }],
+    [17, { identity: "community", name: "SAM" }],
+    [18, { identity: "lina", name: "LINA" }],
+  ]);
+  let run = startStory(STORY_PROLOGUE);
+  for (let step = 1; step <= 18; step++) {
+    run = chooseStory(STORY_PROLOGUE, run, directions[step - 1] === "L" ? "left" : "right");
+    const expected = expectations.get(step);
+    if (!expected) continue;
+    expect(run.ending).toBeNull();
+    await page.evaluate(({ key, value }) => window.localStorage.setItem(key, value), {
+      key: STORY_SAVE_KEY, value: JSON.stringify(run),
+    });
+    await page.reload();
+    const card = page.locator(".story-play-card");
+    await expect(card).toHaveAttribute("data-character", expected.identity);
+    await expect(card.locator(".story-scene-art-label")).toHaveText(expected.name);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  }
 });
 
 test("Histoire : le journal montre seulement les décisions passées et survit au rechargement", async ({ page }) => {
