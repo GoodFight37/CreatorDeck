@@ -1,3 +1,11 @@
+## D-172 — 26 octobre 2026 : identité visuelle du mode Histoire (PR #24 uniquement)
+
+Le prototype narratif fonctionnait mais ressemblait encore à un tableau de bord. Conserver les tokens et polices du design CreatorDeck et redonner la priorité à **la carte événement** : décor de studio composé en CSS local, bord de carte lié au protagoniste (Toi, Flo, Nox, Mona), speaker toujours écrit explicitement, jauges compactes, lecture des conséquences et deux vrais boutons de choix. Pas de sprites téléchargés, de dépendance graphique, d'animations perpétuelles ou d'appel à un service externe ; les emojis existants restent provisoires et peuvent être remplacés ultérieurement par des portraits originaux testés.
+
+La distinction des personnages ne repose jamais uniquement sur la couleur ; le nom reste visible. Les jauges critiques ont un indicateur de risque supplémentaire et les valeurs numériques restent affichées. Les deux boutons réalisent les mêmes choix que le glissé et respectent l'alternative à la manipulation exigée par WCAG 2.2, 2.5.7. Le mode de mouvement réduit coupe les translations décoratives. Vérifier le texte, l'absence de débordement et les cibles tactiles sur 320/390 px.
+
+Périmètre volontairement strict : `src/components/story-mode.tsx`, `src/components/story-mode.css`, tests `e2e/story-mode.spec.ts`, documentation de ce pilote et sa note joueur. Pas de changement au moteur, aux cartes, au portefeuille, à la navigation générale, aux migrations ou à `main`. Les nouveaux scénarios E2E ne sont pas une preuve de réussite tant que la CI du SHA ne les a pas exécutés.
+
 ## D-171 — 26 octobre 2026 : mode Histoire en pilote indépendant
 
 Malik demande de lancer un mode carrière narratif inspiré des choix gauche/droite de Reigns. Le joueur incarne un streamer fictif qui part de zéro, et non les chaînes réelles des cartes à collectionner. Une IA peut aider à fabriquer ou vérifier les scénarios **avant** la partie, jamais pendant un tour. Il faut d'abord éprouver une recette narrative courte avant d'étendre la production.

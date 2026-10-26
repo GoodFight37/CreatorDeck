@@ -1,3 +1,7 @@
+# Checkpoint mode Histoire — passe design D-172 (26 octobre 2026)
+
+Branche **uniquement** `feature/histoire-reigns-pilot-20261026` ; PR brouillon #24. Relecture de la direction artistique Pocket (`DESIGN.md`, `globals.css`), guide React de Vercel et WCAG. Nouvelle carte-scène avec décor de studio CSS, marqueur de personnage Toi/Flo/Nox/Mona, signalement des jauges basses, texte et boutons améliorés, mouvement réduit, petites hauteurs. Tests Playwright ajoutés pour identité des personnages et 320/390 px. Aucun nouveau média, API, coût, dépendance ou modification de `main`/carte/SQL. Vérifier l'état des workflows et le SHA de la dernière prévisualisation avant d'annoncer la validation ; une prévisualisation READY ne confirme pas les gestes, l'accessibilité ou la qualité visuelle. Ponytail non disponible, non exécuté. Suivi technique : `docs/mode-histoire.md`.
+
 # Checkpoint mode Histoire — vérifications et réécriture du pilote, 26 octobre 2026
 
 **Branche de travail uniquement :** `feature/histoire-reigns-pilot-20261026`, PR [#24](https://github.com/GoodFight37/CreatorDeck/pull/24) en brouillon, base main historique `ecaf2907dc2921abc77888eaff560fac22c28e99`. Commits de corrections postérieurs au pilote `4cb66e3` : lint React/Next, rejouage strict de la sauvegarde, tests anti-altération, Playwright, retour visuel des conséquences, 21e scène combinant les intrigues Nox/Mona, nouvelle sauvegarde `.v2`. **Ne pas réécrire le moteur streamer retiré.**

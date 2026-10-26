@@ -16,6 +16,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Sur la route expérimentale /histoire, prends douze décisions avec quatre jauges à équilibrer.",
       "Retrouve Flo, Nox et Mona : certains choix refont surface plusieurs chapitres plus tard.",
       "Ta progression se conserve localement sur cet appareil. Aucun point ni jeton de ta collection ne change.",
+      "Chaque rencontre se présente comme une carte-événement, dans un décor de studio aux couleurs de son personnage.",
     ] }],
   },
   {

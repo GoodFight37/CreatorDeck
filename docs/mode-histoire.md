@@ -57,3 +57,12 @@ La CI du SHA `91bc1ac` a exécuté 1 227 tests unitaires, dont 1 226 réussis : 
 Un double-tap rapide sur le même bouton pouvait valider deux scènes successives : la position des boutons est conservée d'un chapitre à l'autre. Un verrou bref de 450 ms et une vérification du numéro d'étape empêchent le second choix involontaire. Un scénario Playwright `dblclick` vérifie que le chapitre 2 reste affiché après le double-tap. Le défaut a été reproduit dans la démo HTML autonome ; **la confirmation dans Next.js reste soumise au Playwright de la branche**, et la démo ne vaut pas preuve de rendu de production.
 
 Les commits du pilote restent sur une PR brouillon non fusionnée ; ni la production ni l'économie du jeu de cartes ne sont modifiées.
+
+## Passe de design mobile, 26 octobre 2026 (D-172)
+
+La scène est devenue une **carte-événement de studio** : décor léger dessiné uniquement en CSS, bord et speaker propres à Toi/Flo/Nox/Mona, jauges resserrées, indicateur visible pour les valeurs critiques, choix côte à côte plus lisibles et art plus compact sur petites hauteurs. Les dimensions et couleurs restent dérivées des tokens existants dans `globals.css` et la typographie embarquée. Aucun média externe ni génération IA à l'exécution, aucun changement de gameplay.
+
+Deux tests Playwright ciblés ont été ajoutés : identité de la carte pour Toi puis Flo et disposition 320×568 / 390×844 (absence de débordement horizontal, portrait visible, boutons de minimum 44×44). Le test existant des gestes, celui du clavier et celui de la sauvegarde continuent d'être utiles. La validation **reste en attente** du nouveau workflow GitHub sur le SHA de la livraison ; prévisualisation Vercel READY n'atteste pas l'aspect visuel. Pour la revue finale, ouvrir `/histoire` sur le lien de prévisualisation du SHA, observer la carte initiale et après le premier choix, la fin et le mouvement réduit. L'absence de Ponytail dans le catalogue disponible est maintenue, non simulée.
+
+Ressources : `DESIGN.md` et les tokens du thème Pocket dans `src/app/globals.css` ; guide des pratiques React de Vercel ; W3C/WAI WCAG 2.2 (Dragging Movements, Target Size Minimum). Inspirations de présentation : mécanique du choix binaire de Reigns, sans reprise d'illustration ni de dialogue.
+
