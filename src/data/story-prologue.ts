@@ -154,6 +154,22 @@ export const STORY_PROLOGUE: StoryScript = {
       },
     },
     {
+      id: "flo_alliee_final", step: 10, requiresFlags: ["flo_protegee", "communaute_saine"], title: "Le message épinglé", speaker: "FLO · modératrice", emoji: "🛡️", channel: "CHAT",
+      text: "Pendant que tu prépares la dernière semaine, Flo épingle les règles que vous avez écrites ensemble. « Tu m'as laissé souffler quand j'en avais besoin. Cette fois, je peux tenir le chat. Mais toi, tu dois aussi tenir debout. »",
+      choices: {
+        left: { label: "Lui confier le direct et te reposer", effects: { energie: 13, confiance: 7, public: -5 }, addFlags: ["flo_pilier"] },
+        right: { label: "Assurer le direct à deux", effects: { public: 10, energie: -8, confiance: 6 }, addFlags: ["duo_flo"] },
+      },
+    },
+    {
+      id: "nox_duo_final", step: 10, requiresFlags: ["duo_nox"], title: "La proposition de Nox", speaker: "NOX · en appel", emoji: "🎧", channel: "DM",
+      text: "Nox te propose un dernier duo avant le bilan. Il se souvient du clip que tu avais choisi de ne pas transformer en humiliation. « On peut partager la scène sans se voler la lumière. »",
+      choices: {
+        left: { label: "Partager le direct avec Nox", effects: { public: 11, energie: -7, confiance: 8 }, addFlags: ["nox_allie_final"] },
+        right: { label: "Le remercier et préserver ta pause", effects: { energie: 12, confiance: 4, public: -4 }, addFlags: ["nox_respecte_final"] },
+      },
+    },
+    {
       id: "course", step: 10, title: "La dernière semaine", speaker: "TOI", emoji: "⏰", channel: "LIVE",
       text: "Ton téléphone vibre même quand personne n'écrit. Tu peux tenir une semaine de plus, ou laisser une soirée sans caméra.",
       choices: {
