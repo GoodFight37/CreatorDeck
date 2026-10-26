@@ -115,19 +115,17 @@ describe("bruitage expérimental du booster piloté par le geste", () => {
         resume = vi.fn(async () => {});
         decodeAudioData = vi.fn(async () => buffer);
         createGain() {
-          const node = {
+          return {
             gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
-            connect: () => node,
+            connect: vi.fn(),
           };
-          return node;
         }
         createBufferSource() {
-          const node = {
+          return {
             buffer: null as AudioBuffer | null,
             start: (...args: number[]) => { starts.push(args); },
-            connect: () => node,
+            connect: () => ({ connect: vi.fn() }),
           };
-          return node;
         }
         createOscillator() { throw new Error("La synthèse originale ne doit pas démarrer"); }
       },
