@@ -13,8 +13,8 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(script.totalSteps).toBe(12);
   });
 
-  it("attribue un canal narratif connu à chacune des 21 scènes", () => {
-    expect(script.scenes).toHaveLength(21);
+  it("attribue un canal narratif connu à chacune des 23 scènes", () => {
+    expect(script.scenes).toHaveLength(23);
     expect(script.scenes.map((scene) => scene.channel)).toContain("ARCHIVE");
     expect(validateStoryScript({ ...script, scenes: [
       { ...script.scenes[0], channel: "INCONNU" as typeof script.scenes[0]["channel"] },
