@@ -6,7 +6,7 @@ export const STORY_PROLOGUE: StoryScript = {
   id: "zero-spectateur",
   version: 3,
   title: "Zéro spectateur",
-  subtitle: "Quarante décisions. Tes raccourcis ont une facture, tes promesses une mémoire.",
+  subtitle: "Jusqu'à quarante décisions. Tes raccourcis ont une facture, tes promesses une mémoire.",
   totalSteps: 40,
   initialStats: { public: 35, energie: 65, argent: 55, confiance: 55 },
   scenes: [
