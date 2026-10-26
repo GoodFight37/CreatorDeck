@@ -44,7 +44,7 @@ test("Histoire : le journal montre seulement les décisions passées et survit a
   await expect(journal.locator("li").first()).toContainText("Rester avec le téléphone");
   await expect(journal).not.toContainText("Le clip de trop");
   await page.reload();
-  await expect(page.locator(".story-recap-live summary")).toContainText("1 décisions");
+  await expect(page.locator(".story-recap-live summary")).toContainText("1 décision");
   await page.locator(".story-recap-live summary").click();
   await expect(page.locator(".story-recap-live li")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
