@@ -194,6 +194,22 @@ export const STORY_PROLOGUE: StoryScript = {
       },
     },
     {
+      id: "finale_collectif", step: 11, requiresFlags: ["collectif_flo"], title: "Les voix derrière la caméra", speaker: "FLO · collectif", emoji: "🎛️", channel: "LIVE",
+      text: "Flo passe le micro aux bénévoles. Chacun raconte ce qu'il a apporté à la chaîne. Une marque propose de financer le collectif, mais veut le nom de Flo sur une affiche sans lui demander son avis.",
+      choices: {
+        left: { label: "Laisser Flo décider de sa place", effects: { confiance: 14, energie: 6, argent: -6 }, addFlags: ["collectif_autonome", "final_humain"] },
+        right: { label: "Accepter l'offre pour toute l'équipe", effects: { argent: 18, public: 8, confiance: -12, energie: -5 }, addFlags: ["collectif_commercial", "final_spectacle"] },
+      },
+    },
+    {
+      id: "finale_pacte", step: 11, requiresFlags: ["pacte_nox"], title: "Deux directs, un seul public", speaker: "NOX · streamer partenaire", emoji: "📡", channel: "LIVE",
+      text: "Les deux chaînes lancent leur direct en même temps. Le chat demande qui a gagné. Nox t'envoie : « On avait promis de ne pas faire de l'autre un adversaire. »",
+      choices: {
+        left: { label: "Partager les revenus et le générique", effects: { confiance: 13, argent: -6, public: 5 }, addFlags: ["pacte_tenu", "final_humain"] },
+        right: { label: "Réserver l'annonce à ta chaîne", effects: { public: 16, argent: 10, confiance: -15 }, addFlags: ["pacte_brise", "final_spectacle"] },
+      },
+    },
+    {
       id: "finale_collective", step: 11, requiresFlags: ["communaute_saine"], title: "Le dernier bouton", speaker: "FLO · équipe de modération", emoji: "🫶", channel: "LIVE",
       text: "Le jour du bilan, Flo lance le chat : « On ne vient plus seulement pour les chiffres. On vient pour ce qu'on construit ici. » La caméra est prête.",
       choices: {
