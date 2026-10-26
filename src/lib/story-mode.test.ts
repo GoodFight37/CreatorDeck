@@ -54,6 +54,33 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(restoreStory(script, JSON.stringify({ ...run, stats: { ...run.stats, argent: 999 } }))).toBeNull();
   });
 
+  it("rejette les sauvegardes qui réécrivent une jauge, une conséquence ou une fin", () => {
+    const first = chooseStory(script, startStory(script), "left");
+    const forged = (changes: object) => restoreStory(script, JSON.stringify({ ...first, ...changes }));
+    expect(forged({ stats: { ...first.stats, argent: first.stats.argent + 2 } })).toBeNull();
+    expect(forged({ flags: ["sponsor_cache"] })).toBeNull();
+    expect(forged({ ending: "business" })).toBeNull();
+    expect(forged({ history: [{ ...first.history[0], sceneId: "premier_chat" }] })).toBeNull();
+    expect(forged({ history: [{ ...first.history[0], effects: { public: 99 } }] })).toBeNull();
+  });
+
+  it("refuse de prolonger une fin anticipée", () => {
+    let ended: ReturnType<typeof startStory> | null = null;
+    for (let mask = 0; mask < 2 ** script.totalSteps && !ended; mask++) {
+      let run = startStory(script);
+      for (let step = 0; step < script.totalSteps && !run.ending; step++) {
+        run = chooseStory(script, run, mask & (1 << step) ? "right" : "left");
+      }
+      if (run.ending && run.step < script.totalSteps) ended = run;
+    }
+    expect(ended).not.toBeNull();
+    if (!ended) return;
+    const forged = { ...ended, history: [...ended.history, ended.history[0]], step: ended.step + 1 };
+    expect(restoreStory(script, JSON.stringify(forged))).toBeNull();
+    expect(chooseStory(script, ended, "right")).toBe(ended);
+    expect(restoreStory(script, JSON.stringify(ended))).toEqual(ended);
+  });
+
   it("parcourt exhaustivement les 4096 combinaisons binaires : ni blocage ni jauge illégale", () => {
     const endings = new Set<string>();
     for (let mask = 0; mask < 2 ** script.totalSteps; mask++) {
