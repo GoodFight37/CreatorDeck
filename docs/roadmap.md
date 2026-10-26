@@ -1,5 +1,7 @@
 # Roadmap CreatorDeck
 
+**Mode Histoire inspiré de Reigns — pilote du 26 octobre 2026 (D-171, en cours) :** nouvelle expérience narrative sur une branche isolée `feature/histoire-reigns-pilot-20261026`, sans modifier les quatre piliers, le tirage, les jetons ou Supabase. Le joueur est un streamer fictif débutant ; 12 décisions, 4 jauges, personnages récurrents et conséquences différées. Moteur et prologue écrits en amont sans IA à l'exécution. 4096 parcours binaires explorés hors navigateur ; 8 fins accessibles. Route expérimentale `/histoire` non liée à l'accueil. **Non fusionné, non validé visuellement sur APK/navigateur du dépôt et non déclaré déployé.** Suite : Vitest/typecheck/lint/build, Playwright 320/390 px, revue de rythme et d'équilibrage ; détails : [mode-histoire.md](mode-histoire.md).
+
 **Lots 4 et 5 — activités existantes, 26 octobre 2026 (D-170) :** publiés dans
 [`839ff43c`](https://github.com/GoodFight37/CreatorDeck/commit/839ff43c82393059821bfbca390c88b790c189af),
 Vercel Production du même SHA réussi, suivi `CreatorDeck-Codex-3co`. Last Pack conservé en

@@ -1,3 +1,11 @@
+## D-171 — 26 octobre 2026 : mode Histoire en pilote indépendant
+
+Malik demande de lancer un mode carrière narratif inspiré des choix gauche/droite de Reigns. Le joueur incarne un streamer fictif qui part de zéro, et non les chaînes réelles des cartes à collectionner. Une IA peut aider à fabriquer ou vérifier les scénarios **avant** la partie, jamais pendant un tour. Il faut d'abord éprouver une recette narrative courte avant d'étendre la production.
+
+Pour ce premier lot : quatre jauges (Public, Énergie, Argent, Confiance), personnages récurrents (Flo, Nox, Mona), drapeaux de conséquences différées, fins multiples et moteur déterministe avec données versionnées. Écran et sauvegarde locale isolés sur la route de test `/histoire`, sans navigation ajoutée au jeu principal. Aucune monnaie, récompense, RPC, migration SQL ou dépendance nouvelle. Le simulateur historique « Ta chaîne », retiré en octobre, **n'est pas restauré**. Les dialogues et illustrations de Reigns ne sont pas copiés.
+
+Pilotage : travail sur branche dédiée tant que les tests end-to-end du dépôt et le rendu mobile ne sont pas validés. Première preuve : 4096 parcours explorés avec le moteur TypeScript strict, huit fins accessibles. Aucune revendication de déploiement ni de validation physique ; voir `docs/mode-histoire.md`.
+
 ## D-170 — 26 octobre 2026 : lots 4 et 5, corrections visibles seulement
 
 Conserver Last Pack consultatif : l'ami, ses cartes et la propriété sont déjà

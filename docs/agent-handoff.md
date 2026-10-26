@@ -1,3 +1,7 @@
+# Checkpoint — mode Histoire, chantier ouvert le 26 octobre 2026
+
+**Branche de travail (ne pas confondre avec `main`) :** `feature/histoire-reigns-pilot-20261026`, base `ecaf2907dc2921abc77888eaff560fac22c28e99`. Implémentation du pilote « Zéro spectateur » avec le moteur indépendant `src/lib/story-mode.ts`, scénario `src/data/story-prologue.ts`, écran `/histoire` et tests ciblés. Aucun lien dans l'accueil, aucune récompense, aucune migration. Localement hors dépôt : compilation stricte des modules purs, 4096 parcours générés, 8 fins accessibles, syntaxe TSX transpilée. **Non validé dans le build Next complet, CI, navigateur et APK du dépôt ; ne pas fusionner sans ces vérifications.** Le skill Ponytail n'était pas disponible dans la session : ne pas prétendre qu'il a été appliqué. Détails et plan : `docs/mode-histoire.md`. Dernier état Production précédent inchangé par cette branche.
+
 # Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026
 
 **Code publié et vérifié sur GitHub** :

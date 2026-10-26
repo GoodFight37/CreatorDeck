@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-26-histoire-pilote", date: "2026-10-26", title: "Une histoire à choisir",
+    summary: "Prototype indépendant : pars de zéro comme streamer et découvre les conséquences de tes choix.",
+    sections: [{ title: "Mode Histoire (pilote)", items: [
+      "Sur la route expérimentale /histoire, prends douze décisions avec quatre jauges à équilibrer.",
+      "Retrouve Flo, Nox et Mona : certains choix refont surface plusieurs chapitres plus tard.",
+      "Ta progression se conserve localement sur cet appareil. Aucun point ni jeton de ta collection ne change.",
+    ] }],
+  },
+  {
     id: "2026-10-26-activites-lecture", date: "2026-10-26", title: "Des activités plus claires",
     summary: "Last Pack et l’hôtel distinguent une lecture en cours d’une lecture indisponible.",
     sections: [{ title: "Corrections", items: [
