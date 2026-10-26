@@ -219,8 +219,8 @@ export function StoryMode() {
                   onPointerCancel={(event) => pointerEnd(event, true)}
                   style={{ transform: `translateX(${drag * 0.32}px) rotate(${drag * 0.045}deg)` }}
                 >
-                  <div className="story-direction story-direction-left" data-active={drag < -64}>← {scene.choices.left.label}</div>
-                  <div className="story-direction story-direction-right" data-active={drag > 64}>{scene.choices.right.label} →</div>
+                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}>← {scene.choices.left.label}</div>
+                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}>{scene.choices.right.label} →</div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
                     <span className="story-card-meta-mark">● EN COURS</span>
@@ -233,7 +233,7 @@ export function StoryMode() {
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
                   <h2 aria-live="polite">{scene.title}</h2>
                   <p>{scene.text}</p>
-                  <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
+                  <div className="story-swipe-hint">← GLISSE POUR VOIR LES CHOIX →</div>
                 </section>
                 <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>

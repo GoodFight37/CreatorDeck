@@ -271,3 +271,40 @@ test("Histoire : après Entrée le focus suit la scène et les flèches restent 
   await expect(page.locator(".story-progress")).toContainText("3 / 12");
   await expect(page.locator(".story-play-card")).toBeFocused();
 });
+
+
+// Le geste à la Reigns doit permettre de lire le choix AVANT le seuil de validation.
+// Revenir au centre sans franchir 64 px ne doit pas consommer une décision.
+test("Histoire : aperçu au glissement, annulation et validation au seuil", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  const bounds = await card.boundingBox();
+  expect(bounds).not.toBeNull();
+  if (!bounds) return;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  const preview = card.locator(".story-direction-left");
+  await expect(preview).toHaveAttribute("aria-hidden", "true");
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 38, y, { steps: 5 });
+  await expect(preview).toHaveAttribute("data-active", "true");
+  await expect(preview).toHaveAttribute("data-ready", "false");
+  await expect(preview).toHaveCSS("opacity", "1");
+  await page.mouse.up();
+  await expect(preview).toHaveAttribute("data-active", "false");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await expect(page.locator(".story-progress")).toContainText("1 / 12");
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 95, y, { steps: 6 });
+  await expect(preview).toHaveAttribute("data-ready", "true");
+  await page.mouse.up();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(page.locator(".story-progress")).toContainText("2 / 12");
+});
