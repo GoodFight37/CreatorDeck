@@ -74,3 +74,37 @@ test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
   await page.getByRole("button", { name: /Recommencer l’histoire/ }).click();
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
 });
+
+test("Histoire : la carte change d'identité quand le personnage change", async ({ page }) => {
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  await expect(card).toHaveAttribute("data-character", "toi");
+  await expect(card.locator(".story-scene-art")).toBeVisible();
+  await expect(card.locator(".story-scene-art-label")).toHaveText("TOI");
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(card).toHaveAttribute("data-character", "flo");
+  await expect(card.locator(".story-scene-art-label")).toHaveText("FLO");
+});
+
+test("Histoire : design utilisable sur écran étroit, sans débordement ni petites cibles", async ({ page }) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/histoire");
+    await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+    const result = await page.evaluate(() => {
+      const controls = [...document.querySelectorAll<HTMLElement>(".story-choice")];
+      const artwork = document.querySelector<HTMLElement>(".story-scene-art");
+      return {
+        overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        targets: controls.map((el) => ({ width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height })),
+        art: artwork?.getBoundingClientRect().width ?? 0,
+      };
+    });
+    expect(result.overflow).toBe(false);
+    expect(result.art).toBeGreaterThan(40);
+    for (const target of result.targets) {
+      expect(target.width).toBeGreaterThanOrEqual(44);
+      expect(target.height).toBeGreaterThanOrEqual(44);
+    }
+  }
+});
