@@ -192,6 +192,11 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(storyActInterlude({ ...base, step: 20, flags: ["collecte_personnelle"] })?.text).toContain("dons");
     expect(storyActInterlude({ ...base, step: 28, flags: ["charte_collectif"] })?.text).toContain("Flo");
     expect(storyActInterlude({ ...base, step: 36, flags: ["source_protegee"] })?.text).toContain("source");
+    expect(storyActInterlude({ ...base, step: 12, flags: ["debut_modeste"] })?.text).toContain("téléphone");
+    expect(storyActInterlude({ ...base, step: 12, flags: ["micro_cher"] })?.text).toContain("micro");
+    expect(storyActInterlude({ ...base, step: 20, flags: ["refus_sponsor"] })?.text).toContain("Mona");
+    expect(storyActInterlude({ ...base, step: 28, flags: ["nox_dedommage"] })?.text).toContain("Nox");
+    expect(storyActInterlude({ ...base, step: 36, flags: ["reconciliation_flo"] })?.text).toContain("Flo");
     expect(storyActInterlude({ ...base, step: 20, flags: ["defi_algo"] })?.text).toContain("cadence");
     expect(storyActInterlude({ ...base, step: 20, flags: ["formation_modo"] })?.text).toContain("modérateurs");
     expect(storyActInterlude({ ...base, step: 28, flags: ["nuit_blanche"] })?.text).toContain("montage");
