@@ -346,6 +346,23 @@ export function chooseStory(script: StoryScript, run: StoryRun, direction: Story
  * une jauge est plafonnée et l'affichage ne doit pas inventer des points.
  * Les sauvegardes V4 conservent les effets bruts pour être rejouées et validées.
  */
+/**
+ * Deux repères d'effets immédiats pour éclairer le choix sans afficher les valeurs
+ * exactes, ni trahir les promesses et conséquences différées.
+ * Une jauge déjà plafonnée ne promet aucun gain impossible.
+ */
+export function storyChoiceSignals(stats: StoryStats, effects: Partial<StoryStats>): Array<{ stat: StoryStat; direction: "up" | "down" }> {
+  return STORY_STATS
+    .map((stat) => {
+      const applied = Math.max(0, Math.min(100, stats[stat] + (effects[stat] ?? 0))) - stats[stat];
+      return { stat, applied };
+    })
+    .filter(({ applied }) => applied !== 0)
+    .sort((a, b) => Math.abs(b.applied) - Math.abs(a.applied))
+    .slice(0, 2)
+    .map(({ stat, applied }) => ({ stat, direction: applied > 0 ? "up" as const : "down" as const }));
+}
+
 export function lastStoryAppliedEffects(script: StoryScript, run: StoryRun): Partial<StoryStats> | null {
   if (!run.history.length) return null;
   const before = { ...script.initialStats };
