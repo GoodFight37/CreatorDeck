@@ -1,6 +1,11 @@
 import type { StoryScene } from "../lib/story-mode";
 
-/** Actes suivants : scènes locales, choix déterministes, aucun appel réseau. */
+/**
+ * Actes II à V : les gains d'audience ont été modérés lors de l'équilibrage.
+ * Après le premier bilan, les pics viraux restent utiles mais ne doivent pas
+ * provoquer systématiquement une surexposition avant la fin de saison.
+ * Les pertes et les autres jauges restent inchangées.
+ */
 export const STORY_SEASON_SCENES: StoryScene[] = [
   {
     "id": "atelier_flo",
@@ -28,7 +33,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Décider vite, seul",
         "effects": {
-          "public": 5,
+          "public": 3,
           "energie": -4,
           "confiance": -6
         },
@@ -64,7 +69,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Conserver les vidéos du duo",
         "effects": {
           "argent": 5,
-          "public": 5,
+          "public": 3,
           "confiance": -6
         },
         "addFlags": [
@@ -85,7 +90,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Annoncer une nouvelle série",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -4,
           "argent": -4
         },
@@ -118,7 +123,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Tester le défi des quinze jours",
         "effects": {
-          "public": 10,
+          "public": 7,
           "energie": -7,
           "confiance": -2
         },
@@ -155,7 +160,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Reprendre les règles sans la citer",
         "effects": {
           "energie": 4,
-          "public": 4,
+          "public": 3,
           "confiance": -7
         },
         "addFlags": [
@@ -201,7 +206,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Y aller seul et la remercier",
         "effects": {
-          "public": 6,
+          "public": 4,
           "argent": 4,
           "energie": -3
         },
@@ -223,7 +228,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Ouvrir tout de suite",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -6,
           "confiance": -4
         },
@@ -364,7 +369,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Accepter le duel surprise",
         "effects": {
-          "public": 9,
+          "public": 6,
           "energie": -5,
           "confiance": -5
         },
@@ -397,7 +402,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "L'inviter pour une soirée calme",
         "effects": {
-          "public": 4,
+          "public": 3,
           "confiance": 5,
           "energie": -4
         },
@@ -430,7 +435,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Rire pour désamorcer",
         "effects": {
-          "public": 6,
+          "public": 4,
           "confiance": -7,
           "energie": -4
         },
@@ -477,7 +482,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Répondre par un communiqué vague",
         "effects": {
-          "public": 5,
+          "public": 3,
           "argent": 4,
           "confiance": -9
         },
@@ -499,7 +504,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Autoriser les images tout de suite",
         "effects": {
-          "public": 6,
+          "public": 4,
           "argent": 3,
           "confiance": -7
         },
@@ -532,7 +537,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Tout encaisser puis reverser",
         "effects": {
-          "public": 8,
+          "public": 5,
           "argent": 5,
           "confiance": -6
         },
@@ -566,7 +571,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Exiger de relire l'article",
         "effects": {
           "energie": 3,
-          "public": 5,
+          "public": 3,
           "confiance": -6
         },
         "addFlags": [
@@ -601,7 +606,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Dire que le chat n'est pas toi",
         "effects": {
-          "public": 6,
+          "public": 4,
           "energie": 3,
           "confiance": -10
         },
@@ -648,7 +653,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Faire une apparition surprise",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -5,
           "confiance": -3
         },
@@ -682,7 +687,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Publier tes propres règles",
         "effects": {
           "energie": 4,
-          "public": 5,
+          "public": 3,
           "confiance": -5
         },
         "addFlags": [
@@ -719,7 +724,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "effects": {
           "argent": 12,
           "confiance": -9,
-          "public": 2
+          "public": 1
         },
         "addFlags": [
           "silence_vendu"
@@ -772,7 +777,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Terminer le montage maintenant",
         "effects": {
-          "public": 7,
+          "public": 5,
           "argent": 3,
           "energie": -9
         },
@@ -820,7 +825,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Proposer de compenser plus tard",
         "effects": {
           "argent": 7,
-          "public": 4,
+          "public": 3,
           "confiance": -8
         },
         "addFlags": [
@@ -841,7 +846,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Laisser le clip tourner",
         "effects": {
-          "public": 8,
+          "public": 5,
           "confiance": -6,
           "energie": 2
         },
@@ -888,7 +893,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Mettre l'article sur le dos de Lina",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -5,
           "confiance": -9
         },
@@ -910,7 +915,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Transformer l'archive en publicité",
         "effects": {
-          "public": 8,
+          "public": 5,
           "argent": 5,
           "confiance": -5
         },
@@ -947,7 +952,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Attendre que l'orage passe",
         "effects": {
           "argent": 5,
-          "public": 4,
+          "public": 3,
           "confiance": -10
         },
         "addFlags": [
@@ -991,7 +996,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Renvoyer simplement vers le site",
         "effects": {
           "energie": 5,
-          "public": 4,
+          "public": 3,
           "confiance": -4
         },
         "addFlags": [
@@ -1013,7 +1018,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Louer un studio pour la soirée",
         "effects": {
           "argent": -11,
-          "public": 8,
+          "public": 5,
           "energie": -4
         },
         "addFlags": [
@@ -1049,7 +1054,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Passer outre le vote",
         "effects": {
           "argent": 9,
-          "public": 5,
+          "public": 3,
           "confiance": -12
         },
         "addFlags": [
@@ -1095,7 +1100,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Recruter deux remplaçants",
         "effects": {
-          "public": 5,
+          "public": 3,
           "argent": -6,
           "confiance": -8
         },
@@ -1120,7 +1125,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Retirer son nom du document",
         "effects": {
-          "public": 4,
+          "public": 3,
           "energie": 3,
           "confiance": -8
         },
@@ -1188,7 +1193,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Lui proposer de l'exposition",
         "effects": {
-          "public": 8,
+          "public": 5,
           "argent": 5,
           "confiance": -11
         },
@@ -1235,7 +1240,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Exiger des excuses devant le chat",
         "effects": {
-          "public": 7,
+          "public": 5,
           "confiance": -8,
           "energie": -4
         },
@@ -1258,7 +1263,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Le laisser raconter votre histoire",
         "effects": {
           "confiance": 7,
-          "public": 4,
+          "public": 3,
           "energie": -4
         },
         "addFlags": [
@@ -1341,7 +1346,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Accepter la campagne",
         "effects": {
           "argent": 10,
-          "public": 6,
+          "public": 4,
           "confiance": -9
         },
         "addFlags": [
@@ -1374,7 +1379,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Accepter la tournée complète",
         "effects": {
           "argent": 10,
-          "public": 7,
+          "public": 5,
           "energie": -8
         },
         "addFlags": [
@@ -1395,7 +1400,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Exiger le nom en direct",
         "effects": {
-          "public": 8,
+          "public": 5,
           "confiance": -10,
           "energie": -5
         },
@@ -1443,7 +1448,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Faire une vidéo sur son cas",
         "effects": {
-          "public": 8,
+          "public": 5,
           "confiance": -7,
           "energie": -4
         },
@@ -1512,7 +1517,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Signer vite pour voir tout le monde",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": 4,
           "confiance": -4
         },
@@ -1534,7 +1539,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Déplacer le live sans expliquer",
         "effects": {
-          "public": 6,
+          "public": 4,
           "energie": 3,
           "confiance": -6
         },
@@ -1578,7 +1583,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Faire un direct surprise de vingt minutes",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -9,
           "argent": 3
         },
@@ -1600,7 +1605,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Préparer un clip anniversaire",
         "effects": {
-          "public": 8,
+          "public": 5,
           "argent": 4,
           "energie": -5
         },
@@ -1634,7 +1639,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Accepter le texte préparé",
         "effects": {
           "argent": 11,
-          "public": 7,
+          "public": 5,
           "confiance": -9
         },
         "addFlags": [
@@ -1680,7 +1685,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Lui proposer un retour devant caméra",
         "effects": {
-          "public": 6,
+          "public": 4,
           "confiance": -7,
           "energie": -3
         },
@@ -1702,7 +1707,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Promettre de finir tôt et improviser",
         "effects": {
-          "public": 7,
+          "public": 5,
           "energie": -5,
           "confiance": -6
         },
@@ -1739,7 +1744,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Lui donner le micro, sans conditions",
         "effects": {
           "confiance": 8,
-          "public": 5,
+          "public": 3,
           "energie": -3
         },
         "addFlags": [
@@ -1774,7 +1779,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Relancer la rivalité pour la finale",
         "effects": {
-          "public": 11,
+          "public": 7,
           "energie": -6,
           "confiance": -9
         },
@@ -1809,7 +1814,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "effects": {
           "confiance": 7,
           "energie": -3,
-          "public": 3
+          "public": 2
         },
         "addFlags": [
           "nox_credit_final"
@@ -1854,7 +1859,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "right": {
         "label": "Présenter l'équipe puis reprendre seul",
         "effects": {
-          "public": 9,
+          "public": 6,
           "argent": 6,
           "confiance": -7
         },
@@ -1880,7 +1885,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Partager la scène et le générique",
         "effects": {
           "confiance": 9,
-          "public": 5,
+          "public": 3,
           "energie": -4
         },
         "addFlags": [
@@ -1927,7 +1932,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         "label": "Ne raconter que ce que tu peux défendre",
         "effects": {
           "confiance": 4,
-          "public": 8,
+          "public": 5,
           "energie": -4
         },
         "addFlags": [
@@ -1948,7 +1953,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       "left": {
         "label": "Offrir un spectacle sans explication",
         "effects": {
-          "public": 10,
+          "public": 7,
           "argent": 6,
           "energie": -8
         },
