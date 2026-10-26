@@ -93,6 +93,79 @@ describe("plans de sons", () => {
   });
 });
 
+describe("bruitage expérimental du booster piloté par le geste", () => {
+  it("joue la matière pendant la glissade, une seule rupture, puis la fin au relâchement", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const starts: number[][] = [];
+    const contexts: Array<{ currentTime: number }> = [];
+    const buffer = { duration: 0.82 } as AudioBuffer;
+    const storageKey = "creatordeck.audio-lab.experimental-pack-wav";
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) => key === storageKey ? "AA==" : null,
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+      },
+      AudioContext: class {
+        currentTime = 0;
+        state = "running";
+        destination = {};
+        constructor() { contexts.push(this); }
+        resume = vi.fn(async () => {});
+        decodeAudioData = vi.fn(async () => buffer);
+        createGain() {
+          const node = {
+            gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+            connect: () => node,
+          };
+          return node;
+        }
+        createBufferSource() {
+          const node = {
+            buffer: null as AudioBuffer | null,
+            start: (...args: number[]) => { starts.push(args); },
+            connect: () => node,
+          };
+          return node;
+        }
+        createOscillator() { throw new Error("La synthèse originale ne doit pas démarrer"); }
+      },
+    });
+    vi.resetModules();
+    try {
+      const audio = await import("@/lib/sfx");
+      expect(audio.isExperimentalPackOpeningEnabled()).toBe(true);
+      audio.beginExperimentalPackGesture();
+      await vi.waitFor(() => expect(contexts).toHaveLength(1));
+      // Le décodage se termine avant le geste en situation réelle.
+      await Promise.resolve();
+      audio.moveExperimentalPackGesture(15);
+      expect(starts).toHaveLength(1);
+      expect(starts[0][2]).toBeCloseTo(0.07);
+      audio.moveExperimentalPackGesture(15);
+      expect(starts).toHaveLength(1); // Glissade immobile : aucun bruit supplémentaire.
+      contexts[0].currentTime = 0.1;
+      audio.moveExperimentalPackGesture(35);
+      expect(starts).toHaveLength(2);
+      audio.snapExperimentalPackGesture();
+      audio.snapExperimentalPackGesture(); // Un seul claquement de soudure.
+      expect(starts).toHaveLength(3);
+      audio.playPackOpening(); // Le relâchement finit la matière sans tout rejouer.
+      expect(starts).toHaveLength(4);
+      expect(starts[3][1]).toBeCloseTo(0.285);
+      expect(starts[3][2]).toBeCloseTo(0.19);
+      audio.beginExperimentalPackGesture();
+      audio.cancelExperimentalPackGesture();
+      audio.disableExperimentalPackOpening();
+      expect(audio.isExperimentalPackOpeningEnabled()).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
+
 describe("mix de la musique", () => {
   it("garde la musique basse au démarrage, plus basse pendant un pack et absente au Tribunal", () => {
     expect(MUSIC_SCENE_GAIN.hub).toBe(0.08);
