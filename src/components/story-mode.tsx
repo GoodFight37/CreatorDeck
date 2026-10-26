@@ -36,6 +36,8 @@ export function StoryMode() {
   }, [run]);
 
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
+  const lastEffects = run?.history.at(-1)?.effects;
+  const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
   function decide(direction: StoryDirection) {
     setRun((previous) => previous ? chooseStory(SCRIPT, previous, direction) : previous);
@@ -107,6 +109,23 @@ export function StoryMode() {
                 </div>
               ))}
             </section>
+            <div className="story-impact" role="status" aria-live="polite" aria-atomic="true">
+              {lastEffects && changedStats.length > 0 && (
+                <>
+                  <span className="story-impact-label">TON DERNIER CHOIX</span>
+                  <div className="story-impact-values">
+                    {changedStats.map((stat) => {
+                      const delta = lastEffects[stat] ?? 0;
+                      return (
+                        <span key={stat} className="story-impact-value" data-trend={delta > 0 ? "up" : "down"}>
+                          {delta > 0 ? "↑" : "↓"} {STAT_LABELS[stat].name} {delta > 0 ? "+" : ""}{delta}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
             {run.ending ? (
               <section className="story-card story-ending" aria-live="polite">
                 <div className="story-face" aria-hidden="true">{STORY_ENDINGS[run.ending].emoji}</div>
