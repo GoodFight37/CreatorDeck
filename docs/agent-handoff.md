@@ -1,6 +1,12 @@
-# Checkpoint — mode Histoire, chantier ouvert le 26 octobre 2026
+# Checkpoint mode Histoire — vérifications et réécriture du pilote, 26 octobre 2026
 
-**Branche de travail (ne pas confondre avec `main`) :** `feature/histoire-reigns-pilot-20261026`, base `ecaf2907dc2921abc77888eaff560fac22c28e99`. Implémentation du pilote « Zéro spectateur » avec le moteur indépendant `src/lib/story-mode.ts`, scénario `src/data/story-prologue.ts`, écran `/histoire` et tests ciblés. Aucun lien dans l'accueil, aucune récompense, aucune migration. Localement hors dépôt : compilation stricte des modules purs, 4096 parcours générés, 8 fins accessibles, syntaxe TSX transpilée. **Non validé dans le build Next complet, CI, navigateur et APK du dépôt ; ne pas fusionner sans ces vérifications.** Le skill Ponytail n'était pas disponible dans la session : ne pas prétendre qu'il a été appliqué. Détails et plan : `docs/mode-histoire.md`. Dernier état Production précédent inchangé par cette branche.
+**Branche de travail uniquement :** `feature/histoire-reigns-pilot-20261026`, PR [#24](https://github.com/GoodFight37/CreatorDeck/pull/24) en brouillon, base main historique `ecaf2907dc2921abc77888eaff560fac22c28e99`. Commits de corrections postérieurs au pilote `4cb66e3` : lint React/Next, rejouage strict de la sauvegarde, tests anti-altération, Playwright, retour visuel des conséquences, 21e scène combinant les intrigues Nox/Mona, nouvelle sauvegarde `.v2`. **Ne pas réécrire le moteur streamer retiré.**
+
+Preuve initiale du SHA `4cb66e3` : CI `40304763340`, compilation Next et typecheck réussis, 264 tests écrans réussis ; job qualité global **rouge sur trois erreurs ESLint du composant Histoire**. Les erreurs ont été corrigées sur la branche. Les runs lancés sur les commits postérieurs n'étaient pas terminés au dernier relevé : vérifier leur statut précis avant toute revendication de réussite et n'envoyer en production que du code validé.
+
+Simulation locale des modules TS purs après version 2 : **4096 parcours**, **21/21 scènes visitées**, **8 fins** et sauvegardes reconstituées, sans bloqueur. Ce n'est **ni** une preuve du rendu Next/Vercel, **ni** un test sur téléphone physique. La prévisualisation Vercel est sur branche ; l'accès visuel direct via navigateur de l'agent a été bloqué. Les 4 tests Playwright sur la branche doivent encore être lus dans leur CI (sauvegarde, gestes, clavier, écran 320px, reprise). Aucun changement de Supabase ni économie. Aucun appel d'IA payante dans le jeu. Ponytail absent des skills disponibles, non exécuté.
+
+Retrouver la conception, les résultats et les limites dans `docs/mode-histoire.md`. Un contrôle automatisé horaire du chantier a été configuré hors dépôt, avec signalement uniquement si progrès ou blocage concret.
 
 # Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026
 

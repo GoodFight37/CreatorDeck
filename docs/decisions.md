@@ -6,6 +6,9 @@ Pour ce premier lot : quatre jauges (Public, Énergie, Argent, Confiance), perso
 
 Pilotage : travail sur branche dédiée tant que les tests end-to-end du dépôt et le rendu mobile ne sont pas validés. Première preuve : 4096 parcours explorés avec le moteur TypeScript strict, huit fins accessibles. Aucune revendication de déploiement ni de validation physique ; voir `docs/mode-histoire.md`.
 
+Complément de conception du 26 octobre : les chemins narratifs conditionnels peuvent se croiser. Dans le pilote V1, une guerre avec Nox masquait le retour du sponsor caché si les deux drapeaux étaient actifs. Une scène spécifique avec deux drapeaux a priorité dans la V2 : 21 scènes désormais, sans tirage de hasard. La version de sauvegarde passe à `.v2` : les anciennes parties de test ne sont pas requalifiées silencieusement et peuvent être recommencées. Les effets du dernier choix sont montrés, non uniquement insinués par le déplacement des jauges. Le moteur vérifie les sauvegardes par rejeu des décisions, non par seule inspection structurelle. Référence de conception : François Alliot, Game Developer, 2016 ; W3C 2.5.7 pour l'alternative accessible au glissé. Le pilote ne justifie pas encore une migration vers Ink.
+
+
 ## D-170 — 26 octobre 2026 : lots 4 et 5, corrections visibles seulement
 
 Conserver Last Pack consultatif : l'ami, ses cartes et la propriété sont déjà
