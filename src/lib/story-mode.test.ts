@@ -54,6 +54,17 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(restoreStory(script, JSON.stringify({ ...run, stats: { ...run.stats, argent: 999 } }))).toBeNull();
   });
 
+  it("croise les deux scandales sans faire disparaître l'un des retours", () => {
+    let run = startStory(script);
+    for (const direction of ["left", "left", "right", "right", "left", "right", "right", "left", "left"] as StoryDirection[]) {
+      run = chooseStory(script, run, direction);
+    }
+    expect(run.ending).toBeNull();
+    expect(run.flags).toContain("guerre_nox");
+    expect(run.flags).toContain("preuve_effacee");
+    expect(currentStoryScene(script, run)?.id).toBe("double_crise");
+  });
+
   it("rejette les sauvegardes qui réécrivent une jauge, une conséquence ou une fin", () => {
     const first = chooseStory(script, startStory(script), "left");
     const forged = (changes: object) => restoreStory(script, JSON.stringify({ ...first, ...changes }));
