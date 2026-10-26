@@ -38,6 +38,9 @@ export function StoryMode() {
   }, [run]);
 
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
+  const character = scene?.speaker.startsWith("FLO") ? "flo"
+    : scene?.speaker.startsWith("NOX") ? "nox"
+    : scene?.speaker.startsWith("MONA") ? "mona" : "toi";
   const lastEffects = run?.history.at(-1)?.effects;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
@@ -106,7 +109,7 @@ export function StoryMode() {
           <>
             <section className="story-stats" aria-label="Tes quatre jauges">
               {STORY_STATS.map((key) => (
-                <div key={key} className="story-stat">
+                <div key={key} className="story-stat" data-low={run.stats[key] <= 20}>
                   <div className="story-stat-top">
                     <span>{STAT_LABELS[key].icon} {STAT_LABELS[key].name}</span>
                     <strong>{run.stats[key]} <span>/ 100</span></strong>
@@ -151,6 +154,7 @@ export function StoryMode() {
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${(run.step / SCRIPT.totalSteps) * 100}%` }} /></div>
                 <section
                   className="story-card story-play-card" tabIndex={0}
+                  data-character={character}
                   aria-label={`Scène : ${scene.title}. Utilise les flèches gauche et droite du clavier ou les boutons de choix.`}
                   onKeyDown={keyDown}
                   onPointerDown={pointerDown}
@@ -161,7 +165,15 @@ export function StoryMode() {
                 >
                   <div className="story-direction story-direction-left" data-active={drag < -64}>← {scene.choices.left.label}</div>
                   <div className="story-direction story-direction-right" data-active={drag > 64}>{scene.choices.right.label} →</div>
-                  <div className="story-face" aria-hidden="true">{scene.emoji}</div>
+                  <div className="story-card-meta" aria-hidden="true">
+                    <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
+                    <span className="story-card-meta-mark">● EN COURS</span>
+                  </div>
+                  <div className="story-scene-art" aria-hidden="true">
+                    <div className="story-scene-art-orbit" />
+                    <div className="story-face">{scene.emoji}</div>
+                    <span className="story-scene-art-label">{scene.speaker.split(" · ")[0]}</span>
+                  </div>
                   <div className="story-speaker">{scene.speaker}</div>
                   <h2 aria-live="polite">{scene.title}</h2>
                   <p>{scene.text}</p>
