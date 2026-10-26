@@ -1,5 +1,5 @@
 /** Moteur autonome du mode Histoire : aucune dépendance cloud, carte ou IA. */
-export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v2";
+export const STORY_SAVE_KEY = "creatordeck.histoire.prologue.v3";
 export const STORY_STATS = ["public", "energie", "argent", "confiance"] as const;
 export type StoryStat = (typeof STORY_STATS)[number];
 export type StoryStats = Record<StoryStat, number>;
@@ -165,6 +165,23 @@ export function storyEpilogue(run: StoryRun): string[] {
   else if (flags.has("pacte_brise")) memories.push("Nox a coupé son direct avant la fin. La promesse était écrite, la rupture est publique.");
   if (flags.has("agence")) memories.push("Le contrat d'exclusivité est toujours sur ton bureau. Les prochains choix ne seront plus seulement les tiens.");
   else if (flags.has("libre")) memories.push("Tu gardes les clés de ta chaîne. Cette liberté a un prix, mais tu l'as choisi.");
+  if (flags.has("vote_respecte")) memories.push("Tu as accepté de perdre un contrat pour tenir la parole donnée au collectif. Ce vote reste son point de départ.");
+  else if (flags.has("vote_trahi")) memories.push("Tu as gardé les clés du studio. Les membres du collectif, eux, n'ont pas tous gardé la confiance.");
+  else if (flags.has("pouvoir_partage")) memories.push("Le collectif a survécu au moment où tu as accepté de ne plus être seul à décider.");
+  if (flags.has("dette_nox_reglee")) memories.push("Nox a reçu ce que tu lui devais. Le sujet ne reviendra pas comme une menace.");
+  else if (flags.has("dette_nox_refusee")) memories.push("Tu proposais des vues en échange de son travail. Nox a conservé les relevés.");
+  if (flags.has("source_protegee")) memories.push("Lina n'a jamais dévoilé l'identité de sa source. Tu as compris que la transparence n'autorise pas tout.");
+  else if (flags.has("source_menacee")) memories.push("La source de Lina a disparu des réseaux. La recherche d'un nom est devenue une autre histoire.");
+  if (flags.has("audit_dons")) memories.push("Les comptes de la collecte sont publics. L'erreur a coûté cher, mais personne n'attend plus un virement.");
+  else if (flags.has("dons_opacite")) memories.push("Le total affiché lors de la collecte reste différent du montant reçu par l'association.");
+  if (flags.has("saison_collective")) memories.push("Quatre micros sont restés allumés après le générique. Cette chaîne a désormais plus d'une voix.");
+  else if (flags.has("saison_duo")) memories.push("Ton dernier direct se termine à deux. Nox sourit, puis vous coupez chacun votre caméra.");
+  else if (flags.has("saison_transmission")) memories.push("Tu as laissé à Nox le dernier mot. Partager la lumière n'a pas réduit la tienne.");
+  else if (flags.has("saison_transparente")) memories.push("Lina a publié les documents du direct. Les contradictions y sont visibles, comme tes efforts pour les réparer.");
+  else if (flags.has("saison_verite")) memories.push("Le compteur a fini par disparaître de ton écran. Ton récit, lui, restera accessible.");
+  else if (flags.has("saison_spectacle")) memories.push("Le final bat un record d'audience. Les questions sans réponse défilent encore sous la vidéo.");
+  else if (flags.has("saison_vedette")) memories.push("L'équipe était derrière toi, mais le générique n'affichait qu'un seul visage.");
+  else if (flags.has("saison_ambigue")) memories.push("Tu as raconté une version défendable de l'histoire. D'autres détiennent encore les pièces manquantes.");
   return memories;
 }
 
@@ -195,7 +212,7 @@ export function chooseStory(script: StoryScript, run: StoryRun, direction: Story
  * Variations réellement appliquées par le dernier choix.
  * Les effets déclarés dans le scénario sont des intentions : à 100 ou à 0,
  * une jauge est plafonnée et l'affichage ne doit pas inventer des points.
- * Les sauvegardes V2 conservent les effets bruts pour être rejouées et validées.
+ * Les sauvegardes V3 conservent les effets bruts pour être rejouées et validées.
  */
 export function lastStoryAppliedEffects(script: StoryScript, run: StoryRun): Partial<StoryStats> | null {
   if (!run.history.length) return null;
