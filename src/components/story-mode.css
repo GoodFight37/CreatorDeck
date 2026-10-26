@@ -139,3 +139,9 @@
 .story-recap li::marker { color: var(--accent-light); font-weight: 800; font-variant-numeric: tabular-nums; }
 .story-recap-scene { display: block; margin-bottom: 3px; color: var(--muted); }
 .story-recap li strong { display: block; color: var(--text); font-size: 14px; }
+
+/* Épilogue : chaque relation laisse une trace distincte, lisible sur mobile. */
+.story-epilogue { width: 100%; max-width: 390px; margin: 22px auto 0; text-align: left; }
+.story-epilogue h3 { margin: 0 0 12px; font-size: 12px; letter-spacing: .13em; line-height: 1.5; color: var(--accent-light); }
+.story-epilogue p { margin: 0; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.55; color: var(--text); overflow-wrap: anywhere; }
+.story-epilogue p:last-child { border-bottom: 1px solid var(--line); }
