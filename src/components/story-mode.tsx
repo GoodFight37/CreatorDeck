@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
+import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
   STORY_ENDINGS, STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene,
@@ -24,7 +25,9 @@ export function StoryMode() {
   useEffect(() => {
     let saved: string | null = null;
     try { saved = window.localStorage.getItem(STORY_SAVE_KEY); } catch { /* stockage facultatif */ }
-    setRun(restoreStory(SCRIPT, saved) ?? startStory(SCRIPT));
+    // Éviter une mise à jour synchrone depuis un effet React.
+    const pending = window.setTimeout(() => setRun(restoreStory(SCRIPT, saved) ?? startStory(SCRIPT)), 0);
+    return () => window.clearTimeout(pending);
   }, []);
 
   useEffect(() => {
@@ -80,7 +83,7 @@ export function StoryMode() {
   return (
     <main className="story-page">
       <header className="story-header">
-        <a href="/" className="story-back" aria-label="Retour à CreatorDeck">‹ CreatorDeck</a>
+        <Link href="/" className="story-back" aria-label="Retour à CreatorDeck">‹ CreatorDeck</Link>
         <div className="story-brand">MODE HISTOIRE <span>· PILOTE</span></div>
       </header>
       <div className="story-shell">
@@ -110,7 +113,7 @@ export function StoryMode() {
                 <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
                 <h2>{STORY_ENDINGS[run.ending].title}</h2>
                 <p>{STORY_ENDINGS[run.ending].text}</p>
-                <button className="story-replay" onClick={replay}>↻ Recommencer l'histoire</button>
+                <button className="story-replay" onClick={replay}>↻ Recommencer l’histoire</button>
               </section>
             ) : scene ? (
               <>
@@ -133,7 +136,7 @@ export function StoryMode() {
                   <div className="story-direction story-direction-right" data-active={drag > 64}>{scene.choices.right.label} →</div>
                   <div className="story-face" aria-hidden="true">{scene.emoji}</div>
                   <div className="story-speaker">{scene.speaker}</div>
-                  <h2>{scene.title}</h2>
+                  <h2 aria-live="polite">{scene.title}</h2>
                   <p>{scene.text}</p>
                   <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
                 </section>
