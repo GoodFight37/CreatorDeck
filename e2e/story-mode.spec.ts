@@ -11,6 +11,29 @@ test("Histoire : les choix persistent après un rechargement", async ({ page }) 
   await expect(page.getByRole("progressbar", { name: "Argent" })).toHaveAttribute("aria-valuenow", "64");
 });
 
+test("Histoire : nouvelle partie confirmée sans perdre une partie par erreur", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("button", { name: /Nouvelle partie/ })).toHaveCount(0);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Nouvelle partie/ }).click();
+  await expect(page.getByRole("group", { name: "Confirmer une nouvelle partie" })).toBeVisible();
+  await page.getByRole("button", { name: "Garder ma partie" }).click();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Nouvelle partie/ }).click();
+  await page.getByRole("button", { name: "Oui, recommencer" }).click();
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Nouvelle partie/ })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+});
+
 test("Histoire : clavier et boutons sans glissement obligatoire", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
