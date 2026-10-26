@@ -847,7 +847,7 @@ export function preloadExperimentalPackOpening(): void {
 }
 
 /** Importe un WAV court sur l'appareil de test, uniquement en développement. */
-export async function useExperimentalPackOpening(file: File): Promise<boolean> {
+export async function setExperimentalPackOpeningFile(file: File): Promise<boolean> {
   if (process.env.NODE_ENV !== "development" || typeof window === "undefined" || file.size > 512_000 || !file.size) return false;
   const ctx = audioContext();
   if (!ctx) return false;
