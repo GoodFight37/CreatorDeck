@@ -11,6 +11,9 @@ import {
   getSfxVolume,
   isMusicMuted,
   isMuted,
+  isExperimentalPackOpeningEnabled,
+  useExperimentalPackOpening,
+  disableExperimentalPackOpening,
   playBang,
   playGavel,
   playGrace,
@@ -90,6 +93,8 @@ export function AudioLab() {
   const [muet, setMuet] = useState(() => isMuted());
   const [musiqueMuet, setMusiqueMuet] = useState(() => isMusicMuted());
   const [lecture, setLecture] = useState<string | null>(null);
+  const [essaiBooster, setEssaiBooster] = useState(() => isExperimentalPackOpeningEnabled());
+  const [retourBooster, setRetourBooster] = useState("");
   const [disponibles, setDisponibles] = useState<Record<string, boolean>>({});
   const [choix, setChoix] = useState<ChoixLabo>(choixInitial);
   const [pisteJeu] = useState(() => getMusicTrackId());
@@ -367,6 +372,43 @@ export function AudioLab() {
       <section className="al-carte" aria-labelledby="al-jeu">
         <h2 id="al-jeu">Dans le jeu (vraies animations sonores)</h2>
         <h3>Ouverture de booster</h3>
+        {process.env.NODE_ENV === "development" ? (
+          <div className="al-piste">
+            <div>
+              <h3>Tester B Confort dans un vrai booster</h3>
+              <p>
+                Charge le fichier <code>03_B_confort.wav</code> choisi dans notre comparatif.
+                L&apos;audio sera mémorisé seulement dans ce navigateur et remplacera
+                temporairement le son de l&apos;ouverture du pack dans le jeu.
+                La musique, les révélations et les sons des autres gestes restent inchangés.
+              </p>
+              <p className="al-note">{essaiBooster ? "Essai actif : B Confort" : "Son original actif"}{retourBooster ? ` · ${retourBooster}` : ""}</p>
+            </div>
+            <div className="al-rangee">
+              <label>
+                Choisir le WAV
+                <input
+                  type="file"
+                  accept=".wav,audio/wav,audio/x-wav"
+                  onChange={(event) => {
+                    const fichier = event.currentTarget.files?.[0];
+                    if (!fichier) return;
+                    void useExperimentalPackOpening(fichier).then((ok) => {
+                      setEssaiBooster(ok);
+                      setRetourBooster(ok ? "Tu peux maintenant ouvrir un booster réel." : "Fichier invalide ou stockage indisponible (512 Ko maximum).");
+                    });
+                  }}
+                />
+              </label>
+              <button type="button" onClick={() => {
+                disableExperimentalPackOpening();
+                setEssaiBooster(false);
+                setRetourBooster("Le son d'origine est rétabli.");
+              }}>Revenir au son original</button>
+              <a href="/">Tester dans le jeu</a>
+            </div>
+          </div>
+        ) : null}
         <div className="al-rangee">
           <button type="button" onClick={() => playTear()}>Déchirure</button>
           <button type="button" onClick={() => playPackOpening()}>Ouverture du pack</button>
