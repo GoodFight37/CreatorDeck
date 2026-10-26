@@ -1,4 +1,17 @@
-# Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026 (local)
+# Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026
+
+**Code publié et vérifié sur GitHub** :
+[`839ff43c82393059821bfbca390c88b790c189af`](https://github.com/GoodFight37/CreatorDeck/commit/839ff43c82393059821bfbca390c88b790c189af),
+`main` distant identique. Vercel **Production success** du même SHA, deployment
+GitHub `7326963891`, statut du 26 octobre à 08:08:59 UTC :
+[déploiement](https://creator-deckk-jujyeid0d-hafsi37-2386.vercel.app).
+Connecteur Vercel hors périmètre de l'équipe (403 déjà constaté) ; preuve lue via
+les deployments GitHub et leur statut, sans toucher à la configuration Vercel.
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40290214295) :
+SQL jetable et unitaires/écrans/statique/build **réussis** ; trois shards E2E et
+cloud simulé **en cours** au relevé. Ne pas les déclarer verts par anticipation.
+L'APK officielle de ce lot dépend de cette CI ; l'APK locale ci-dessous est celle
+effectivement installée et vérifiée. Les suites longues peuvent finir sans suivi.
 
 Demande Malik : Last Pack compréhensible, sans changer coût/règle, conserver
 son code s'il est déjà bon ; Tribunal, Arène, Hôtel et missions seulement pour
@@ -61,8 +74,10 @@ stabilisation memes.spec et assertion ecrans-tribunal. Aucun SQL, coût ou règl
 Tribunal payé vérifié dans le navigateur : cinq verdicts justes, karma 100 %,
 une seule occurrence de « +40 points ». Captures missions et bilan sous
 `D:/CreatorDeck-preuves/lots-4-5/navigateur/` ; aucun code de ces écrans changé.
-Reste : revue finale du diff, commit/push ciblés et preuve Vercel même SHA.
-Checkpoint **local non commité**.
+Implémentation, essais et publication du code achevés. SHA du commit de ce
+complément documentaire : `git log -1 --format=%H -- docs/agent-handoff.md`.
+Prochaine action utile en cas de retour : lire le résultat final de la CI liée
+ci-dessus et, en cas d'échec, examiner uniquement son scénario et ses preuves.
 Préserver les fichiers préexistants du lot D : Kyara dans cette passation,
 Gradle généré, quatre PNG sachets, fichiers d'échange et autres non suivis.
 

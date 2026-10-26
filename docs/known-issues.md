@@ -190,7 +190,7 @@ de `paiement.delta`. Le code ne rend plus que le message de paiement. Assertion
 explicite d'une seule occurrence ajoutée au test existant ; 15/15 tests Tribunal
 réussis. Ce défaut historique ne justifie pas une nouvelle réécriture du bilan.
 
-## Last Pack, Hôtel et Arène : quatre défauts visibles — corrigés localement, 26 octobre 2026
+## Last Pack, Hôtel et Arène : états de lecture et libellés — publiés, 26 octobre 2026
 
 Base `713fed02`, gravité P2 pour lecture indisponible, P3 pour les libellés.
 Last Pack : lecture lente sans indication, échec pris pour absence de boosters ;
@@ -200,7 +200,8 @@ annoncé au samedi déjà passé. Avant : quatre scénarios téléphone échouen
 captures relues ; après : 8/8 bureau/téléphone, reprises comprises. Règles et
 serveur inchangés. Aucun contournement garanti avant correction ; aucune perte
 ou double versement démontré. Gestes natifs/reprises et captures vérifiés sur APK
-`883341` / API 36, 390×844 et 320×568, RPC simulées. Publication : checkpoint courant.
+`883341` / API 36, 390×844 et 320×568, RPC simulées. Code `839ff43c` publié,
+Vercel Production de ce SHA réussi ; statut CI et liens : checkpoint courant.
 
 ## Tribunal : focus du dialogue principal — correctif publié, 22 octobre 2026
 
