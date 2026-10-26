@@ -8,7 +8,7 @@ Le joueur incarne **son propre streamer fictif**, qui commence à zéro, et pren
 
 ## Architecture testable
 
-- `src/data/story-prologue.ts` : contenu éditorial typé et versionné, 20 scènes possibles sur 12 étapes. Chaque étape possède une scène de repli ; les scènes conditionnelles ont priorité si leurs drapeaux correspondent. Cette V1 fait volontairement une saison courte pour tester si les personnages et dilemmes fonctionnent.
+- `src/data/story-prologue.ts` : contenu éditorial typé et versionné, 21 scènes possibles sur 12 étapes. Chaque étape possède une scène de repli ; les scènes conditionnelles ont priorité si leurs drapeaux correspondent. Cette V1 fait volontairement une saison courte pour tester si les personnages et dilemmes fonctionnent.
 - `src/lib/story-mode.ts` : validation du format, sélection déterministe des scènes, application des effets bornés de 0 à 100, conditions différées, fins de partie et restauration de sauvegarde. **Aucun appel IA**, pas de hasard au runtime.
 - `src/components/story-mode.tsx` et sa feuille CSS : écran mobile autonome, boutons gauche/droite accessibles au pouce, geste horizontal (64 px, priorité au défilement vertical), flèches clavier, progression, jauges lisibles et sauvegarde locale.
 - `src/app/histoire/page.tsx` : route isolée, aucune modification des quatre piliers Drop/Binder/Craft/Toi. Ne touche ni au catalogue, ni aux tirages, ni aux points, ni aux jetons, ni à Supabase.
@@ -30,3 +30,22 @@ La sauvegarde du pilote utilise `localStorage` (clé versionnée), propre au nav
 4. Après validation, décider ensemble de l'accès au mode depuis l'application, d'une sauvegarde synchronisée facultative et de la création d'autres saisons. Aucune récompense sur le jeu de cartes tant qu'une autorité serveur n'a pas été conçue et vérifiée.
 
 **Limites :** pas de génération IA à chaud, pas de service externe ni de budget requis pour jouer. Le contenu est écrit en amont, versionné et révisable. Le skill « Ponytail » requis par `AGENTS.md` n'est pas installé parmi les skills disponibles dans cette session ; il n'a pas été exécuté. Ne pas présenter la démo HTML autonome comme une validation du rendu de l'application Next.
+
+
+## Reprise du chantier et améliorations du pilote (26 octobre 2026)
+
+La première CI du commit `4cb66e3` a confirmé les tests unitaires, les tests d'écrans (264), le typage et la compilation Next, mais son job qualité a échoué sur **trois erreurs ESLint** dans `story-mode.tsx` : setState synchrone dans un effet, ancre HTML interne et apostrophe JSX. Ces trois erreurs ont été corrigées dans un commit séparé. **Cela ne vaut pas preuve de réussite pour les CI ultérieures : contrôler leurs SHA et résultats.**
+
+Modifications complémentaires :
+- La restauration de la partie *rejoue toutes les décisions* afin de vérifier les scènes effectivement proposées, les variations de jauges, les drapeaux et la fin. Les états trafiqués, y compris les fins prématurées artificiellement prolongées, sont rejetés sans écraser le moteur.
+- Retour visible du dernier choix, avec variations positives/négatives sur les jauges. Les boutons et le clavier restent des alternatives au geste (WCAG 2.2, 2.5.7).
+- Tests Vitest renforcés : les 4096 combinaisons doivent atteindre toutes les scènes et huit fins. Tests Playwright sur la sauvegarde, les gestes, le clavier, les conséquences et le recommencement, y compris une fenêtre de 320×568. Ces tests sont ajoutés au dépôt mais ne sont **pas déclarés verts** tant que la CI correspondante ne l'atteste pas.
+- Version 2 du pilote : une nouvelle scène au chapitre 10 (« Deux affaires, une caméra ») donne une conséquence commune aux joueurs ayant à la fois une guerre avec Nox et un sponsor caché dont les preuves ont été effacées. Ce cas était auparavant pris en priorité par la seule scène Nox. La clé de sauvegarde passe en `.v2` pour éviter de réinterpréter l'ancien chemin narratif ; ce changement réinitialise les sessions du prototype précédent.
+
+### Méthode éditoriale pour les épisodes suivants
+
+La mécanique à conserver vient des quatre pressions lisibles, du geste simple et des conséquences qui réapparaissent. Chaque dilemme doit proposer **deux choix défendables** et une contrepartie compréhensible. Les meilleurs retours doivent provenir d'un personnage ou d'une promesse déjà rencontrée plutôt que d'une statistique surgie de nulle part. Éviter de transformer tous les choix « éthiques » en succès faciles et tous les choix de visibilité en désastre certain.
+
+Avant d'intégrer des scènes créées avec une IA, les **réviser hors partie** : cohérence des personnages, drapeaux utiles, ramifications croisées, variété de ton, lisibilité mobile, absence d'emprunt à Reigns, puis simulation et tests. Le runtime ne sollicite aucune IA, aucune API et aucun service payant. Pour une future production de plusieurs centaines de scènes, étudier le langage ouvert Ink (conditions, « knots », embranchements rejoignables et suivi d'état), mais ne pas ajouter sa dépendance au pilote sans gain vérifié.
+
+Références consultées : François Alliot, « Creating an adaptive narrative in Reigns », Game Developer (2016) ; W3C/WAI, « Understanding WCAG 2.5.7 Dragging Movements » ; inkle, documentation « Writing with Ink ».
