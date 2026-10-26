@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
@@ -31,14 +31,16 @@ const STAT_LABELS: Record<StoryStat, { name: string }> = {
   confiance: { name: "Confiance" },
 };
 
+const STORY_SCENES_BY_ID = new Map(SCRIPT.scenes.map((scene) => [scene.id, scene] as const));
+
 /** Journal consultable pendant la partie ou après la fin, sans scènes futures ni spoilers. */
-function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: boolean }) {
+const StoryJournal = memo(function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: boolean }) {
   return (
     <details className={completed ? "story-recap" : "story-recap story-recap-live"} aria-live="off">
       <summary>{completed ? `Revoir mes ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}` : `Journal de bord · ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}`}</summary>
       <ol>
         {run.history.map((entry, index) => {
-          const chapter = SCRIPT.scenes.find((candidate) => candidate.id === entry.sceneId);
+          const chapter = STORY_SCENES_BY_ID.get(entry.sceneId);
           return (
             <li key={index}>
               <span className="story-recap-scene">{chapter?.title ?? `Chapitre ${index + 1}`}</span>
@@ -49,7 +51,7 @@ function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: b
       </ol>
     </details>
   );
-}
+});
 
 export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
