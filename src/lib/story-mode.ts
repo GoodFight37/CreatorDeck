@@ -148,7 +148,8 @@ export function storyEpilogue(run: StoryRun): string[] {
   if (!run.ending) return [];
   const flags = new Set(run.flags);
   const memories: string[] = [];
-  if (flags.has("rupture_flo")) memories.push("Flo n'est pas revenue. Le chat défile encore, mais personne ne répond à ta place.");
+  if (flags.has("flo_spectatrice_libre")) memories.push("Flo est revenue comme spectatrice, sans devoir reprendre les clés de la modération.");
+  else if (flags.has("rupture_flo")) memories.push("Flo n'est pas revenue. Le chat défile encore, mais personne ne répond à ta place.");
   else if (flags.has("flo_pilier") || flags.has("duo_flo")) memories.push("Flo est restée. Elle se souvient du jour où tu lui as laissé le droit de souffler.");
   else if (flags.has("flo_protegee")) memories.push("Flo t'écrit après le dernier direct. Elle n'a pas oublié que tu as respecté ses limites.");
   else if (flags.has("flo_epuisee")) memories.push("Flo a pris ses distances. Tu as compris trop tard que la loyauté ne remplace pas le repos.");
@@ -156,7 +157,9 @@ export function storyEpilogue(run: StoryRun): string[] {
   else if (flags.has("aveu_double") || flags.has("transparence_tardive")) memories.push("Tes excuses sont toujours en ligne. Certains sont partis, d'autres ont choisi de te croire.");
   else if (flags.has("sponsor_cache")) memories.push("Le premier contrat secret de Mona laisse une trace dans les archives de ta chaîne.");
   else if (flags.has("sponsor_clair")) memories.push("Mona te recontacte pour une campagne dont les règles sont écrites noir sur blanc.");
-  if (flags.has("nox_allie_final") || flags.has("duo_nox")) memories.push("Nox t'envoie un dernier message : « On remet ça ? » Cette fois, c'est une invitation.");
+  if (flags.has("pacte_brise") || flags.has("dette_nox_refusee")) memories.push("Le silence de Nox raconte ce qui s'est passé entre vos deux chaînes.");
+  else if (flags.has("paix_durable_nox") || flags.has("nox_scene_partagee")) memories.push("Nox est revenu sans chercher une revanche. Votre relation a changé de nature.");
+  else if (flags.has("nox_allie_final") || flags.has("duo_nox")) memories.push("Nox t'envoie un dernier message : « On remet ça ? » Cette fois, c'est une invitation.");
   else if (flags.has("guerre_nox") && !flags.has("paix_nox")) memories.push("Nox ne te parle plus. Vos deux communautés connaissent encore chaque épisode du conflit.");
   else if (flags.has("respect_nox")) memories.push("Nox continue de saluer ton travail, même lorsque vos chaînes prennent des chemins différents.");
   if (flags.has("collectif_autonome")) memories.push("Flo choisit elle-même son rôle. Le collectif continue sans que son nom soit à vendre.");
