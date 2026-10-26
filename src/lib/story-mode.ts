@@ -274,7 +274,11 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
           ? "Tu as encaissé toi-même les dons de la collecte. Il faudra bientôt montrer ce que les chiffres ne disent pas."
           : flags.has("limites_vie_privee")
             ? "Tu as posé une limite entre ta chaîne et ta porte d'entrée. À présent, Lina attend des réponses."
-            : "L'audience ne regarde plus seulement tes vidéos. Elle commence à regarder ce que tu fais quand le direct est coupé.",
+            : flags.has("defi_algo")
+              ? "Quinze jours de publications t'ont apporté des vues. Tu connais désormais la différence entre un rythme choisi et une cadence imposée."
+              : flags.has("formation_modo")
+                ? "Tu as pris le temps de former les modérateurs. Ils commencent à tenir le chat sans tout faire reposer sur toi."
+                : "L'audience ne regarde plus seulement tes vidéos. Elle commence à regarder ce que tu fais quand le direct est coupé.",
       };
     case 28:
       return {
@@ -285,7 +289,11 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
             ? "Le montant des dons n'est toujours pas clair. Même les personnes qui te soutiennent commencent à demander des preuves."
             : flags.has("charte_collectif")
               ? "Flo a mis vos règles par écrit. Les appliquer quand elles te dérangent sera une autre épreuve."
-              : "Les gens reviennent dans ta vie avec leurs souvenirs. Aucun compteur ne te dit ce qu'ils ont retenu.",
+              : flags.has("nuit_blanche")
+                ? "Tu as encore sacrifié une nuit au montage. Le public ne voit que la vidéo terminée ; toi, tu sens le coût de chaque heure."
+                : flags.has("archives_exposees")
+                  ? "Lina conserve les images de l'ancien live. Flo n'avait pas donné son accord, et cette décision commence à peser."
+                  : "Les gens reviennent dans ta vie avec leurs souvenirs. Aucun compteur ne te dit ce qu'ils ont retenu.",
       };
     case 36:
       return {
@@ -296,7 +304,13 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
             ? "À force de chercher un nom, tu as exposé quelqu'un d'autre. Le direct final approche et la question demeure."
             : flags.has("vraie_pause")
               ? "Tu t'es accordé une soirée sans écran. Il reste quatre décisions pour choisir ce que le public emportera."
-              : "Le direct final est proche. Quatre décisions pour découvrir si ta chaîne ressemble encore à ton premier soir.",
+              : flags.has("vote_trahi")
+                ? "Tu as ignoré le vote du collectif. Pour le grand final, l'équipe décidera elle-même si elle veut encore monter sur scène."
+                : flags.has("dette_nox_refusee")
+                  ? "La dette envers Nox n'a pas été réglée. Le dernier direct arrive avec une facture que les vues ne paient pas."
+                  : flags.has("reprise_voix")
+                    ? "Tu as repris le contrôle de tes vidéos après le conflit avec l'agence. Reste à trouver les mots du dernier direct."
+                    : "Le direct final est proche. Quatre décisions pour découvrir si ta chaîne ressemble encore à ton premier soir.",
       };
     default:
       return null;
