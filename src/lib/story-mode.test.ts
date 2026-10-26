@@ -13,8 +13,8 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(script.totalSteps).toBe(12);
   });
 
-  it("attribue un canal narratif connu à chacune des 25 scènes", () => {
-    expect(script.scenes).toHaveLength(25);
+  it("attribue un canal narratif connu à chacune des 27 scènes", () => {
+    expect(script.scenes).toHaveLength(27);
     expect(script.scenes.map((scene) => scene.channel)).toContain("ARCHIVE");
     expect(validateStoryScript({ ...script, scenes: [
       { ...script.scenes[0], channel: "INCONNU" as typeof script.scenes[0]["channel"] },
@@ -121,6 +121,18 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, nox)?.id).toBe("agence_nox");
     const isolated = play(["left", "right", "right", "left", "left", "right", "left", "right"]);
     expect(currentStoryScene(script, isolated)?.id).toBe("agence");
+  });
+
+  it("les alliances changent également le dernier dilemme", () => {
+    const play = (directions: StoryDirection[]) => {
+      let run = startStory(script);
+      for (const direction of directions) run = chooseStory(script, run, direction);
+      return run;
+    };
+    const flo = play(["left", "left", "left", "left", "left", "right", "left", "left", "left", "left", "left"]);
+    expect(currentStoryScene(script, flo)?.id).toBe("finale_collectif");
+    const nox = play(["left", "right", "left", "left", "left", "left", "left", "right", "left", "left", "left"]);
+    expect(currentStoryScene(script, nox)?.id).toBe("finale_pacte");
   });
 
   it("protège de la double décision après une fin de saison", () => {
