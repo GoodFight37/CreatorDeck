@@ -1,4 +1,4 @@
-## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — corrigés localement, 26 octobre 2026
+## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — publiés, 26 octobre 2026
 
 P1, base `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. Malik observe Live fonctionnel
 mais MEMES/IMGFLIP temporairement bloqués avec « Lecture de ta réserve… », réessai
@@ -16,7 +16,8 @@ Deux scénarios téléphone échouent avant correction, 38 E2E cloud passent apr
 APK : préparations/retours des trois sachets et deux tirages MEMES/IMGFLIP jusqu'au
 bilan, un renouvellement, un tirage par univers, zéro erreur JS ; API36 en
 390×844 et 320×568, réseau simulé. Captures relues sous
-`D:/CreatorDeck-preuves/booster-reserve-position/`. Publication : passation.
+`D:/CreatorDeck-preuves/booster-reserve-position/`. Code `ea80907a` publié, Vercel
+Production même SHA réussi ; CI/APK officielle et limites : passation.
 
 ## Carte : portrait tramé et nom superposé — corrigé sur émulateur, 25 octobre 2026
 

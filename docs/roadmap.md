@@ -1,7 +1,8 @@
 # Roadmap CreatorDeck
 
-**Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** correctif
-local sur `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. MEMES/IMGFLIP partagent le
+**Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans
+[`ea80907a`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
+Vercel Production du même SHA réussi, suivi `CreatorDeck-Codex-pg1`. MEMES/IMGFLIP partagent le
 client de session du jeu ; erreur et chargement séparés. Sachet préparé centré
 et de même taille que sur l'accueil. Critères : renouvellement unique, réserves
 lisibles sans fausse reconnexion, réessai fonctionnel, aucun tirage avant le
@@ -9,7 +10,8 @@ geste, cinq cartes après celui-ci, Retour sûr, rendu sur petits écrans/paysag
 38 E2E cloud, 264 écrans et 272 tests logiques réussis ; gestes APK sur API36 en
 390×844 et 320×568. E2E complet : 217 réussis/45 ignorés/4 attentes visuelles
 obsolètes ; ces quatre cas réussissent après actualisation ciblée sous Windows,
-et références générées/vérifiées sur Linux. Publication : passation.
+et références générées/vérifiées sur Linux (rejeu 4/4 sans régénération). CI distante
+en cours au relevé ; APK officielle après CI verte. Preuves et limites : passation.
 
 **Lots 4 et 5 — activités existantes, 26 octobre 2026 (D-170) :** publiés dans
 [`839ff43c`](https://github.com/GoodFight37/CreatorDeck/commit/839ff43c82393059821bfbca390c88b790c189af),

@@ -1,4 +1,14 @@
-# Checkpoint Codex — réserves des boosters et sachet recentré, 26 octobre 2026 (local)
+# Checkpoint Codex — réserves des boosters et sachet recentré, 26 octobre 2026
+
+**Code publié et vérifié sur GitHub** :
+[`ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
+`main` distant identique. Vercel **Production success**, même SHA, deployment
+GitHub `7344886157`, statut du 26 octobre à 22:13:42 UTC :
+[déploiement](https://creator-deckk-415vdk2r0-hafsi37-2386.vercel.app).
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40410669744) :
+six jobs **en cours** au relevé. L'APK officielle dépend de cette CI verte ; elle
+n'est pas encore annoncée publiée. L'APK locale effectivement testée est décrite
+ci-dessous. Les suites longues peuvent terminer sans surveillance.
 
 Retour Malik : Live ouvre mais MEMES/IMGFLIP bloquent par intermittence, avec
 « Lecture de ta réserve… », réessai et demande de connexion contradictoires ;
@@ -74,9 +84,18 @@ uniquement `android/**/build/**`, `android/app/src/main/assets/**` et `reports/*
 Jargon réussi. `git -c core.whitespace=cr-at-eol diff --check` réussi : le CSS
 booster-continuity est déjà versionné en CRLF, son format est conservé. Aucun SQL
 ni catalogue modifié. Émulateur arrêté, stockage et dimensions restaurés.
-Reste : commit/push ciblés et preuve de publication.
+Implémentation, tests et publication du code achevés. Serveur de développement,
+relais TCP Linux et émulateur de ce lot arrêtés. Un ancien `.git/index.lock` vide
+(créé à 21:45:59 UTC, aucun Git actif Windows/WSL) empêchait l'indexation :
+travail/index sauvegardés sous
+`D:/CreatorDeck-preuves/booster-reserve-position/index-verrou-1793052692436`,
+puis seul ce verrou abandonné retiré. HEAD et index
+vérifiés avant reprise, aucun reset ni changement d'historique.
+Prochaine action utile : lire le résultat final de la CI liée en tête et, si
+nécessaire, diagnostiquer seulement son scénario et ses preuves. SHA documentaire :
+`git log -1 --format=%H -- docs/agent-handoff.md`.
 Aucun vrai compte/token dans les tests ni les docs.
-Checkpoint **local non commité**. Préserver le bloc Kyara préexistant dans cette
+Préserver le bloc Kyara préexistant dans cette
 passation, les deux Gradle générés et quatre PNG sachets modifiés avant ce lot.
 
 # Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026
