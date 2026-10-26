@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue, storyActInterlude,
+  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory, storyEpilogue, storyActInterlude, storyEndingNarrative,
   validateStoryScript, type StoryDirection,
 } from "./story-mode";
 
@@ -95,6 +95,36 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, nox)?.id).toBe("nox_duo_final");
     const isolated = play(["left", "right", "right", "left", "left", "right", "left", "right", "left", "left"]);
     expect(currentStoryScene(script, isolated)?.id).toBe("course");
+  });
+
+  it("adapte la conclusion au contrat et aux alliances sans altérer la fin calculée", () => {
+    const base = startStory(script);
+    expect(storyEndingNarrative(base)).toBeNull();
+
+    const indep = { ...base, ending: "independant" as const };
+    const agency = storyEndingNarrative({ ...indep, flags: ["agence"] });
+    const free = storyEndingNarrative({ ...indep, flags: ["libre"] });
+    expect(agency?.title).toBe("Une communauté sous contrat");
+    expect(agency?.text).toContain("comité");
+    expect(free).toEqual(STORY_ENDINGS.independant);
+    expect(indep.ending).toBe("independant");
+
+    const successful = { ...base, ending: "phenomene" as const };
+    expect(storyEndingNarrative({ ...successful, flags: ["saison_collective"] })?.title).toBe("La chaîne à plusieurs voix");
+    expect(storyEndingNarrative({ ...successful, flags: ["saison_duo"] })?.title).toBe("Deux voix, une percée");
+    expect(storyEndingNarrative({ ...successful, flags: [] })).toEqual(STORY_ENDINGS.phenomene);
+  });
+
+  it("reconnaît les origines d'une fin anticipée sans changer les jauges", () => {
+    const base = startStory(script);
+    const collapse = { ...base, ending: "epuisement" as const, flags: ["nuit_blanche"] };
+    expect(storyEndingNarrative(collapse)?.title).toBe("La dernière nuit blanche");
+    const trust = { ...base, ending: "scandale" as const, flags: ["double_mensonge"] };
+    expect(storyEndingNarrative(trust)?.text).toContain("documents");
+    const exposure = { ...base, ending: "surexposition" as const, flags: ["defi_algo"] };
+    expect(storyEndingNarrative(exposure)?.text).toContain("cent");
+    expect(storyEndingNarrative({ ...base, ending: "silence" })).toEqual(STORY_ENDINGS.silence);
+    expect(collapse.stats).toEqual(base.stats);
   });
 
   it("personnalise le bilan avec les décisions de Flo, Nox, Mona et l'agence", () => {
