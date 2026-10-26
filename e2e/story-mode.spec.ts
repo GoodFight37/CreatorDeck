@@ -5,6 +5,7 @@ test("Histoire : les choix persistent après un rechargement", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
   await page.getByRole("button", { name: /Rester avec le téléphone/ }).click();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Argent +9" })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Argent" })).toHaveAttribute("aria-valuenow", "64");
