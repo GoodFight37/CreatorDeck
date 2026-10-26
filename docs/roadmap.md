@@ -1,7 +1,9 @@
 # Roadmap CreatorDeck
 
-**LOT D — Classeur pilote, 26 octobre 2026 (D-169) :** implémenté et vérifié
-localement sur `628c15e7` + diff (`CreatorDeck-Codex-2g9`). Filtres créateurs
+**LOT D — Classeur pilote, 26 octobre 2026 (D-169) :** publié dans
+[`51ba6be4`](https://github.com/GoodFight37/CreatorDeck/commit/51ba6be47af1b43bfc09fcfb57f41aa3012d432e),
+Vercel Production du même SHA réussi ; vérifié localement sur `628c15e7` + diff
+(`CreatorDeck-Codex-2g9`). Filtres créateurs
 cumulables (rareté, possession, cercle), tri existant, progression totale/par
 rareté sans changer de règle, bas d'écran dégagé et PNG local à la demande sur web.
 Critères : filtres/pagination cohérents, cibles 44 px et champs tactiles 16 px,

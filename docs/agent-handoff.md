@@ -59,9 +59,21 @@ et inspecté (`export-12-obtenues.png`), export des 12 dos aussi testé en E2E.
 Limite locale rencontrée au départ : C disposait d'environ 1,2 Go, l'émulateur existant
 refuse le démarrage faute de place. Configuration API 36 copiée sur D, disque
 émulateur neuf sur D, original préservé ; démarrage désormais effectif.
-Reste : commit ciblé, push normal main,
-vérification du SHA distant, contrôles GitHub et Vercel Production même SHA.
-Checkpoint **local non commité**. Préserver les fichiers préexistants : bloc
+Code **commité et vérifié sur GitHub** :
+[`51ba6be4`](https://github.com/GoodFight37/CreatorDeck/commit/51ba6be47af1b43bfc09fcfb57f41aa3012d432e),
+push normal main, SHA distant identique. Déploiement Production GitHub
+**7326068339**, SHA `51ba6be4`, statut `success`, « Deployment has completed »
+le 26 octobre à 07:08:23 UTC :
+[Vercel](https://creator-deckk-6gzl3q6m2-hafsi37-2386.vercel.app).
+Le connecteur Vercel liste le projet mais refuse sa lecture de déploiement (403,
+scope hafsi37-2386) ; preuve obtenue via l'API GitHub, aucune configuration changée.
+[CI 40283897147](https://github.com/GoodFight37/CreatorDeck/actions/runs/40283897147)
+en cours au relevé ; Postgres jetable réussi, autres jobs en cours. L'APK officielle
+du lot attend la CI verte. Ne pas confondre l'APK locale 883273 avec une publication.
+Checkpoint contenant les preuves : commit documentaire ultérieur au code ; SHA
+retrouvable par `git log -1 --format=%H -- docs/agent-handoff.md`.
+Lot son reporté, aucun développement ElevenLabs ni Last Pack. Aucun test physique Redmi.
+Préserver les fichiers préexistants : bloc
 Kyara non commité de cette passation, Gradle généré, quatre snapshots sachets,
 fichiers d'échange et autres fichiers non suivis. Ne pas les indexer avec ce lot.
 
