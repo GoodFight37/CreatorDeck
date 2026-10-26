@@ -152,7 +152,7 @@ export function StoryMode() {
                   <span>CHAPITRE {String(run.step + 1).padStart(2, "0")}</span>
                   <span>{run.step + 1} / {SCRIPT.totalSteps}</span>
                 </div>
-                <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${(run.step / SCRIPT.totalSteps) * 100}%` }} /></div>
+                <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
                 <section
                   className="story-card story-play-card" tabIndex={0}
                   data-character={character}
@@ -170,7 +170,8 @@ export function StoryMode() {
                     <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
                     <span className="story-card-meta-mark">● EN COURS</span>
                   </div>
-                  <div className="story-scene-art" aria-hidden="true">
+                  <div key={scene.id} className="story-scene-art" data-channel={scene.channel} aria-hidden="true">
+                    <span className="story-scene-art-channel">{scene.channel}</span>
                     <div className="story-face">{scene.emoji}</div>
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>

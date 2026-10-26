@@ -82,9 +82,10 @@
 .story-play-card[data-character="duo"] .story-scene-art { border-bottom: 4px solid var(--accent-light); }
 .story-card-meta { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .075em; }
 .story-card-meta-mark { color: var(--ink); white-space: nowrap; }
-.story-scene-art { position: relative; isolation: isolate; display: grid; place-items: center; width: min(100%, 255px); height: 124px; margin: 9px auto; overflow: hidden; border: 0; border-radius: 6px; background: var(--bg-deep); color: var(--paper); }
-.story-scene-art::before { content: "LIVE"; position: absolute; z-index: 1; top: 9px; left: 11px; color: var(--paper); font-size: 12px; font-weight: 900; letter-spacing: .11em; }
-.story-scene-art::after { content: ""; position: absolute; top: 12px; right: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+.story-scene-art { position: relative; isolation: isolate; display: grid; place-items: center; width: min(100%, 255px); height: 124px; margin: 9px auto; overflow: hidden; border: 0; border-radius: 6px; background: var(--bg-deep); color: var(--paper); animation: story-feed-cut .24s cubic-bezier(.16, 1, .3, 1) both; }
+.story-scene-art-channel { position: absolute; z-index: 1; top: 9px; left: 11px; color: var(--paper); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.story-scene-art[data-channel="LIVE"]::after { content: ""; position: absolute; top: 12px; right: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+@keyframes story-feed-cut { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .story-scene-art .story-face { position: relative; z-index: 1; width: 66px; height: 66px; margin: 0 0 14px; font-size: 42px; border: 0; border-radius: 0; background: transparent; transform: none; box-shadow: none; }
 .story-scene-art-label { position: absolute; bottom: 7px; left: 10px; right: 10px; text-align: center; color: var(--paper); font-size: 12px; letter-spacing: .17em; font-weight: 800; text-transform: uppercase; }
 .story-play-card .story-speaker { color: var(--ink); text-decoration: underline; text-decoration-color: var(--story-character); text-decoration-thickness: 3px; text-underline-offset: 5px; }
@@ -100,7 +101,6 @@
   .story-header { margin-bottom: 10px; }
   .story-intro { padding-bottom: 12px; }
   .story-scene-art { height: 108px; margin: 6px auto; }
-  .story-scene-art-orbit { top: -85px; }
   .story-card { min-height: 290px; }
 }
 @media (max-width: 370px) {
@@ -121,4 +121,5 @@
 @media (prefers-reduced-motion: reduce) {
   .story-page *, .story-page *::before, .story-page *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
   .story-play-card { transform: none !important; }
+  .story-scene-art { animation: none !important; }
 }

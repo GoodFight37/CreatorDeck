@@ -13,6 +13,15 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(script.totalSteps).toBe(12);
   });
 
+  it("attribue un canal narratif connu à chacune des 21 scènes", () => {
+    expect(script.scenes).toHaveLength(21);
+    expect(script.scenes.map((scene) => scene.channel)).toContain("ARCHIVE");
+    expect(validateStoryScript({ ...script, scenes: [
+      { ...script.scenes[0], channel: "INCONNU" as typeof script.scenes[0]["channel"] },
+      ...script.scenes.slice(1),
+    ] })).toContain("Canal invalide : studio");
+  });
+
   it("un même choix donne le même état, sans IA ni hasard", () => {
     const first = startStory(script);
     expect(chooseStory(script, first, "left")).toEqual(chooseStory(script, first, "left"));

@@ -4,6 +4,8 @@ export const STORY_STATS = ["public", "energie", "argent", "confiance"] as const
 export type StoryStat = (typeof STORY_STATS)[number];
 export type StoryStats = Record<StoryStat, number>;
 export type StoryDirection = "left" | "right";
+export const STORY_CHANNELS = ["LIVE", "CHAT", "CLIP", "DM", "MAIL", "CONTRAT", "ARCHIVE"] as const;
+export type StoryChannel = (typeof STORY_CHANNELS)[number];
 
 export interface StoryChoice {
   label: string;
@@ -18,6 +20,8 @@ export interface StoryScene {
   title: string;
   speaker: string;
   emoji: string;
+  /** Support narratif affiché sur le moniteur de la carte, sans effet sur les règles. */
+  channel: StoryChannel;
   text: string;
   /** Les drapeaux sont écrits par les choix précédents, parfois bien avant cette scène. */
   requiresFlags?: string[];
@@ -80,6 +84,7 @@ export function validateStoryScript(script: StoryScript): string[] {
     ids.add(scene.id);
     if (!Number.isInteger(scene.step) || scene.step < 0 || scene.step >= script.totalSteps) errors.push(`Étape invalide : ${scene.id}`);
     if (!scene.title.trim() || !scene.text.trim() || !scene.speaker.trim()) errors.push(`Texte manquant : ${scene.id}`);
+    if (!STORY_CHANNELS.includes(scene.channel)) errors.push(`Canal invalide : ${scene.id}`);
     if (scene.requiresFlags?.some((flag) => scene.forbidsFlags?.includes(flag))) errors.push(`Conditions contradictoires : ${scene.id}`);
     for (const direction of ["left", "right"] as const) {
       const choice = scene.choices?.[direction];

@@ -179,3 +179,38 @@ test("Histoire : les jauges privilégient la lecture aux émojis", async ({ page
     await expect(page.getByRole("progressbar", { name })).toHaveAttribute("aria-valuemin", "0");
   }
 });
+
+test("Histoire : la barre de progression représente le chapitre en cours", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  const bar = page.locator(".story-progress-track span");
+  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(100 / 12, 4);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-progress")).toContainText("2 / 12");
+  expect(await bar.evaluate((el) => parseFloat((el as HTMLElement).style.width))).toBeCloseTo(200 / 12, 4);
+});
+
+test("Histoire : le support narratif suit la scène et n'affiche LIVE que pour un direct", async ({ page }) => {
+  await page.goto("/histoire");
+  const monitor = page.locator(".story-scene-art");
+  await expect(monitor).toHaveAttribute("data-channel", "LIVE");
+  await expect(monitor.locator(".story-scene-art-channel")).toHaveText("LIVE");
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(monitor).toHaveAttribute("data-channel", "CHAT");
+  await expect(monitor.locator(".story-scene-art-channel")).toHaveText("CHAT");
+});
+
+test.describe("Histoire : mouvement réduit", () => {
+  test.use({ reducedMotion: "reduce" });
+  test("la transition du moniteur est supprimée sans cacher la scène", async ({ page }) => {
+    await page.goto("/histoire");
+    await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+    const monitor = page.locator(".story-scene-art");
+    await expect(monitor).toBeVisible();
+    await expect(monitor).toHaveCSS("animation-name", "none");
+    await page.locator(".story-actions .story-choice").first().click();
+    await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+    await expect(monitor).toBeVisible();
+  });
+});
