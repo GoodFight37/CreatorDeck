@@ -177,7 +177,7 @@ export function storyEpilogue(run: StoryRun): string[] {
   else if (flags.has("source_menacee")) memories.push("La source de Lina a disparu des réseaux. La recherche d'un nom est devenue une autre histoire.");
   if (flags.has("audit_dons")) memories.push("Les comptes de la collecte sont publics. L'erreur a coûté cher, mais personne n'attend plus un virement.");
   else if (flags.has("dons_opacite")) memories.push("Le total affiché lors de la collecte reste différent du montant reçu par l'association.");
-  if (flags.has("saison_collective")) memories.push("Quatre micros sont restés allumés après le générique. Cette chaîne a désormais plus d'une voix.");
+  if (flags.has("saison_collective")) memories.push("Après le générique, quatre micros diffusent encore. Cette chaîne a désormais plus d'une voix.");
   else if (flags.has("saison_duo")) memories.push("Ton dernier direct se termine à deux. Nox sourit, puis vous coupez chacun votre caméra.");
   else if (flags.has("saison_transmission")) memories.push("Tu as laissé à Nox le dernier mot. Partager la lumière n'a pas réduit la tienne.");
   else if (flags.has("saison_transparente")) memories.push("Lina a publié les documents du direct. Les contradictions y sont visibles, comme tes efforts pour les réparer.");
