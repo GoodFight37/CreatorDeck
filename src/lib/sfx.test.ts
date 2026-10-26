@@ -100,11 +100,12 @@ describe("bruitage expérimental du booster piloté par le geste", () => {
     const contexts: Array<{ currentTime: number }> = [];
     const buffer = { duration: 0.82 } as AudioBuffer;
     const storageKey = "creatordeck.audio-lab.experimental-pack-wav";
+    let saved: string | null = "AA==";
     vi.stubGlobal("window", {
       localStorage: {
-        getItem: (key: string) => key === storageKey ? "AA==" : null,
-        setItem: vi.fn(),
-        removeItem: vi.fn(),
+        getItem: (key: string) => key === storageKey ? saved : null,
+        setItem: (key: string, value: string) => { if (key === storageKey) saved = value; },
+        removeItem: (key: string) => { if (key === storageKey) saved = null; },
       },
       AudioContext: class {
         currentTime = 0;
