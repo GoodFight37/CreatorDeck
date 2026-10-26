@@ -1,5 +1,16 @@
 # Roadmap CreatorDeck
 
+**LOT D — Classeur pilote, 26 octobre 2026 (D-169) :** implémenté et vérifié
+localement sur `628c15e7` + diff (`CreatorDeck-Codex-2g9`). Filtres créateurs
+cumulables (rareté, possession, cercle), tri existant, progression totale/par
+rareté sans changer de règle, bas d'écran dégagé et PNG local à la demande sur web.
+Critères : filtres/pagination cohérents, cibles 44 px et champs tactiles 16 px,
+réserve et dernière rangée au-dessus de la navigation, preuves navigateur/APK.
+1 218 unitaires, 264 écrans, 221 E2E réussis / 29 ignorés ; APK 883273,
+gestes et filtres sur émulateur API 36 à 390×844 et 320×568. Export natif non ajouté.
+Publication et vérifications dans la passation. Le lot son est reporté à plus
+tard avec ElevenLabs ; Last Pack et autres écrans ne font pas partie du lot.
+
 **Lot 1 — la carte seulement, 25 octobre 2026 (D-168) :** implémenté et vérifié sur émulateur
 sur `2c8367cd`, suivi `CreatorDeck-Codex-p62`. Portrait sans trame, cartouche
 sous la photo, matières partagées par rareté et tap d'agrandissement.

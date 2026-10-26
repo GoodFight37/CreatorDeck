@@ -41,8 +41,9 @@ describe("étape 3 : le Binder au service de mon cercle", () => {
     // Les manquantes suivent, en dos de carte, celles du cercle d'abord.
     expect(cards.slice(2, 6)).toEqual(["ibai", "anyme023", "swehyt", "zeusspezial"].map((slug) => ({ name: name(slug), locked: true })));
     expect(cards.slice(2).every((card) => card.locked)).toBe(true);
-    // Un album, pas un tableau : ni score, ni filtres, ni tri, ni objectifs.
-    for (const removed of [".collection-score", ".progress-track", ".filter-chips", 'select[aria-label="Trier le classeur"]',
+    // Le pilotage du lot D garde l'ordre album par défaut et les miniatures sobres.
+    expect(document.querySelector('select[aria-label="Trier le classeur"]')).not.toBeNull();
+    for (const removed of [".collection-score", ".progress-track", ".filter-chips",
       ".binder-active-page", ".binder-circle-goal", ".binder-next-pages", ".binder-collections-picker", ".pocket-count", ".binder-card-caption"]) {
       expect(document.querySelector(removed), removed).toBeNull();
     }
@@ -57,6 +58,32 @@ describe("étape 3 : le Binder au service de mon cercle", () => {
     expect(cards.slice(0, 2)).toEqual([{ name: name("jeanmassiet"), locked: false }, { name: name("ibai"), locked: false }]);
     expect(cards.slice(2).every((card) => card.locked)).toBe(true);
     expect(cards).toHaveLength(12);
+  });
+
+  it("combine possession, rareté, cercle et tri sans compter les copies dans la progression", async () => {
+    setCircle(CIRCLE);
+    await banc.monter(<CollectionView game={gameWith(["ibai", "ibai", "jeanmassiet", "kaicenat"])} onCraft={async () => true} />);
+    expect(document.querySelector(".binder-total")!.textContent).toBe("3 / 1000 possédées");
+    const select = (label: string, value: string) => banc.saisir(document.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!, value);
+    select("Cartes affichées", "owned");
+    expect(grid()).toHaveLength(3);
+    select("Filtrer par cercle", "circle");
+    expect(grid().map((card) => card.name)).toEqual([name("ibai"), name("jeanmassiet")]);
+    select("Filtrer par rareté", "rare");
+    expect(grid().map((card) => card.name)).toEqual([name("jeanmassiet")]);
+    select("Cartes affichées", "missing");
+    expect(grid()).toHaveLength(0);
+    expect(document.querySelector<HTMLButtonElement>(".binder-export button")!.disabled).toBe(true);
+    select("Filtrer par rareté", "all");
+    expect(grid()).toHaveLength(3);
+    expect(grid().every((card) => card.locked)).toBe(true);
+    select("Filtrer par cercle", "all");
+    select("Cartes affichées", "owned");
+    select("Trier le classeur", "duplicates");
+    expect(grid()[0].name).toBe(name("ibai"));
+    select("Trier le classeur", "alpha");
+    expect(grid().map((card) => card.name)).toEqual(["ibai", "jeanmassiet", "kaicenat"].map(name).sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" })));
+    expect([...document.querySelectorAll(".binder-progress progress")].reduce((sum, node) => sum + Number(node.getAttribute("value")), 0)).toBe(3);
   });
 });
 

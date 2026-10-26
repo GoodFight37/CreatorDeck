@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-26-classeur-pilote", date: "2026-10-26", title: "Ton classeur se pilote",
+    summary: "Retrouve tes cartes par rareté, possession ou cercle, et choisis leur ordre.",
+    sections: [{ title: "Dans le classeur", items: [
+      "Ta progression totale et par rareté reste visible en tête du classeur.",
+      "Affiche les cartes obtenues, les manquantes ou celles de ton cercle, puis trie-les.",
+      "Sur la version web, prépare une image de la page affichée, seulement quand tu le demandes.",
+      "Le bas des pages garde plus de place au-dessus de la navigation.",
+    ] }],
+  },
+  {
     id: "2026-10-25-carte-objet", date: "2026-10-25", title: "La carte laisse la place au portrait",
     summary: "Un nom sous la photo, des matières différentes selon la rareté, et la même carte du booster au classeur.",
     sections: [{ title: "Tes cartes", items: [

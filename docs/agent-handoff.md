@@ -1,3 +1,70 @@
+# Checkpoint Codex — LOT D, classeur pilote, 26 octobre 2026
+
+Demande Malik : reprendre les filtres Mèmes dans le classeur créateurs (rareté,
+obtenues/manquantes, cercle, tri), progression existante, bas de page dégagé,
+contrôles tactiles de l'audit encore vrais seulement, export local de page si simple.
+Le lot son est mis de côté : ElevenLabs plus tard. Aucun travail Last Pack.
+Suivi `CreatorDeck-Codex-2g9`, base `main` locale/distante `628c15e7`.
+CI du code carte `36839abb` et APK officielle du checkpoint `628c15e7` réussies
+(runs 40275117746 et 40275586488 vérifiés le 26 octobre).
+
+Implémentation locale : filtres cumulables, fonctions de tri existantes, ordre
+album par défaut ; compteurs uniques sur le catalogue courant, barres par rareté.
+PNG local de la page affichée **sur navigateur**, à la demande ; dos anonymes
+pour les manquantes. Chargement des portraits de l'affiche existante réutilisé,
+aucun envoi automatique, aucune dépendance ajoutée. L'APK ne propose pas de
+téléchargement blob non pris en charge ; pas de nouveau pont natif pour cet export.
+Marge basse portée à 132 px + zone sûre. Décision D-169, note joueur
+`2026-10-26-classeur-pilote`. Aucun changement de taux, économie ou SQL.
+Audit : les cinq cibles citées sont déjà à 44 px ; champs déjà à 16 px sous
+`pointer: coarse`. Pas de retouche aveugle de leurs anciennes règles.
+Validation finale de la base `628c15e7` + diff LOT D :
+- `npm ci --cache D:/CreatorDeck-preuves/npm-cache --no-audit --no-fund` :
+  installation réalignée sur le lockfile (Next 16.4.2, auparavant 16.3.6),
+  aucun changement de package.json/lockfile. Bloc AGENTS Next régénéré (niveau de titre).
+- `npm test -- --maxWorkers=2 --pool=threads` : **1 218/1 218**, 95 fichiers,
+  sortie 0, 75,16 s. Deux runs avec forks avaient 1 218 assertions réussies
+  mais une erreur RPC `onTaskUpdate` ; ne pas les compter comme runs verts.
+- `npm run ecrans -- --maxWorkers=2` : **264/264**, 40 fichiers, sortie 0,
+  187,58 s. Ancienne attente « pas de 0 / 1000 » actualisée selon la demande.
+- `npm run e2e -- --workers=2 --reporter=list,json` : **221 réussis,
+  29 ignorés**, aucun échec/instable, sortie 0, 17,5 min. Variables publiques
+  Supabase explicitement à un espace, serveur webpack ; rapport
+  `D:/CreatorDeck-preuves/lot-d-e2e-final.json`. Aucun RPC de production testé.
+- `npm run typecheck`, jargon et `npm run catalog:ci` : réussis.
+- `npm run lint -- --ignore-pattern "android/**/build/**" --ignore-pattern
+  "android/app/src/main/assets/**" --ignore-pattern "reports/**"` : réussi.
+  Le premier lint incluait rapports et assets compilés ; exclusions limitées
+  à ces produits générés, aucune exclusion du code applicatif.
+- `npm run android:sync` (cloud absent, essai local), puis
+  `node scripts/android-gradle.mjs assembleDebug -PcdVersionName=628c15e-classeur-verifie` :
+  build Next 16.4.2 et Gradle réussis, 156 tâches / 109 exécutées, 58 s.
+  APK **883273 / 628c15e-classeur-verifie** installée sur émulateur API 36.
+
+Parcours natifs réussis à 390×844 et 320×568 (vraies dimensions WebView via
+`wm size`) : taps adb Binder/Drop/page/fiche, choix Obtenues dans le menu Android,
+Retour Android, swipe vertical ; combinaisons filtres et remise à zéro de page
+via WebView. Dernière rangée au-dessus du sachet, aucun débordement ni erreur JS.
+Complément de captures stabilisées et réserve sans cercle réussi aux deux tailles :
+10 captures produites, rendu des têtes, dernières rangées et réserves relu.
+Dernière rangée à 397 px, objet Drop à 472 px sur le viewport 320×568 ; réserve
+sans cercle à 118 px, objet à 467 px après défilement. Aucun recouvrement observé.
+Pour les menus natifs, désactiver l'émulation de focus Playwright ; sinon elle
+empêche leur affichage. Recentrer les contrôles avant un tap adb pour éviter
+la barre fixe. Les essais interrompus pour préparation ne sont pas des preuves.
+Commandes : `node reports/lot-d-android.mjs`, preuves natives et JSON dans
+`D:/CreatorDeck-preuves/lot-d/`. Export web de 12 obtenues réellement enregistré
+et inspecté (`export-12-obtenues.png`), export des 12 dos aussi testé en E2E.
+
+Limite locale rencontrée au départ : C disposait d'environ 1,2 Go, l'émulateur existant
+refuse le démarrage faute de place. Configuration API 36 copiée sur D, disque
+émulateur neuf sur D, original préservé ; démarrage désormais effectif.
+Reste : commit ciblé, push normal main,
+vérification du SHA distant, contrôles GitHub et Vercel Production même SHA.
+Checkpoint **local non commité**. Préserver les fichiers préexistants : bloc
+Kyara non commité de cette passation, Gradle généré, quatre snapshots sachets,
+fichiers d'échange et autres fichiers non suivis. Ne pas les indexer avec ce lot.
+
 # Checkpoint Codex — lot 1, la carte seulement, 25 octobre 2026
 
 Demande active Malik : carte comme objet, portrait dégagé, nom lisible,

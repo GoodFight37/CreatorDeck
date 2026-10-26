@@ -15,7 +15,7 @@ import { Bookmark, Check, Copy, Download, RefreshCw, Share2, Target, Trophy, X }
 import { ShowcaseCard } from "@/components/showcase-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { drawPoster, drawStory, posterFileName, posterModel, storyFileName } from "@/lib/poster";
+import { drawPoster, drawStory, loadPosterImage, posterFileName, posterModel, storyFileName } from "@/lib/poster";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { describeCard, formatPoints } from "@/lib/market";
 import { seasonHue } from "@/lib/cosmetics";
@@ -33,16 +33,6 @@ function shareableLink(userId: string): string | null {
   if (protocol !== "http:" && protocol !== "https:") return null;
   if (hostname === "localhost" || hostname === "127.0.0.1") return null;
   return `${origin}${pathname}?profil=${userId}`;
-}
-
-/** Charge un portrait local ; `null` si l'image manque (l'affiche reste valable). */
-function loadImage(source: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = source;
-  });
 }
 
 function percent(ratio: number): string {
@@ -119,7 +109,7 @@ export function PublicProfileSheet() {
       const images = new Map<string, CanvasImageSource>();
       await Promise.all(
         model.cards.map(async (card) => {
-          const image = await loadImage(card.image);
+          const image = await loadPosterImage(card.image);
           if (image) images.set(card.slug, image);
         }),
       );

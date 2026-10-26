@@ -1,3 +1,29 @@
+## D-169 — 26 octobre 2026 : classeur pilote, sans nouvelle règle de collection
+
+Malik demande le LOT D après la carte ; le lot son est reporté (ElevenLabs plus
+tard). Remplacer la restriction « album sans filtres » par le pilotage demandé :
+rareté, obtenues/manquantes, cercle et tri cumulables. Garder l'ordre album par
+défaut et réutiliser `sortBinder` / `BINDER_SORTS`, les possessions et les raretés
+du catalogue. La progression totale vient de `game.stats.uniqueCreators`, les
+barres ne comptent qu'une fois chaque créateur du catalogue courant, sans Sortants.
+Les filtres changent l'affichage, jamais les possessions, taux, valeurs ou RPC.
+
+La recherche reste épinglée ; les filtres défilent avec la page pour préserver
+la place des cartes sur petit écran. La marge basse réserve aussi le sachet
+surélevé. Les cinq petites cibles de l'audit du 23 octobre sont déjà à 44 px,
+les champs cités sont déjà à 16 px sous `pointer: coarse` : conserver ces corrections.
+
+Export facultatif retenu pour le navigateur : PNG des 12 emplacements de la page
+affichée, à la demande, traitement local, manquantes anonymes, aucune publication
+ni partage automatique. Réutiliser le canvas et le chargement des portraits de
+l'affiche existante ; aucune dépendance ajoutée. Dans l'APK, ne pas afficher un
+lien blob que la WebView ne sait pas enregistrer : l'export natif nécessiterait
+un pont supplémentaire, hors de ce petit export. Le PNG est un aperçu de page,
+pas une reproduction des reflets ni des variantes de chaque carte.
+
+Preuves et état de publication : checkpoint courant de `docs/agent-handoff.md`,
+suivi `CreatorDeck-Codex-2g9`, base `628c15e7`. Aucune validation Redmi revendiquée.
+
 ## D-168 — 25 octobre 2026 : la carte comme objet, sans modifier l'accueil
 
 Malik annule le chantier d'accueil et demande uniquement le lot carte.

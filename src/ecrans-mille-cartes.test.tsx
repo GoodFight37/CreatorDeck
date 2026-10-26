@@ -145,12 +145,12 @@ describe("mille cartes dans le classeur", () => {
     expect(document.body.textContent).toContain("Page 4");
   });
 
-  it("à l'arrivée : une phrase d'accueil, puis une page de dos à feuilleter, sans compteurs", async () => {
+  it("à l'arrivée : progression vide, phrase d'accueil et page de dos à feuilleter", async () => {
     const { CollectionView } = await import("@/components/binder-view");
     const game = getGameView(createInitialState(T0), T0);
     await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
 
-    expect(document.body.textContent).not.toContain("0 / 1000");
+    expect(document.querySelector(".binder-total")!.textContent).toBe("0 / 1000 possédées");
     expect(document.body.textContent).not.toContain("complété");
     expect(document.body.textContent).toContain("Ta collection commence avec le prochain booster.");
     expect(pose().cartes).toBe(CARTES_PAR_PAGE);

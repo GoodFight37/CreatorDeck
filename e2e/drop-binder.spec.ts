@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
-test("le Binder est un album calme : ni score, ni filtres, ni objectifs, à 320 px", async ({ page }) => {
+test("le Binder garde ses cartes sobres et propose le pilotage à 320 px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await gotoDeck(page, true, { withoutCircle: true });
   await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
@@ -10,7 +10,8 @@ test("le Binder est un album calme : ni score, ni filtres, ni objectifs, à 320 
     ".binder-collections-picker", ".binder-active-page", ".pocket-count", ".binder-card-caption"]) {
     await expect(page.locator(removed)).toHaveCount(0);
   }
-  await expect(page.getByRole("combobox", { name: "Trier le classeur" })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Trier le classeur" })).toHaveValue("album");
+  await expect(page.locator(".binder-total")).toHaveText("0 / 1000 possédées");
   await expect(page.getByRole("textbox", { name: "Rechercher un créateur" })).toBeVisible();
   // Un classeur neuf se feuillette déjà : douze dos à découvrir.
   await expect(page.locator(".collection-grid .creator-card.is-locked")).toHaveCount(12);

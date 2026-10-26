@@ -137,15 +137,23 @@ ciblée demandée par Malik ; aucun gain de performances chiffré ou essai Andro
 revendiqué. Les animations plus spécifiques de `booster-continuity.css` restent
 inchangées. Vérifications et publication dans le checkpoint courant.
 
-## Drop : la ligne de réserve passe sous l'objet Drop de la barre du bas — ouvert, 22 octobre 2026
+## Drop : la ligne de réserve passe sous l'objet Drop de la barre du bas — correction locale, 26 octobre 2026
 
 Version : `main` `957d22fb`. Gravité P2, lisibilité. Constat sur capture Playwright
 (téléphone, `next dev`, partie neuve) : à 320×568 et à 1024×768, l'objet Drop
 surélevé au centre de la barre du bas (`nav-objects.tsx`) recouvre `.stock-row`
 (« 2 sachets · prochain à … ») ; à 1024 l'icône masque « prochain », à 320 toute
 la ligne est cachée. À 390×844 la ligne est lisible. Non vérifié sur Android.
-Piste : réserver sous le contenu de l'accueil la hauteur réelle de l'objet Drop,
-pas seulement celle de la barre. Aucune correction faite.
+LOT D, base `628c15e7` : marge basse du contenu portée à 132 px + zone sûre,
+pour réserver aussi l'objet Drop surélevé. Réserve visible et dernière rangée
+au-dessus de l'objet vérifiées par rectangles navigateur à 320×568, 390×844 et
+1024×768 (deux projets, deux tests réussis après correction des sélecteurs du test).
+APK locale 883273 / `628c15e-classeur-verifie`, émulateur API 36 : geste vertical,
+dernière rangée et réserve avec/sans cercle vérifiés à 390×844 et 320×568.
+À 320 px, dernière rangée à 397 px et objet Drop à 472 px ; réserve sans cercle
+à 118 px et objet à 467 px après défilement. Captures relues, aucune erreur JS.
+Publication : checkpoint courant. Pas de preuve sur Redmi physique ; ne pas
+confondre ces tests avec une validation téléphone.
 
 ## Préparation E2E : modes cloud mélangés et accueil du Tribunal — correctif publié, 22 octobre 2026
 

@@ -18,6 +18,7 @@ import {
   CREATOR_BY_SLUG,
   RARITY_META,
   creatorImage,
+  type Creator,
   type Rarity,
 } from "@/lib/catalog";
 import type { PlayerProfile } from "@/lib/cloud/api";
@@ -161,6 +162,61 @@ function roundedRect(
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+/** Une page locale du classeur : les manquantes restent des dos anonymes. */
+export function drawBinderPage(canvas: HTMLCanvasElement, creators: readonly Creator[], owned: ReadonlySet<string>, page: number,
+  images: Map<string, CanvasImageSource> = new Map()): void {
+  canvas.width = 1080;
+  canvas.height = 1640;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponible");
+  ctx.fillStyle = "#101014";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#f4f1e9";
+  ctx.font = "700 48px system-ui, sans-serif";
+  ctx.fillText("Mon classeur", 48, 40);
+  ctx.font = "400 26px system-ui, sans-serif";
+  ctx.fillText(`CreatorDeck · page ${page} · ${creators.length} cartes`, 48, 104);
+  creators.slice(0, 12).forEach((creator, index) => {
+    const x = 48 + index % 3 * 336;
+    const y = 168 + Math.floor(index / 3) * 360;
+    const obtained = owned.has(creator.slug);
+    const meta = RARITY_META[creator.rarity];
+    roundedRect(ctx, x, y, 312, 336, 12);
+    ctx.fillStyle = "#25252c";
+    ctx.fill();
+    ctx.strokeStyle = obtained ? meta.color : "#62626b";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    const image = obtained ? images.get(creator.slug) : undefined;
+    if (image) {
+      // Les portraits du catalogue sont carrés : même cadrage que les cartes.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 8, y + 8, 296, 250);
+      ctx.clip();
+      ctx.drawImage(image, x + 8, y - 15, 296, 296);
+      ctx.restore();
+    }
+    ctx.fillStyle = "#f4f1e9";
+    ctx.font = "700 26px system-ui, sans-serif";
+    ctx.fillText(obtained ? fitText(ctx, creator.displayName, 280) : "À découvrir", x + 16, y + 270);
+    ctx.fillStyle = obtained ? meta.color : "#aaaab5";
+    ctx.font = "500 22px system-ui, sans-serif";
+    ctx.fillText(obtained ? meta.label : "CREATORDECK", x + 16, y + 306);
+  });
+}
+
+/** Un portrait absent n'empêche pas de générer l'image locale. */
+export function loadPosterImage(source: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = source;
+  });
 }
 
 /**

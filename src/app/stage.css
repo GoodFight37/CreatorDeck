@@ -252,11 +252,29 @@
 .collection-view .page-title-row h1 { font-size: 30px !important; letter-spacing: .01em; }
 .collection-view .circle-strip { margin-top: 18px; }
 
-/* Une seule recherche, discrète : l'album se feuillette, il ne se filtre pas. */
+/* Recherche et filtres du classeur pilote. */
 .binder-tools { margin: 0 -16px; padding: 10px 16px 8px; }
 .binder-tools .search-field { height: 46px; margin: 0; border-radius: 6px; background: rgb(255 255 255 / .04); }
 .binder-tools .search-field:focus-within { border-color: var(--paper); }
 .collection-view .search-field button { min-width: 44px; min-height: 44px; border-radius: 6px; }
+.collection-view .page-title-row { flex-wrap: wrap; gap: 6px 12px; }
+.binder-total { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.binder-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 16px 0; }
+.binder-progress label { display: flex; flex-direction: column; gap: 5px; min-width: 0; color: var(--muted); font-size: 12px; }
+.binder-progress strong { color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
+.binder-progress progress { width: 100%; height: 6px; border: 0; border-radius: 4px; overflow: hidden; background: var(--panel); accent-color: var(--rarity-color); }
+.binder-progress progress::-webkit-progress-bar { background: var(--panel); }
+.binder-progress progress::-webkit-progress-value { background: var(--rarity-color); }
+.binder-progress progress::-moz-progress-bar { background: var(--rarity-color); }
+.binder-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.binder-filters label { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: var(--muted); font-size: 12px; }
+.binder-filters select { width: 100%; min-height: 44px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font-size: 16px; }
+.binder-filters option { color: var(--text); background: var(--panel); }
+.binder-results { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.binder-export { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 0; }
+.binder-export img { display: block; width: 100%; height: auto; }
+.binder-export a { text-decoration: none; }
+@media (max-width: 360px) { .binder-progress { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .filter-chips button { min-height: 44px; }
 
 .binder-pager { gap: 10px; }
@@ -637,7 +655,8 @@
 /* Un booster est prêt et le joueur est ailleurs : le sachet se balance. */
 .nav-object.hub.ready:not(.active) .nav-object-art { animation: nav-sachet-sway 2.6s ease-in-out infinite; }
 @keyframes nav-sachet-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
-.app-content { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+/* Le sachet central dépasse de la barre : garder aussi sa hauteur libre. */
+.app-content { padding-bottom: calc(132px + env(safe-area-inset-bottom)); }
 
 /* ------------------------------------------------------------ en-tête A3
  * À gauche le niveau et sa jauge (le profil), à droite les ressources et

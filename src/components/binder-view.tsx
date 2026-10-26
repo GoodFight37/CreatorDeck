@@ -13,11 +13,12 @@ import { useCircle } from "@/lib/circle-store";
 import { circleLabel } from "@/lib/circle";
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
-import { albumOrder } from "@/lib/binder-sort";
+import { albumOrder, BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
+import { BinderPageExport } from "@/components/binder-page-export";
 import { useNow } from "@/hooks/use-game";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive } from "@/hooks/use-live";
-import { CREATORS, RETIRED_CREATORS, RARITY_META, type CardVariant, type Creator } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, RETIRED_CREATORS, RARITY_META, type Rarity, type CardVariant, type Creator } from "@/lib/catalog";
 import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
 import { cardEffectsAllowed } from "@/lib/tilt";
@@ -48,6 +49,10 @@ export function CollectionView({
 }) {
   const circle = useCircle();
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "owned" | "missing">("all");
+  const [rarity, setRarity] = useState<Rarity | "all">("all");
+  const [circleOnly, setCircleOnly] = useState(false);
+  const [sort, setSort] = useState<BinderSort | "album">("album");
   const [page, setPage] = useState(0);
   const [turnDirection, setTurnDirection] = useState(0);
   const [turning, setTurning] = useState(false);
@@ -114,10 +119,19 @@ export function CollectionView({
   const filtered = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
     const retiredOwned = RETIRED_CREATORS.filter((creator) => owned.has(creator.slug));
-    const matching = [...CREATORS, ...retiredOwned].filter((creator) => !q ||
-      `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr").includes(q));
-    return albumOrder(matching, circle, (slug) => owned.get(slug)?.latestAt);
-  }, [circle, owned, query]);
+    const matching = [...CREATORS, ...retiredOwned].filter((creator) =>
+      (filter === "all" || (filter === "owned" ? owned.has(creator.slug) : !owned.has(creator.slug)))
+      && (rarity === "all" || creator.rarity === rarity)
+      && (!circleOnly || circle.includes(creator.slug))
+      && (!q || `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr").includes(q)));
+    return sort === "album" ? albumOrder(matching, circle, (slug) => owned.get(slug)?.latestAt)
+      : sortBinder(matching, sort, (slug) => owned.get(slug)?.count ?? 0, (slug) => owned.get(slug)?.latestAt ?? 0);
+  }, [circle, circleOnly, filter, owned, query, rarity, sort]);
+
+  const byRarity = useMemo(() => (Object.keys(RARITY_META) as Rarity[]).map((rarity) => {
+    const creators = CREATORS.filter((creator) => creator.rarity === rarity);
+    return { rarity, total: creators.length, count: creators.filter((creator) => owned.has(creator.slug)).length };
+  }), [owned]);
 
   function finishTurn() {
     if (turnTimer.current !== null) clearTimeout(turnTimer.current);
@@ -221,10 +235,16 @@ export function CollectionView({
   return (
     <div className="view collection-view" style={themeStyle}>
       {modeSwitch}
-      {/* L'album se feuillette : ses visages d'abord, sans tableau de bord. */}
       <section className="page-title-row" style={{ marginBottom: "0.2rem" }}>
         <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Mon classeur</h1>
+        <span className="binder-total">{game.stats.uniqueCreators} / {CATALOG_SIZE} possédées</span>
       </section>
+      <div className="binder-progress" aria-label="Collection par rareté">
+        {byRarity.map(({ rarity, count, total }) => <label key={rarity} style={{ "--rarity-color": RARITY_META[rarity].color } as CSSProperties}>
+          <span>{RARITY_META[rarity].label}</span><strong>{count} / {total}</strong>
+          <progress value={count} max={total || 1} aria-label={`${RARITY_META[rarity].label} : ${count} sur ${total}`} />
+        </label>)}
+      </div>
 
       {circle.length > 0 ? (
         <CircleStrip
@@ -248,7 +268,6 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Une seule recherche discrète : retrouver un visage par son nom. */}
       <div className="binder-tools">
         <label className="search-field">
           <Search size={16} />
@@ -274,6 +293,23 @@ export function CollectionView({
           ) : null}
         </label>
       </div>
+      <div className="binder-filters">
+          <label><span>Cartes</span><select aria-label="Cartes affichées" value={filter} onChange={(event) => { setFilter(event.target.value as typeof filter); resetPage(); }}>
+            <option value="all">Toutes</option><option value="owned">Obtenues</option><option value="missing">Manquantes</option>
+          </select></label>
+          <label><span>Rareté</span><select aria-label="Filtrer par rareté" value={rarity} onChange={(event) => { setRarity(event.target.value as typeof rarity); resetPage(); }}>
+            <option value="all">Toutes raretés</option>
+            {Object.entries(RARITY_META).map(([key, meta]) => <option key={key} value={key}>{meta.label}</option>)}
+          </select></label>
+          <label><span>Chaînes</span><select aria-label="Filtrer par cercle" value={circleOnly ? "circle" : "all"} onChange={(event) => { setCircleOnly(event.target.value === "circle"); resetPage(); }}>
+            <option value="all">Tous les créateurs</option><option value="circle">Mon cercle</option>
+          </select></label>
+          <label><span>Ordre</span><select aria-label="Trier le classeur" value={sort} onChange={(event) => { setSort(event.target.value as typeof sort); resetPage(); }}>
+            <option value="album">Mon album</option>
+            {BINDER_SORTS.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
+          </select></label>
+        </div>
+      <p className="binder-results" role="status">{filtered.length} carte{filtered.length > 1 ? "s" : ""}</p>
 
       {showPager ? (
         <div className="binder-pager">
@@ -351,6 +387,8 @@ export function CollectionView({
           ) : null}
         </div>
       </div>
+
+      <BinderPageExport key={`${safePage}:${visibleCreators.map((creator) => `${creator.slug}:${owned.has(creator.slug)}`).join(",")}`} creators={visibleCreators} owned={ownedSlugs} page={safePage + 1} />
 
       {inspect ? (
         <CardInspectModal
