@@ -23,6 +23,14 @@ export function StoryMode() {
   const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
+  const sceneRef = useRef<HTMLElement | null>(null);
+  const endingRef = useRef<HTMLElement | null>(null);
+  const previousStep = useRef<number | null>(null);
+  const focusNextScene = useRef(false);
+  const step = run?.step;
+  const ending = run?.ending;
 
   useEffect(() => {
     let saved: string | null = null;
@@ -37,6 +45,34 @@ export function StoryMode() {
     try { window.localStorage.setItem(STORY_SAVE_KEY, JSON.stringify(run)); } catch { /* session en mémoire */ }
   }, [run]);
 
+  // Après un choix, le nouveau dilemme doit être visible même sur un petit
+  // écran où le joueur a fait défiler la page pour atteindre les boutons.
+  // Un choix clavier transfère le focus à la nouvelle scène (ou à la fin).
+  useEffect(() => {
+    if (step === undefined) return;
+    if (previousStep.current === null) { previousStep.current = step; return; }
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+
+    if (focusNextScene.current) {
+      (ending ? endingRef.current : sceneRef.current)?.focus({ preventScroll: true });
+    }
+    focusNextScene.current = false;
+
+    if (ending) {
+      endingRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      return;
+    }
+    const progress = progressRef.current;
+    const actions = actionsRef.current;
+    if (!progress || !actions) return;
+    const progressTop = progress.getBoundingClientRect().top;
+    const actionsBottom = actions.getBoundingClientRect().bottom;
+    if (progressTop < 12 || actionsBottom > window.innerHeight - 12) {
+      progress.scrollIntoView({ block: "start", behavior: "auto" });
+    }
+  }, [step, ending]);
+
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
   const character = scene?.id === "double_crise" ? "duo"
     : scene?.speaker.startsWith("FLO") ? "flo"
@@ -45,12 +81,13 @@ export function StoryMode() {
   const lastEffects = run?.history.at(-1)?.effects;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
-  function decide(direction: StoryDirection) {
+  function decide(direction: StoryDirection, focusScene = false) {
     const expectedStep = run?.step;
     if (expectedStep === undefined) return;
     const now = performance.now();
     if (now - lastDecisionAt.current < 450) return;
     lastDecisionAt.current = now;
+    focusNextScene.current = focusScene;
     setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
     gesture.current = null;
     setDrag(0);
@@ -70,7 +107,7 @@ export function StoryMode() {
   function chooseFromButton(event: MouseEvent<HTMLButtonElement>, direction: StoryDirection) {
     if (event.detail > 0 && (event.currentTarget.dataset.touchActivated === "true"
       || window.matchMedia("(hover: none)").matches)) event.currentTarget.blur();
-    decide(direction);
+    decide(direction, event.detail === 0);
   }
 
   function pointerDown(event: PointerEvent<HTMLElement>) {
@@ -100,11 +137,12 @@ export function StoryMode() {
     if (!scene || event.target !== event.currentTarget) return;
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
-      decide(event.key === "ArrowLeft" ? "left" : "right");
+      decide(event.key === "ArrowLeft" ? "left" : "right", true);
     }
   }
 
-  function replay() {
+  function replay(focusScene = false) {
+    focusNextScene.current = focusScene;
     lastDecisionAt.current = Number.NEGATIVE_INFINITY;
     gesture.current = null;
     setDrag(0);
@@ -156,22 +194,22 @@ export function StoryMode() {
               )}
             </div>
             {run.ending ? (
-              <section className="story-card story-ending" aria-live="polite">
+              <section ref={endingRef} tabIndex={-1} className="story-card story-ending" aria-live="polite">
                 <div className="story-face" aria-hidden="true">{STORY_ENDINGS[run.ending].emoji}</div>
                 <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
                 <h2>{STORY_ENDINGS[run.ending].title}</h2>
                 <p>{STORY_ENDINGS[run.ending].text}</p>
-                <button className="story-replay" onClick={replay}>↻ Recommencer l’histoire</button>
+                <button className="story-replay" onClick={(event) => replay(event.detail === 0)}>↻ Recommencer l’histoire</button>
               </section>
             ) : scene ? (
               <>
-                <div className="story-progress" aria-label={`Décision ${run.step + 1} sur ${SCRIPT.totalSteps}`}>
+                <div ref={progressRef} className="story-progress" aria-label={`Décision ${run.step + 1} sur ${SCRIPT.totalSteps}`}>
                   <span>CHAPITRE {String(run.step + 1).padStart(2, "0")}</span>
                   <span>{run.step + 1} / {SCRIPT.totalSteps}</span>
                 </div>
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
                 <section
-                  className="story-card story-play-card" tabIndex={0}
+                  ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
                   aria-label={`Scène : ${scene.title}. Utilise les flèches gauche et droite du clavier ou les boutons de choix.`}
                   onKeyDown={keyDown}
@@ -197,7 +235,7 @@ export function StoryMode() {
                   <p>{scene.text}</p>
                   <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
                 </section>
-                <div className="story-actions">
+                <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>

@@ -167,8 +167,7 @@ test("Histoire : le clavier conserve le focus sans présélection forcée", asyn
   await left.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
-  expect(await left.evaluate((element) => document.activeElement === element)).toBe(true);
-  await expect(left).toBeFocused();
+  await expect(page.locator(".story-play-card")).toBeFocused();
 });
 
 test("Histoire : les jauges privilégient la lecture aux émojis", async ({ page }) => {
@@ -241,4 +240,34 @@ test.describe("Histoire : écran hybride tactile et souris", () => {
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(left).not.toHaveAttribute("data-touch-activated", "true");
   });
+});
+
+test("Histoire : le prochain dilemme remonte dans la zone visible sur téléphone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  const buttons = page.locator(".story-actions .story-choice");
+  await buttons.first().scrollIntoViewIfNeeded();
+  await buttons.first().click();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect.poll(async () => page.locator(".story-progress").evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
+  const position = await page.locator(".story-progress").evaluate((el) => el.getBoundingClientRect().top);
+  expect(position).toBeLessThan(70);
+  const heading = await page.getByRole("heading", { name: "Une personne dans le chat" }).boundingBox();
+  expect(heading).not.toBeNull();
+  if (heading) expect(heading.y).toBeLessThan(568);
+});
+
+test("Histoire : après Entrée le focus suit la scène et les flèches restent utilisables", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  await page.locator(".story-actions .story-choice").first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(page.locator(".story-play-card")).toBeFocused();
+  await page.waitForTimeout(470);
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator(".story-progress")).toContainText("3 / 12");
+  await expect(page.locator(".story-play-card")).toBeFocused();
 });

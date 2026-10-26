@@ -33,13 +33,14 @@
 .story-impact-value { font-size: 12px; font-weight: 700; color: var(--text); }
 .story-impact-value[data-trend="up"] { color: var(--green); }
 .story-impact-value[data-trend="down"] { color: var(--danger); }
+.story-progress, .story-ending { scroll-margin-top: max(12px, env(safe-area-inset-top)); }
 .story-progress { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .12em; font-weight: 800; color: var(--muted); }
 .story-progress-track { height: 4px; background: var(--panel-3); border-radius: 5px; margin: 9px 0 15px; overflow: hidden; }
 .story-progress-track span { display: block; height: 100%; background: var(--accent); transition: width .25s ease; }
 .story-card { position: relative; min-height: 330px; border: 0; border-radius: 14px; padding: 16px 22px 20px; text-align: center; background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .story-play-card { --story-character: var(--accent); touch-action: pan-y; user-select: none; cursor: grab; overflow: hidden; isolation: isolate; background: var(--paper); color: var(--ink); box-shadow: 0 14px 28px rgb(var(--ink-rgb) / .32); }
 .story-play-card:active { cursor: grabbing; }
-.story-play-card:focus-visible, .story-choice:focus-visible, .story-replay:focus-visible, .story-back:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
+.story-play-card:focus-visible, .story-ending:focus-visible, .story-choice:focus-visible, .story-replay:focus-visible, .story-back:focus-visible { outline: 3px solid var(--action); outline-offset: 3px; }
 .story-face { height: 86px; width: 86px; border: 1px solid var(--line-strong); border-radius: 26px; background: var(--panel-3); font-size: 43px; display: grid; place-items: center; margin: 0 auto 14px; transform: rotate(-3deg); }
 .story-speaker, .story-chapter { font-size: 11px; letter-spacing: .15em; color: var(--accent-light); font-weight: 800; }
 .story-card h2 { font-family: "Barlow Condensed", sans-serif; font-size: clamp(30px, 7vw, 37px); line-height: 1.08; margin: 9px 0 10px; text-wrap: balance; }
