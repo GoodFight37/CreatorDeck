@@ -29,6 +29,27 @@ test("Histoire : les indices expliquent les enjeux sans révéler les nombres", 
   await expect(left.getByLabel("Confiance en hausse")).toBeVisible();
 });
 
+test("Histoire : le journal montre seulement les décisions passées et survit au rechargement", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-recap-live")).toHaveCount(0);
+  await page.locator(".story-actions .story-choice").first().click();
+  const journal = page.locator(".story-recap-live");
+  await expect(journal).toBeVisible();
+  await expect(journal).not.toHaveAttribute("open", "");
+  await journal.locator("summary").click();
+  await expect(journal).toHaveAttribute("open", "");
+  await expect(journal.locator("li")).toHaveCount(1);
+  await expect(journal.locator("li").first()).toContainText("Le grand départ");
+  await expect(journal.locator("li").first()).toContainText("Rester avec le téléphone");
+  await expect(journal).not.toContainText("Le clip de trop");
+  await page.reload();
+  await expect(page.locator(".story-recap-live summary")).toContainText("1 décisions");
+  await page.locator(".story-recap-live summary").click();
+  await expect(page.locator(".story-recap-live li")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+});
+
 test("Histoire : nouvelle partie confirmée sans perdre une partie par erreur", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
