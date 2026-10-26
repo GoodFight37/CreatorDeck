@@ -38,7 +38,8 @@ export function StoryMode() {
   }, [run]);
 
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
-  const character = scene?.speaker.startsWith("FLO") ? "flo"
+  const character = scene?.id === "double_crise" ? "duo"
+    : scene?.speaker.startsWith("FLO") ? "flo"
     : scene?.speaker.startsWith("NOX") ? "nox"
     : scene?.speaker.startsWith("MONA") ? "mona" : "toi";
   const lastEffects = run?.history.at(-1)?.effects;
@@ -114,9 +115,10 @@ export function StoryMode() {
                     <span>{STAT_LABELS[key].icon} {STAT_LABELS[key].name}</span>
                     <strong>{run.stats[key]} <span>/ 100</span></strong>
                   </div>
-                  <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]}>
+                  <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]} aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
                     <div className={`story-meter-fill story-meter-${key}`} style={{ width: `${run.stats[key]}%` }} />
                   </div>
+                  {run.stats[key] <= 20 && <span className="story-stat-alert" aria-hidden="true">⚠ NIVEAU CRITIQUE</span>}
                 </div>
               ))}
             </section>
@@ -172,7 +174,7 @@ export function StoryMode() {
                   <div className="story-scene-art" aria-hidden="true">
                     <div className="story-scene-art-orbit" />
                     <div className="story-face">{scene.emoji}</div>
-                    <span className="story-scene-art-label">{scene.speaker.split(" · ")[0]}</span>
+                    <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
                   <h2 aria-live="polite">{scene.title}</h2>
@@ -181,11 +183,11 @@ export function StoryMode() {
                 </section>
                 <div className="story-actions">
                   <button className="story-choice" onClick={() => decide("left")}>
-                    <span className="story-choice-direction">← GAUCHE</span>
+                    <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
                   </button>
                   <button className="story-choice" onClick={() => decide("right")}>
-                    <span className="story-choice-direction">DROITE →</span>
+                    <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
                   </button>
                 </div>

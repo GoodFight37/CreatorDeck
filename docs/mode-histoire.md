@@ -68,3 +68,11 @@ Ressources : `DESIGN.md` et les tokens du thème Pocket dans `src/app/globals.cs
 
 
 Complément exploratoire au contrôle visuel : une maquette HTML locale dérivée du prototype (et non l'application Next) a été chargée dans Chromium via `set_content`, car les navigations fichier/localhost étaient bloquées par l'environnement. À 320×568 et 390×844, aucun débordement horizontal détecté, boutons ~83 px de hauteur, aucun `pageerror`. La maquette a révélé deux petites retouches intégrées : titre sur une ligne à 320 px et libellé narratif « Ton point de vue » à la place d'un double « Toi ». Ces constats restent **des preuves de composition approximative** ; les vrais tests E2E et une inspection visuelle du déploiement demeurent indispensables.
+
+## Itération ciblée : scène croisée et reflow accessible (26 octobre 2026)
+
+Le contrôle du code a mis en évidence un cas narratif concret : la scène `double_crise` cite **Nox et Mona**, mais le décor reprenait seulement le premier nom de `speaker` et l'identité Nox. La carte affiche désormais « NOX + MONA » et un bandeau bicolore, sans nouvelle illustration externe, dépendance ou modification de scénario.
+
+Autre défaut : les jauges ≤ 20 n'étaient signalées que par une couleur de bordure. Un libellé visible « NIVEAU CRITIQUE » et `aria-valuetext` explicitent la situation, indépendamment de la perception des couleurs. Les boutons évitent la répétition de chevrons et le titre ne force plus `white-space: nowrap` à 320 px ; les colonnes passent en une seule colonne à 280 px ou moins, pour le reflow et le zoom. Références : W3C WCAG 2.2, 1.4.1 (couleur), 1.4.4 (agrandissement), 2.5.7 (glissé), 2.5.8 (cibles).
+
+Deux scénarios Playwright ajoutés : (1) le chemin Nox/Mona jusqu'au chapitre 10, avec alerte de confiance à 11/100 ; (2) le reflow à 240 px. **Les tests ont été écrits mais ne sont pas exécutés localement dans cette session** : le checkout complet et le serveur Next ne sont pas disponibles dans l'environnement de l'agent. Seule la vérification statique des remplacements et du code source a été faite ; attendre la CI du SHA correspondant. Ni test Android ni téléphone réel. 

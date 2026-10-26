@@ -108,3 +108,36 @@ test("Histoire : design utilisable sur écran étroit, sans débordement ni peti
     }
   }
 });
+
+// Ce parcours croise Nox et Mona ; la carte ne doit masquer aucun des deux.
+test("Histoire : double crise et jauge critique lisibles sans code couleur", async ({ page }) => {
+  await page.goto("/histoire");
+  const path = ["left", "left", "right", "right", "left", "right", "right", "left", "left"] as const;
+  for (const [index, direction] of path.entries()) {
+    await page.locator(".story-actions .story-choice").nth(direction === "left" ? 0 : 1).click();
+    if (index === 6) {
+      const confiance = page.locator(".story-stat").filter({ has: page.getByRole("progressbar", { name: "Confiance" }) });
+      await expect(confiance.getByText("NIVEAU CRITIQUE")).toBeVisible();
+      await expect(page.getByRole("progressbar", { name: "Confiance" })).toHaveAttribute("aria-valuetext", "11 sur 100, niveau critique");
+    }
+    await page.waitForTimeout(470);
+  }
+  const card = page.locator(".story-play-card");
+  await expect(card).toHaveAttribute("data-character", "duo");
+  await expect(card.locator(".story-scene-art-label")).toHaveText("NOX + MONA");
+  await expect(page.getByRole("heading", { name: "Deux affaires, une caméra" })).toBeVisible();
+});
+
+test("Histoire : le titre et les choix se réorganisent en très petit viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 240, height: 640 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Zéro spectateur" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Rester avec le téléphone/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  const buttons = page.locator(".story-choice");
+  const first = await buttons.first().boundingBox();
+  const second = await buttons.last().boundingBox();
+  expect(first).not.toBeNull();
+  expect(second).not.toBeNull();
+  if (first && second) expect(second.y).toBeGreaterThan(first.y + first.height - 1);
+});

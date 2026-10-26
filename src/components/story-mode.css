@@ -72,10 +72,14 @@
 /* Un décor de studio fictif, entièrement CSS : ni asset distant, ni animation perpétuelle. */
 .story-stat[data-low="true"] { border-color: var(--danger); }
 .story-stat[data-low="true"] .story-stat-top strong { color: var(--danger); }
+.story-stat-alert { display: block; margin-top: 6px; color: var(--danger); font-size: 12px; font-weight: 800; letter-spacing: .02em; }
 .story-play-card::before { content: ""; position: absolute; z-index: -1; inset: 0 0 auto; height: 3px; background: var(--story-character); }
 .story-play-card[data-character="flo"] { --story-character: var(--green); }
 .story-play-card[data-character="nox"] { --story-character: var(--accent-light); }
 .story-play-card[data-character="mona"] { --story-character: var(--muted); }
+.story-play-card[data-character="duo"] { --story-character: var(--accent-light); }
+.story-play-card[data-character="duo"]::before { background: linear-gradient(90deg, var(--accent-light) 50%, var(--muted) 50%); }
+.story-play-card[data-character="duo"] .story-scene-art { background: linear-gradient(110deg, var(--panel-3) 50%, var(--bg-soft) 50%); }
 .story-card-meta { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .075em; }
 .story-card-meta-mark { color: var(--story-character); white-space: nowrap; }
 .story-scene-art { position: relative; isolation: isolate; display: grid; place-items: center; width: min(100%, 255px); height: 130px; margin: 7px auto 8px; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 12px; background: linear-gradient(160deg, var(--panel-3), var(--bg-soft)); }
@@ -102,13 +106,18 @@
   .story-card { min-height: 290px; }
 }
 @media (max-width: 370px) {
-  .story-intro h1 { font-size: 36px; white-space: nowrap; }
+  .story-intro h1 { font-size: clamp(30px, 10vw, 36px); text-wrap: balance; overflow-wrap: anywhere; }
   .story-card-meta, .story-scene-art-label { font-size: 12px; }
   .story-scene-art { height: 100px; }
   .story-scene-art .story-face { width: 56px; height: 56px; font-size: 34px; margin-bottom: 11px; }
   .story-card h2 { font-size: 31px; }
   .story-card p { line-height: 1.45; }
   .story-choice { padding: 12px 10px; }
+}
+
+@media (max-width: 280px) {
+  .story-stats, .story-actions { grid-template-columns: minmax(0, 1fr); }
+  .story-stat-top { flex-wrap: wrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
