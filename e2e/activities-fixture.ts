@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-export async function prepareActivities(page: Page, options: { lastPack?: "ready" | "waiting" | "failed"; marketFailed?: boolean } = {}) {
+export async function prepareActivities(page: Page, options: { lastPack?: "ready" | "waiting" | "failed"; marketFailed?: boolean; expiredSession?: boolean } = {}) {
   const now = Date.now();
   const user = "11111111-1111-4111-8111-111111111111";
   const friend = "22222222-2222-4222-8222-222222222222";
@@ -39,11 +39,11 @@ export async function prepareActivities(page: Page, options: { lastPack?: "ready
       rows: Array.from({ length: 100 }, (_, i) => ({ userId: `player-${i}`, displayName: `Collectionneur ${i + 1}`, rank: i + 1, score: 20000 - i, liveCount: 1, lineup: [] })) });
     return answer([]);
   });
-  await page.addInitScript(({ state, user }) => {
+  await page.addInitScript(({ state, user, expiredSession }) => {
     localStorage.setItem("creatordeck.save.v9", JSON.stringify(state));
     localStorage.setItem("creatordeck-tutorial:local", "done");
     localStorage.setItem(`creatordeck-tutorial:${user}`, "done");
-    localStorage.setItem("creatordeck.cloud.session", JSON.stringify({ accessToken: "fake-token", refreshToken: "fake-refresh", userId: user, expiresAt: Date.now() + 3600000 }));
-  }, { state, user });
+    localStorage.setItem("creatordeck.cloud.session", JSON.stringify({ accessToken: "fake-token", refreshToken: "fake-refresh", userId: user, expiresAt: expiredSession ? 0 : Date.now() + 3600000 }));
+  }, { state, user, expiredSession: options.expiredSession });
   return { requests, releaseLastPack: () => { lastPackMode = "ready"; releaseLastPack(); }, recoverMarket: () => { marketFailed = false; } };
 }

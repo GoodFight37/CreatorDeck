@@ -2,6 +2,19 @@
 
 **Mode Histoire — saison 1 « Zéro spectateur » (PR brouillon #24, 27 octobre 2026) :** jusqu’à 40 décisions, cinq actes, quatre jauges, 84 scènes alternatives et neuf fins accessibles, avec personnages récurrents et conséquences différées. Journal de bord, indices des effets immédiats, sauvegarde locale V4 contrôlée par rejeu, reprise et recommencement confirmé. Tests du moteur et Playwright automatisés sur la branche expérimentale `/histoire` ; contrôle Android et iOS physiques et temps de lecture réels à vérifier avant toute intégration. La production, les cartes, les jetons, Supabase et les quatre piliers ne sont pas modifiés. Détails : [mode-histoire.md](mode-histoire.md), [bible narrative](mode-histoire-saison-v3.md), [audit V4](mode-histoire-v4-audit.md).
 
+**Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans
+[`ea80907a`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
+Vercel Production du même SHA réussi, suivi `CreatorDeck-Codex-pg1`. MEMES/IMGFLIP partagent le
+client de session du jeu ; erreur et chargement séparés. Sachet préparé centré
+et de même taille que sur l'accueil. Critères : renouvellement unique, réserves
+lisibles sans fausse reconnexion, réessai fonctionnel, aucun tirage avant le
+geste, cinq cartes après celui-ci, Retour sûr, rendu sur petits écrans/paysage.
+38 E2E cloud, 264 écrans et 272 tests logiques réussis ; gestes APK sur API36 en
+390×844 et 320×568. E2E complet : 217 réussis/45 ignorés/4 attentes visuelles
+obsolètes ; ces quatre cas réussissent après actualisation ciblée sous Windows,
+et références générées/vérifiées sur Linux (rejeu 4/4 sans régénération). CI distante
+en cours au relevé ; APK officielle après CI verte. Preuves et limites : passation.
+
 **Lots 4 et 5 — activités existantes, 26 octobre 2026 (D-170) :** publiés dans
 [`839ff43c`](https://github.com/GoodFight37/CreatorDeck/commit/839ff43c82393059821bfbca390c88b790c189af),
 Vercel Production du même SHA réussi, suivi `CreatorDeck-Codex-3co`. Last Pack conservé en

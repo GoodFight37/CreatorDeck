@@ -12,6 +12,106 @@ Simulation locale des modules TS purs après version 2 : **4096 parcours**, **21
 
 Retrouver la conception, les résultats et les limites dans `docs/mode-histoire.md`. Un contrôle automatisé horaire du chantier a été configuré hors dépôt, avec signalement uniquement si progrès ou blocage concret.
 
+# Checkpoint Codex — réserves des boosters et sachet recentré, 26 octobre 2026
+
+**Code publié et vérifié sur GitHub** :
+[`ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
+`main` distant identique. Vercel **Production success**, même SHA, deployment
+GitHub `7344886157`, statut du 26 octobre à 22:13:42 UTC :
+[déploiement](https://creator-deckk-415vdk2r0-hafsi37-2386.vercel.app).
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40410669744) :
+six jobs **en cours** au relevé. L'APK officielle dépend de cette CI verte ; elle
+n'est pas encore annoncée publiée. L'APK locale effectivement testée est décrite
+ci-dessous. Les suites longues peuvent terminer sans surveillance.
+
+Retour Malik : Live ouvre mais MEMES/IMGFLIP bloquent par intermittence, avec
+« Lecture de ta réserve… », réessai et demande de connexion contradictoires ;
+sachet préparé trop bas et apparemment plus petit. Suivi `CreatorDeck-Codex-pg1`,
+base `main` locale/distante vérifiée `ecaf2907`, Ponytail full. Aucun coût, stock,
+tirage ni règle serveur à modifier.
+
+Reproduction avant correction : E2E téléphone, session expirée et réponses de
+renouvellement espacées ; MEMES reste bloqué malgré la session renouvelée.
+Les hooks MEMES/Imgflip créaient chacun un CloudApi, donc leurs propres verrous
+de renouvellement. Le client principal gagne ; les autres réponses sont devenues
+obsolètes et rendent un faux no_session. Géométrie : centre à 58 %, écart mesuré
+47 px sur 320×568. Deux scénarios avant correction échouent comme prévu ;
+captures/traces : `D:/CreatorDeck-preuves/booster-reserve-position/avant/`.
+
+Correction locale : `cloudStore.getApi()` réutilise son client unique dans les
+deux hooks, sans changer la validation de session. Un réessai efface le problème
+précédent dès son lancement. Drop et classeur MEMES distinguent panne et lecture
+en cours. Sachet à 50dvh, même formule de largeur que l'accueil, sans changer le
+carrousel ou la révélation des cartes. Les deux tests de connexion passent après
+correction ; test de taille ajusté pour attendre la fin du mouvement du carrousel
+avant sa mesure (sinon l'ancienne taille mesurée est encore en transition).
+
+Fichiers : cloud-store, deux hooks, drop-view/meme-deck, booster-continuity.css,
+deux tests écrans, fixture activités (session expirée en option), nouveau
+`e2e/booster-session.spec.ts` et note joueur `2026-10-26-boosters-session`.
+Vérifié : `npm run ecrans -- src/ecrans-meme-booster.test.tsx
+src/ecrans-imgflip-booster.test.tsx --maxWorkers=2` **16/16** ; `npm test --
+src/lib/cloud/api.test.ts src/lib/cloud/cloud-store.test.ts src/lib/release-notes.test.ts
+--maxWorkers=2 --pool=threads` **272/272**, dont déconnexion/changement de compte
+et sessions concurrentes ; `npm run typecheck` réussi.
+
+E2E cloud finaux : **38/38**, aucun ignoré/flaky, 2,8 minutes, rapport
+`D:/CreatorDeck-preuves/booster-reserve-position/cloud.json`. Inclut session
+expirée/renouvellement unique, deux pannes/reprises, cadrage des trois sachets
+en 320×568, 390×844 et 844×390, vrais gestes de déchirure navigateur.
+Suite écrans complète : premier passage 263/264 (mock Scène sans le nouveau
+getApi), mock corrigé, **264/264** finaux (`ecrans-final.json`). Notes et tests
+uniquement adaptés aux API réutilisées ; aucun scénario supprimé. Jargon réussi.
+
+Build Next16.4.2/Android sync réussi avec configuration factice ; Gradle
+`assembleDebug -PcdVersionName=ecaf290-boosters`, 156 tâches/33 exécutées, 9 s.
+APK installée et testée avec `node reports/boosters-android.mjs` : 6 préparations
+natives (trois sachets, deux tailles), gestes ADB et Retour Android, centre/largeur
+mesurés, puis 2 déchirures natives MEMES/IMGFLIP, cinq cartes chacune et récap.
+Un renouvellement pour la session expirée, un tirage par univers, zéro erreur JS.
+Transport HTTP simulé dans le banc, pas de preuve serveur réel ni Redmi physique.
+Captures natives relues, stockage/dimensions restaurés ; résultats et métadonnées
+APK dans `D:/CreatorDeck-preuves/booster-reserve-position/android/resultats.json`.
+Version effectivement installée : **883409 / ecaf290-boosters**.
+Les 4 PNG sachets préexistants restent hors de ce lot, ne pas les écraser.
+
+Suite E2E générale exécutée entièrement : **217 réussis, 45 ignorés, 4 échecs**,
+13,1 min (`e2e-complet.json`). Ces quatre écarts attendent l'ancien cadrage :
+deux comparaisons d'images et deux contraintes de hauteur de soudure. Le test
+compact contrôle désormais le centre à 50 % et la soudure dans la zone 25–50 %,
+avec gestes dans les deux sens toujours exécutés. Rejeu Windows sans mise à jour
+des références : **4/4** (`replay-final-win.json`), donc 221 scénarios distincts
+réussis après ce rejeu ; ne pas présenter le premier passage comme entièrement vert.
+
+Huit nouvelles références `centered-*` (scellé/déchiré, bureau/téléphone,
+Windows/Linux) : les anciennes restent intactes, hashes des 4 fichiers locaux
+préexistants conservés dans `snapshots-preexistants.json`. Linux réellement joué
+dans WSL/Chromium 153, références générées par le scénario : **4/4**. Captures
+Windows et Linux relues. Premier essai Linux arrêté avant lancement du navigateur
+(libnspr/nss/asound absentes), second bloqué à l'accueil par l'origine du serveur
+de développement ; installation locale des dépendances système puis accès
+localhost via relais TCP temporaire. Aucune configuration applicative ou CI
+modifiée. Rejeu Linux sans régénération : **4/4**, 52,3 s (`linux.json`).
+
+Typecheck et lint rejoués après les dernières adaptations, réussis ; lint exclut
+uniquement `android/**/build/**`, `android/app/src/main/assets/**` et `reports/**`.
+Jargon réussi. `git -c core.whitespace=cr-at-eol diff --check` réussi : le CSS
+booster-continuity est déjà versionné en CRLF, son format est conservé. Aucun SQL
+ni catalogue modifié. Émulateur arrêté, stockage et dimensions restaurés.
+Implémentation, tests et publication du code achevés. Serveur de développement,
+relais TCP Linux et émulateur de ce lot arrêtés. Un ancien `.git/index.lock` vide
+(créé à 21:45:59 UTC, aucun Git actif Windows/WSL) empêchait l'indexation :
+travail/index sauvegardés sous
+`D:/CreatorDeck-preuves/booster-reserve-position/index-verrou-1793052692436`,
+puis seul ce verrou abandonné retiré. HEAD et index
+vérifiés avant reprise, aucun reset ni changement d'historique.
+Prochaine action utile : lire le résultat final de la CI liée en tête et, si
+nécessaire, diagnostiquer seulement son scénario et ses preuves. SHA documentaire :
+`git log -1 --format=%H -- docs/agent-handoff.md`.
+Aucun vrai compte/token dans les tests ni les docs.
+Préserver le bloc Kyara préexistant dans cette
+passation, les deux Gradle générés et quatre PNG sachets modifiés avant ce lot.
+
 # Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026
 
 **Code publié et vérifié sur GitHub** :

@@ -17,6 +17,26 @@ Pilotage : travail sur branche dédiée tant que les tests end-to-end du dépôt
 Complément de conception du 26 octobre : les chemins narratifs conditionnels peuvent se croiser. Dans le pilote V1, une guerre avec Nox masquait le retour du sponsor caché si les deux drapeaux étaient actifs. Une scène spécifique avec deux drapeaux a priorité dans la V2 : 21 scènes désormais, sans tirage de hasard. La version de sauvegarde passe à `.v2` : les anciennes parties de test ne sont pas requalifiées silencieusement et peuvent être recommencées. Les effets du dernier choix sont montrés, non uniquement insinués par le déplacement des jauges. Le moteur vérifie les sauvegardes par rejeu des décisions, non par seule inspection structurelle. Référence de conception : François Alliot, Game Developer, 2016 ; W3C 2.5.7 pour l'alternative accessible au glissé. Le pilote ne justifie pas encore une migration vers Ink.
 
 
+## D-171 — 26 octobre 2026 : une session pour les trois réserves, sachet centré
+
+Malik signale une ouverture intermittente de MEMES/IMGFLIP, avec lecture de
+réserve et demande de reconnexion simultanées ; le sachet préparé est trop bas.
+Reproduction sur `ecaf2907` : trois CloudApi renouvellent séparément la même
+session expirée. Le premier écrit la nouvelle session, les autres réponses sont
+obsolètes et les hooks rendent un faux no_session. Réutiliser le client de
+cloudStore dans ces deux hooks ; conserver sa validation, ses verrous et tous
+les garde-fous de changement de compte/déconnexion. Aucune modification de
+jeton, règle, coût, recharge, tirage ou clé de rejeu. Pas de client supplémentaire.
+
+L'échec d'une réserve n'est plus présenté comme une lecture en cours ; un
+réessai efface le problème précédent pendant sa requête. Le sachet préparé
+passe de 58 % à 50dvh et reprend la largeur effective de l'accueil (dont le seuil
+700 px), sans modifier le carrousel ni les cartes révélées. Géométrie testée en
+320×568, 390×844 et paysage ; 38 E2E cloud réussis, deux tirages natifs simulés
+jusqu'aux cinq cartes, un seul renouvellement. Cette reproduction explique un
+cas possible du retour Malik ; aucun journal de son téléphone ne prouve son
+incident exact. Preuves, version et publication : passation, suivi `CreatorDeck-Codex-pg1`.
+
 ## D-170 — 26 octobre 2026 : lots 4 et 5, corrections visibles seulement
 
 Conserver Last Pack consultatif : l'ami, ses cartes et la propriété sont déjà
