@@ -21,6 +21,16 @@ test("Histoire : clavier et boutons sans glissement obligatoire", async ({ page 
   await expect(page.getByRole("progressbar", { name: "Argent" })).toHaveAttribute("aria-valuenow", "38");
 });
 
+test("Histoire : un double-tap ne saute pas la scène suivante", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  // Le bouton garde sa position entre les scènes : un double-tap sans garde
+  // choisissait à tort deux fois, et sautait directement au chapitre 3.
+  await page.locator(".story-actions .story-choice").first().dblclick();
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  await expect(page.locator(".story-progress")).toContainText("2 / 12");
+});
+
 test("Histoire : le geste vertical ne décide rien, l'horizontal choisit", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
