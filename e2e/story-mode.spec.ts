@@ -214,3 +214,31 @@ test.describe("Histoire : mouvement réduit", () => {
     await expect(monitor).toBeVisible();
   });
 });
+
+// Certains appareils hybrides exposent à la fois une souris et un écran tactile.
+// Un tap ne doit pas laisser l'état :hover du choix précédent sur la nouvelle scène.
+test.describe("Histoire : écran hybride tactile et souris", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("un tap désactive le survol collant, puis la souris récupère son survol", async ({ page }) => {
+    await page.goto("/histoire");
+    await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+    const left = page.locator(".story-actions .story-choice").first();
+    const right = page.locator(".story-actions .story-choice").last();
+    const restingBackground = await right.evaluate((el) => getComputedStyle(el).backgroundColor);
+
+    await left.tap();
+    await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+    await expect(left).toHaveAttribute("data-touch-activated", "true");
+    await expect(left).not.toBeFocused();
+    await expect(left).toHaveCSS("background-color", restingBackground);
+
+    await left.scrollIntoViewIfNeeded();
+    const box = await left.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    await page.mouse.move(0, 0);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(left).not.toHaveAttribute("data-touch-activated", "true");
+  });
+});

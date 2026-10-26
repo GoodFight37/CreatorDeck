@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
@@ -54,6 +54,23 @@ export function StoryMode() {
     setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
     gesture.current = null;
     setDrag(0);
+  }
+
+  // Sur un appareil hybride, un tap peut laisser :hover actif même si
+  // le navigateur annonce aussi une souris. Mémoriser la vraie entrée.
+  function markChoicePointer(event: PointerEvent<HTMLButtonElement>) {
+    if (event.pointerType === "mouse") delete event.currentTarget.dataset.touchActivated;
+    else event.currentTarget.dataset.touchActivated = "true";
+  }
+
+  function restoreChoiceMouseHover(event: PointerEvent<HTMLButtonElement>) {
+    if (event.pointerType === "mouse") delete event.currentTarget.dataset.touchActivated;
+  }
+
+  function chooseFromButton(event: MouseEvent<HTMLButtonElement>, direction: StoryDirection) {
+    if (event.detail > 0 && (event.currentTarget.dataset.touchActivated === "true"
+      || window.matchMedia("(hover: none)").matches)) event.currentTarget.blur();
+    decide(direction);
   }
 
   function pointerDown(event: PointerEvent<HTMLElement>) {
@@ -181,11 +198,11 @@ export function StoryMode() {
                   <div className="story-swipe-hint">← GLISSE POUR CHOISIR →</div>
                 </section>
                 <div className="story-actions">
-                  <button className="story-choice" onClick={(event) => { if (event.detail > 0 && window.matchMedia("(hover: none)").matches) event.currentTarget.blur(); decide("left"); }}>
+                  <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
                   </button>
-                  <button className="story-choice" onClick={(event) => { if (event.detail > 0 && window.matchMedia("(hover: none)").matches) event.currentTarget.blur(); decide("right"); }}>
+                  <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "right")}>
                     <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
                   </button>

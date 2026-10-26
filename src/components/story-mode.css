@@ -92,7 +92,7 @@
 .story-choice { position: relative; text-align: left; background: var(--panel); }
 .story-choice::after { content: "›"; position: absolute; top: 9px; right: 12px; color: var(--accent-light); font-size: 22px; font-weight: 600; line-height: 1; }
 .story-choice:first-child::after { content: "‹"; }
-@media (hover: hover) and (pointer: fine) { .story-choice:hover { border-color: var(--accent-light); background: var(--panel-2); } }
+@media (hover: hover) and (pointer: fine) { .story-choice:hover:not([data-touch-activated="true"]) { border-color: var(--accent-light); background: var(--panel-2); } }
 .story-choice:focus-visible { background: var(--panel-2); }
 .story-ending { overflow: hidden; }
 .story-ending::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: var(--action); }
