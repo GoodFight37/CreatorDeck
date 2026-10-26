@@ -327,6 +327,7 @@ describe("le Tribunal des Bannis", () => {
     // La récompense est versée à la cinquième décision : aucun bouton à oublier.
     expect(etat.paiements.length, "la séance n'a pas été encaissée").toBe(1);
     expect(bilan).toContain("Séance payée");
+    expect(bilan.split(`+${etat.paiements[0]} points`).length - 1).toBe(1);
     expect(bilan).toContain("Fermer le bilan");
     expect(bilan).not.toContain("Retour au Drop");
   });

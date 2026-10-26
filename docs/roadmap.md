@@ -1,5 +1,13 @@
 # Roadmap CreatorDeck
 
+**Lots 4 et 5 — activités existantes, 26 octobre 2026 (D-170) :** corrections
+locales sur `713fed02`, suivi `CreatorDeck-Codex-3co`. Last Pack conservé en
+consultation ; états de lecture et reprise corrigés, de même que l'attente en
+échec de l'Hôtel. Arène : rang sans faux total et prochain samedi correctement
+annoncé. Tribunal déjà corrigé avant ce lot, missions conservées. Critères :
+captures des vrais états, reprises fonctionnelles, montant Tribunal unique,
+aucune modification d'économie, règle, écran ou rappel. État réel : passation.
+
 **LOT D — Classeur pilote, 26 octobre 2026 (D-169) :** publié dans
 [`51ba6be4`](https://github.com/GoodFight37/CreatorDeck/commit/51ba6be47af1b43bfc09fcfb57f41aa3012d432e),
 Vercel Production du même SHA réussi ; vérifié localement sur `628c15e7` + diff

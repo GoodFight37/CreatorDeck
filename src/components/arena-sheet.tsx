@@ -278,7 +278,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                       <Crown size={13} />
                       {mine?.rank ? (
                         <>
-                          {arenaRankLabel(mine.rank)} sur {board?.rows.length ?? "?"}
+                          {arenaRankLabel(mine.rank)}
                         </>
                       ) : (
                         "rang en cours"
@@ -463,7 +463,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                 <span>
                   {draftOpen
                     ? draftWindow.closesAt <= now ? "Fenêtre terminée" : `ouvert — se referme dans ${formatLeft(draftWindow.closesAt - now)}`
-                    : `ouvre ${formatMoment(draftWindow.opensAt)}`}
+                    : `ouvre ${formatMoment(draftWindow.opensAt > now ? draftWindow.opensAt : draftWindow.opensAt + 7 * 24 * 60 * 60 * 1000)}`}
                 </span>
               </div>
 

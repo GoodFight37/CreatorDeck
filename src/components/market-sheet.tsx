@@ -201,6 +201,8 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
                     );
                   })}
                 </div>
+              ) : !cloud.marketBusy && !ready && cloud.isError ? (
+                <p className="account-hint" role="alert">Lecture du comptoir indisponible. Actualise pour réessayer.</p>
               ) : ready ? (
                 <p className="account-hint">
                   Le comptoir est vide pour l&apos;instant. Reviens plus tard : les cartes arrivent

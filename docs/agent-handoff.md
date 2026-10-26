@@ -1,3 +1,71 @@
+# Checkpoint Codex — lots 4 et 5, activités existantes, 26 octobre 2026 (local)
+
+Demande Malik : Last Pack compréhensible, sans changer coût/règle, conserver
+son code s'il est déjà bon ; Tribunal, Arène, Hôtel et missions seulement pour
+des bugs visibles. Aucun nouvel écran, monnaie, rappel ou pastille de retour.
+Base `main` locale/distante `713fed02`, suivi `CreatorDeck-Codex-3co`, Ponytail full.
+
+Last Pack : présentation déjà claire en consultation (ami, cinq cartes, propriété
+explicitée), conservée. Corriger seulement les états de lecture : l'attente ne
+montrait aucune indication, l'échec devenait une invitation à partager. Indication
+de lecture et bouton Réessayer en cas d'échec ; les packs renvoyés par le serveur
+priment sur une déduction faite depuis le classement global.
+Lot 5 : Hôtel bloqué visuellement en « Chargement du comptoir… » après un échec ;
+message d'indisponibilité, action Actualiser existante conservée. Arène « 150e sur
+100 » reproduit : le SQL limite le classement aux 100 premiers, ce n'est pas un
+total ; garder seulement le rang. Le lundi, la date d'ouverture du draft affichait
+le samedi passé : afficher le prochain, sans changer la fenêtre ni le serveur.
+Tribunal : le double montant est **déjà corrigé** par `2f5ca420` ; aucune réécriture.
+Assertion de non-répétition ajoutée au test existant. Missions inchangées.
+
+Avant : quatre E2E téléphone échouent sur les défauts attendus, captures et traces
+dans `D:/CreatorDeck-preuves/lots-4-5/avant/`. Après : les 8 scénarios bureau/téléphone
+passent, reprises Last Pack/Hôtel comprises. 33 tests écrans ciblés réussis,
+puis Tribunal rejoué 15/15 après assertion ; 38 tests logiques ciblés (arène,
+Last Pack et notes) réussis. Typecheck et lint réussis avec exclusions des seuls
+rapports/assets compilés déjà utilisées au lot D. Build Next 16.4.2 et Android
+sync réussis avec configuration cloud **factice** du workflow, aucun vrai RPC.
+Gradle `assembleDebug -PcdVersionName=713fed0-activites` : 156 tâches,
+33 exécutées, 18 s, APK installée sur API 36 (émulateur de test sur D).
+
+Suite cloud simulée : 29/30 réussis, échec temporel du test MEMES téléphone
+(contrôle du verrou de 360 ms après plusieurs mesures). Test seul rejoué : même
+échec. Observation du verrou à son apparition via MutationObserver, contrôle
+conservé et aucun code du booster changé ; MEMES rejoué bureau/téléphone **2/2**.
+Rapport initial `D:/CreatorDeck-preuves/lots-4-5/cloud.json`, traces conservées.
+Suite E2E générale complète : **221 réussis, 37 ignorés, zéro échec et zéro flaky**,
+16 minutes, cloud explicitement vide et serveur webpack. Les 8 nouveaux scénarios
+cloud sont ignorés ici, exécutés séparément avec la configuration factice du CI.
+Rapport `D:/CreatorDeck-preuves/lots-4-5/e2e-complet.json`.
+APK `883341`, nom `713fed0-activites` : gestes ADB, reprises Last Pack/Hôtel,
+rang d'Arène et Retour natif réussis en **390×844 et 320×568**, sans débordement
+horizontal. Captures natives relues ; 15 lectures RPC simulées, aucun vol de carte,
+zéro erreur JS. `node reports/activities-android.mjs`, preuves sous
+`D:/CreatorDeck-preuves/lots-4-5/android/` (dont `resultats.json`). Le premier banc
+n'interceptait pas HTTP natif : corriger le banc, sans modifier le transport du
+jeu. Le test redirige uniquement HTTP vers les réponses factices après démarrage,
+puis restaure stockage et dimensions. Aucune preuve de réseau/serveur réel ni
+de Redmi physique. Taille réelle du WebView, aucune émulation CDP de viewport.
+
+Commandes ciblées : `npm test -- src/lib/arena.test.ts src/lib/last-pack.test.ts
+src/lib/release-notes.test.ts --maxWorkers=2 --pool=threads` (38) ;
+`npm run ecrans -- src/ecrans-retention.test.tsx src/ecrans-social-sync.test.tsx
+src/ecrans-tribunal.test.tsx src/ecrans-missions.test.tsx --maxWorkers=2` (33),
+puis `npm run ecrans -- src/ecrans-tribunal.test.tsx --maxWorkers=1` (15).
+`npm run typecheck` et lint rejoués après les dernières modifications de tests,
+réussis ; `node scripts/check-jargon.mjs` réussi. Pas de SQL modifié.
+
+Fichiers applicatifs : last-pack-sheet, market-sheet, arena-sheet et note joueur
+`2026-10-26-activites-lecture`. Tests : activities-fixture/activities-visible,
+stabilisation memes.spec et assertion ecrans-tribunal. Aucun SQL, coût ou règle changé.
+Tribunal payé vérifié dans le navigateur : cinq verdicts justes, karma 100 %,
+une seule occurrence de « +40 points ». Captures missions et bilan sous
+`D:/CreatorDeck-preuves/lots-4-5/navigateur/` ; aucun code de ces écrans changé.
+Reste : revue finale du diff, commit/push ciblés et preuve Vercel même SHA.
+Checkpoint **local non commité**.
+Préserver les fichiers préexistants du lot D : Kyara dans cette passation,
+Gradle généré, quatre PNG sachets, fichiers d'échange et autres non suivis.
+
 # Checkpoint Codex — LOT D, classeur pilote, 26 octobre 2026
 
 Demande Malik : reprendre les filtres Mèmes dans le classeur créateurs (rareté,

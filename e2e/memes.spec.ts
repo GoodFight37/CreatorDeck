@@ -82,6 +82,13 @@ test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et ti
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 12 });
   await expect(scene.locator(".booster-opening-instruction")).toHaveText("RELÂCHE");
+  // Les verrous brefs se constatent à leur apparition, avant les mesures et captures.
+  await page.evaluate(() => {
+    new MutationObserver(() => {
+      const button = document.querySelector<HTMLButtonElement>(".opening-continuum .meme-reveal-next");
+      if (button?.disabled) document.documentElement.dataset[button.closest(".is-summary") ? "memeSummaryLocked" : "memeRevealLocked"] = "true";
+    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
+  });
   await page.mouse.up();
   await expect(scene.locator(".foil-back-card")).toHaveCount(5);
   await expect(scene.locator(".meme-reveal-flow")).toBeVisible();
@@ -92,7 +99,7 @@ test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et ti
     whiteSpace: getComputedStyle(node).whiteSpace,
     overflow: getComputedStyle(node).textOverflow,
   }))).toMatchObject({ whiteSpace: "normal", overflow: "clip" });
-  await expect(scene.locator(".meme-reveal-next")).toBeDisabled();
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.memeRevealLocked)).toBe("true");
   for (let i = 0; i < 5; i++) {
     await expect(scene.locator(".meme-reveal-counter")).toHaveText(`CARTE ${i + 1} / 5`);
     await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
@@ -107,7 +114,7 @@ test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et ti
   }
   await expect(scene.locator(".meme-reveal-summary-grid > div")).toHaveCount(5);
   await page.screenshot({ path: `test-results/memes-recap-${test.info().project.name}.png` });
-  await expect(scene.locator(".meme-reveal-next")).toBeDisabled();
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.memeSummaryLocked)).toBe("true");
   await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
   await scene.locator(".meme-reveal-next").click();
   await expect(scene).toHaveCount(0);

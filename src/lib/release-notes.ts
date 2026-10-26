@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-26-activites-lecture", date: "2026-10-26", title: "Des activités plus claires",
+    summary: "Last Pack et l’hôtel distinguent une lecture en cours d’une lecture indisponible.",
+    sections: [{ title: "Corrections", items: [
+      "Last Pack indique le chargement des boosters de tes amis et permet de réessayer si la lecture échoue. Leurs cartes restent à eux.",
+      "L’hôtel ne reste plus affiché en chargement après une lecture échouée du comptoir.",
+      "L’Arène affiche ton rang sans confondre les 100 premiers avec le nombre total de participants.",
+      "La date d’ouverture annoncée pour le draft désigne le prochain samedi, pas le précédent.",
+    ] }],
+  },
+  {
     id: "2026-10-26-classeur-pilote", date: "2026-10-26", title: "Ton classeur se pilote",
     summary: "Retrouve tes cartes par rareté, possession ou cercle, et choisis leur ordre.",
     sections: [{ title: "Dans le classeur", items: [

@@ -1,3 +1,22 @@
+## D-170 — 26 octobre 2026 : lots 4 et 5, corrections visibles seulement
+
+Conserver Last Pack consultatif : l'ami, ses cartes et la propriété sont déjà
+explicités. Aucun vol, coût, délai ou transfert rétabli ; aucune refonte ni
+incitation ajoutée. Distinguer seulement lecture en cours, échec avec reprise
+et résultat vide ; afficher les vrais packs servis plutôt qu'inférer leur absence
+depuis le classement général. L'Hôtel distingue aussi l'échec du chargement,
+en réutilisant son bouton Actualiser.
+
+Le rang d'Arène est connu, le nombre total de participants ne l'est pas :
+`arena_leaderboard` est limité à 100 dans `0018_arena.sql`. Retirer le faux
+dénominateur, sans ajouter de RPC. Dans le libellé du draft fermé, avancer de sept
+jours le samedi déjà passé ; la fenêtre de jeu et l'autorité serveur sont conservées.
+Le bilan Tribunal sans double montant est déjà publié (`2f5ca420`) : renforcer
+son test et actualiser le défaut connu, sans réécrire l'écran. Missions conservées.
+
+Pas d'écran, monnaie, pastille ou notification ajouté. Note joueur avec le code.
+Base `713fed02`, suivi `CreatorDeck-Codex-3co` ; preuves et limites dans la passation.
+
 ## D-169 — 26 octobre 2026 : classeur pilote, sans nouvelle règle de collection
 
 Malik demande le LOT D après la carte ; le lot son est reporté (ElevenLabs plus

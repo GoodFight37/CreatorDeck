@@ -175,7 +175,7 @@ cloud + Tribunal 18/18, zéro ignoré dans ces relances locales. La CI publiée
 16/16 cloud simulés, aucun échec. Suivi
 `CreatorDeck-Codex-1ny`, rapports locaux dans `reports/reprise-claude-2026-10-22/`.
 
-## Bilan du Tribunal : montant affiché deux fois — ouvert, 22 octobre 2026
+## Bilan du Tribunal : montant affiché deux fois — déjà corrigé sur main, réexaminé le 26 octobre 2026
 
 Version : `87454815`, gravité P3, affichage. Terminer les cinq verdicts en mode
 local : le bilan peut afficher « Séance payée : +40 points. +40 points ».
@@ -184,6 +184,23 @@ Cause de rendu confirmée : `paiement.message` contient déjà le montant, puis
 double versement ; règles et serveur inchangés. Capture téléphone simulé :
 `reports/reprise-claude-2026-10-22/tribunal-sans-cloud-test-results/tribunal-focus-le-Tribunal-c0765-ilan-et-le-rend-à-la-sortie-téléphone/bilan.png`.
 Suivi distinct `CreatorDeck-Codex-zmo` ; aucun contournement nécessaire pour jouer.
+
+Réexamen lots 4/5 sur `713fed02` : `2f5ca420` a déjà retiré le second affichage
+de `paiement.delta`. Le code ne rend plus que le message de paiement. Assertion
+explicite d'une seule occurrence ajoutée au test existant ; 15/15 tests Tribunal
+réussis. Ce défaut historique ne justifie pas une nouvelle réécriture du bilan.
+
+## Last Pack, Hôtel et Arène : quatre défauts visibles — corrigés localement, 26 octobre 2026
+
+Base `713fed02`, gravité P2 pour lecture indisponible, P3 pour les libellés.
+Last Pack : lecture lente sans indication, échec pris pour absence de boosters ;
+Hôtel : « Chargement du comptoir… » restait affiché après échec ; Arène : rang
+150 affiché « sur 100 » car le top 100 était pris pour un total, et prochain draft
+annoncé au samedi déjà passé. Avant : quatre scénarios téléphone échouent et
+captures relues ; après : 8/8 bureau/téléphone, reprises comprises. Règles et
+serveur inchangés. Aucun contournement garanti avant correction ; aucune perte
+ou double versement démontré. Gestes natifs/reprises et captures vérifiés sur APK
+`883341` / API 36, 390×844 et 320×568, RPC simulées. Publication : checkpoint courant.
 
 ## Tribunal : focus du dialogue principal — correctif publié, 22 octobre 2026
 
