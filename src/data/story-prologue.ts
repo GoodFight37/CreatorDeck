@@ -4,7 +4,7 @@ import { STORY_SEASON_SCENES } from "./story-season";
 /** Scénario écrit et contrôlé en amont. Aucune requête IA pendant la partie. */
 export const STORY_PROLOGUE: StoryScript = {
   id: "zero-spectateur",
-  version: 3,
+  version: 4,
   title: "Zéro spectateur",
   subtitle: "Jusqu'à quarante décisions. Tes raccourcis ont une facture, tes promesses une mémoire.",
   totalSteps: 40,
