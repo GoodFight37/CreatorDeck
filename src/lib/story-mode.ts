@@ -170,10 +170,23 @@ export function restoreStory(script: StoryScript, raw: string | null): StoryRun 
       || !Array.isArray(run.flags) || run.flags.some((flag) => typeof flag !== "string" || flag.length > 80)
       || !run.stats || STORY_STATS.some((key) => !Number.isInteger(run.stats[key]) || run.stats[key] < 0 || run.stats[key] > 100)
       || !(run.ending === null || Object.hasOwn(STORY_ENDINGS, run.ending))) return null;
-    // Les identifiants, directions et étapes jouées correspondent au script connu.
-    if (run.history.some((entry, index) => !entry || !["left", "right"].includes(entry.direction)
-      || !script.scenes.some((scene) => scene.id === entry.sceneId && scene.step === index))) return null;
-    if (run.ending === null && run.step === script.totalSteps) return null;
-    return run;
+    // Rejouer l'historique pour vérifier les jauges, les drapeaux et la fin :
+    // une sauvegarde ne peut inventer ni conséquences, ni scène conditionnelle.
+    let verified = startStory(script);
+    for (const entry of run.history) {
+      if (!entry || (entry.direction !== "left" && entry.direction !== "right") || verified.ending) return null;
+      const scene = currentStoryScene(script, verified);
+      if (!scene || scene.id !== entry.sceneId) return null;
+      const actualEffects = scene.choices[entry.direction].effects;
+      if (!entry.effects || typeof entry.effects !== "object"
+        || Object.keys(entry.effects).length !== Object.keys(actualEffects).length
+        || Object.entries(actualEffects).some(([key, value]) => entry.effects[key as StoryStat] !== value)) return null;
+      verified = chooseStory(script, verified, entry.direction);
+    }
+    if (verified.step !== run.step || verified.ending !== run.ending
+      || run.flags.length !== verified.flags.length
+      || run.flags.some((flag, index) => flag !== verified.flags[index])
+      || STORY_STATS.some((key) => run.stats[key] !== verified.stats[key])) return null;
+    return verified;
   } catch { return null; }
 }
