@@ -21,6 +21,8 @@ export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
   const [drag, setDrag] = useState(0);
   const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  // Empêche qu’un double-tap valide deux scènes successives au même endroit.
+  const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
 
   useEffect(() => {
     let saved: string | null = null;
@@ -40,7 +42,12 @@ export function StoryMode() {
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
   function decide(direction: StoryDirection) {
-    setRun((previous) => previous ? chooseStory(SCRIPT, previous, direction) : previous);
+    const expectedStep = run?.step;
+    if (expectedStep === undefined) return;
+    const now = performance.now();
+    if (now - lastDecisionAt.current < 450) return;
+    lastDecisionAt.current = now;
+    setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
     gesture.current = null;
     setDrag(0);
   }
@@ -77,6 +84,7 @@ export function StoryMode() {
   }
 
   function replay() {
+    lastDecisionAt.current = Number.NEGATIVE_INFINITY;
     gesture.current = null;
     setDrag(0);
     setRun(startStory(SCRIPT));
