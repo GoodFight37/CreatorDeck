@@ -83,6 +83,20 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, run)?.id).toBe("sponsor_retour");
   });
 
+  it("fait revenir Flo ou Nox au dernier acte selon les alliances", () => {
+    const play = (directions: StoryDirection[]) => {
+      let run = startStory(script);
+      for (const direction of directions) run = chooseStory(script, run, direction);
+      return run;
+    };
+    const flo = play(["left", "left", "left", "left", "left", "right", "left", "left", "left", "left"]);
+    expect(currentStoryScene(script, flo)?.id).toBe("flo_alliee_final");
+    const nox = play(["left", "right", "left", "left", "left", "left", "left", "right", "left", "left"]);
+    expect(currentStoryScene(script, nox)?.id).toBe("nox_duo_final");
+    const isolated = play(["left", "right", "right", "left", "left", "right", "left", "right", "left", "left"]);
+    expect(currentStoryScene(script, isolated)?.id).toBe("course");
+  });
+
   it("protège de la double décision après une fin de saison", () => {
     let run = startStory(script);
     for (let step = 0; step < script.totalSteps && !run.ending; step++) run = chooseStory(script, run, "left");
