@@ -931,7 +931,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
       }
     }
   },
-{
+  {
     "id": "dons_en_attente",
     "step": 26,
     "title": "Le compte de la collecte",
@@ -1425,7 +1425,8 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "channel": "DM",
     "text": "Sam t'écrit qu'il a compris la limite posée devant ton immeuble. Il demande si tu acceptes ses excuses. Tu sais qu'une réponse publique attirerait encore l'attention.",
     "requiresFlags": [
-      "limites_vie_privee"
+      "limites_vie_privee",
+      "communaute_saine"
     ],
     "choices": {
       "left": {
