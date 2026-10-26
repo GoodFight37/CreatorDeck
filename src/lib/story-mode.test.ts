@@ -145,6 +145,19 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(collapse.stats).toEqual(base.stats);
   });
 
+  it("le bilan se souvient des droits à l'image, de la sécurité et du dernier contrat", () => {
+    const run = { ...startStory(script), ending: "survivant" as const };
+    const respected = storyEpilogue({ ...run, flags: ["consentement_archives", "adresse_protegee", "questions_libres"] });
+    const exposed = storyEpilogue({ ...run, flags: ["archives_exposees", "sam_expose", "direct_scripte"] });
+    expect(respected).toHaveLength(3);
+    expect(exposed).toHaveLength(3);
+    expect(respected.join(" ")).toContain("personnes filmées");
+    expect(respected.join(" ")).toContain("questions spontanées");
+    expect(exposed.join(" ")).toContain("Sam");
+    expect(exposed.join(" ")).toContain("annonceur");
+    expect(respected).not.toEqual(exposed);
+  });
+
   it("personnalise le bilan avec les décisions de Flo, Nox, Mona et l'agence", () => {
     const base = { ...startStory(script), ending: "survivant" as const };
     expect(storyEpilogue(startStory(script))).toEqual([]);
