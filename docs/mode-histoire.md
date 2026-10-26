@@ -8,7 +8,7 @@ Le joueur incarne **son propre streamer fictif**, qui commence à zéro, et pren
 
 ## Architecture testable
 
-- `src/data/story-prologue.ts` : contenu éditorial typé et versionné, 21 scènes possibles sur 12 étapes. Chaque étape possède une scène de repli ; les scènes conditionnelles ont priorité si leurs drapeaux correspondent. Cette V1 fait volontairement une saison courte pour tester si les personnages et dilemmes fonctionnent.
+- `src/data/story-prologue.ts` : contenu éditorial typé et versionné, 84 scènes possibles sur 40 décisions au maximum, réparties en cinq actes. Chaque étape possède une scène de repli ; les scènes conditionnelles ont priorité si leurs drapeaux correspondent. Cette V1 fait volontairement une saison courte pour tester si les personnages et dilemmes fonctionnent.
 - `src/lib/story-mode.ts` : validation du format, sélection déterministe des scènes, application des effets bornés de 0 à 100, conditions différées, fins de partie et restauration de sauvegarde. **Aucun appel IA**, pas de hasard au runtime.
 - `src/components/story-mode.tsx` et sa feuille CSS : écran mobile autonome, boutons gauche/droite accessibles au pouce, geste horizontal (64 px, priorité au défilement vertical), flèches clavier, progression, jauges lisibles et sauvegarde locale.
 - `src/app/histoire/page.tsx` : route isolée, aucune modification des quatre piliers Drop/Binder/Craft/Toi. Ne touche ni au catalogue, ni aux tirages, ni aux points, ni aux jetons, ni à Supabase.
