@@ -135,6 +135,15 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, nox)?.id).toBe("finale_pacte");
   });
 
+  it("la rencontre avec les abonnés n'est pas masquée par les deux variantes de crise", () => {
+    const atConvention = { ...startStory(script), step: 32, flags: ["limites_vie_privee"] };
+    const protectedCommunity = { ...atConvention, flags: ["limites_vie_privee", "communaute_saine"] };
+    const exposedAddress = { ...atConvention, flags: ["frontieres_floues"] };
+    expect(currentStoryScene(script, atConvention)?.id).toBe("fan_rencontre");
+    expect(currentStoryScene(script, protectedCommunity)?.id).toBe("fan_retour");
+    expect(currentStoryScene(script, exposedAddress)?.id).toBe("fan_dox");
+  });
+
   it("protège de la double décision après une fin de saison", () => {
     let run = startStory(script);
     for (let step = 0; step < script.totalSteps && !run.ending; step++) run = chooseStory(script, run, "left");
