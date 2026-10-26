@@ -80,6 +80,9 @@
 .story-play-card[data-character="flo"] { --story-character: var(--green); }
 .story-play-card[data-character="nox"] { --story-character: var(--accent-light); }
 .story-play-card[data-character="mona"] { --story-character: var(--muted); }
+.story-play-card[data-character="lina"] { --story-character: var(--gold); }
+.story-play-card[data-character="platform"] { --story-character: var(--danger); }
+.story-play-card[data-character="community"] { --story-character: var(--green); }
 .story-play-card[data-character="duo"] { --story-character: var(--accent-light); }
 .story-play-card[data-character="duo"]::before { background: linear-gradient(90deg, var(--accent-light) 50%, var(--muted) 50%); }
 .story-play-card[data-character="duo"] .story-scene-art { border-bottom: 4px solid var(--accent-light); }
