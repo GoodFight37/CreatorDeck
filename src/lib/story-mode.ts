@@ -265,7 +265,11 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
           ? "Flo a désormais sa place à la table des décisions. L'équipe a grandi ; reste à savoir comment la faire vivre."
           : flags.has("pacte_brise")
             ? "Le bilan est passé, pas la trahison. Nox garde le silence et le studio ouvre une nouvelle page."
-            : "Le premier grand direct est derrière toi. Les applaudissements s'effacent, mais les factures et les promesses restent.",
+            : flags.has("debut_modeste")
+              ? "Les images de ton premier direct tremblent encore sur ton vieux téléphone. Elles rappellent que la chaîne a commencé sans studio."
+              : flags.has("micro_cher")
+                ? "Le micro acheté au premier soir est toujours sur ton bureau. Tu te rappelles le prix que tu avais accepté de payer avant même d'avoir un public."
+                : "Le premier grand direct est derrière toi. Les applaudissements s'effacent, mais les factures et les promesses continuent.",
       };
     case 20:
       return {
@@ -278,7 +282,9 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
               ? "Quinze jours de publications t'ont apporté des vues. Tu connais désormais la différence entre un rythme choisi et une cadence imposée."
               : flags.has("formation_modo")
                 ? "Tu as pris le temps de former les modérateurs. Ils commencent à tenir le chat sans tout faire reposer sur toi."
-                : "L'audience ne regarde plus seulement tes vidéos. Elle commence à regarder ce que tu fais quand le direct est coupé.",
+                : flags.has("refus_sponsor")
+                  ? "Mona se souvient de ton premier refus. Maintenant, les personnes qui te suivent veulent savoir si tes principes résistent à l'audience."
+                  : "L'audience ne regarde plus seulement tes vidéos. Elle commence à regarder ce que tu fais quand le direct est coupé.",
       };
     case 28:
       return {
@@ -293,7 +299,9 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
                 ? "Tu as encore sacrifié une nuit au montage. Le public ne voit que la vidéo terminée ; toi, tu sens le coût de chaque heure."
                 : flags.has("archives_exposees")
                   ? "Lina conserve les images de l'ancien live. Flo n'avait pas donné son accord, et cette décision commence à peser."
-                  : "Les gens reviennent dans ta vie avec leurs souvenirs. Aucun compteur ne te dit ce qu'ils ont retenu.",
+                  : flags.has("nox_dedommage")
+                    ? "Tu avais payé la facture de Nox après votre rupture. Le geste n'a pas effacé le conflit, mais il en a changé la suite."
+                    : "Les gens reviennent dans ta vie avec leurs souvenirs. Aucun compteur ne te dit ce qu'ils ont retenu.",
       };
     case 36:
       return {
@@ -310,7 +318,9 @@ export function storyActInterlude(run: StoryRun): StoryActInterlude | null {
                   ? "La dette envers Nox n'a pas été réglée. Le dernier direct arrive avec une facture que les vues ne paient pas."
                   : flags.has("reprise_voix")
                     ? "Tu as repris le contrôle de tes vidéos après le conflit avec l'agence. Reste à trouver les mots du dernier direct."
-                    : "Le direct final est proche. Quatre décisions pour découvrir si ta chaîne ressemble encore à ton premier soir.",
+                    : flags.has("reconciliation_flo")
+                      ? "Tu avais rappelé Flo le soir où elle n'en pouvait plus. Cette promesse de respect revient avec le dernier direct."
+                      : "Le direct final est proche. Quatre décisions pour découvrir si ta chaîne ressemble encore à ton premier soir.",
       };
     default:
       return null;
