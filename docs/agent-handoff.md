@@ -16,7 +16,7 @@ Tap révélation vers la fiche existante, Retour ferme la fiche, glissé avance.
 Note joueur `2026-10-25-carte-objet`, tests provenance/tactile adaptés et
 nouveau `src/ecrans-carte-objet.test.tsx` ; e2e/binder-finitions complété.
 
-Validation locale terminée, publication à vérifier après le commit : 67 tests écrans et
+Validation locale terminée, code publié : 67 tests écrans et
 30 tests logique ciblés réussis ; typecheck, ESLint ciblé et jargon réussis.
 E2E ciblés isolés : 25 réussis / 1 ignoré. Suite complète isolée : **215 réussis,
 29 ignorés (18,8 min)**. Après le dernier réglage du nom : 21 ciblés réussis,
@@ -52,8 +52,16 @@ Android : `npm run android:sync`, `node scripts/android-gradle.mjs assembleDebug
 -PcdVersionName=2c8367c-carte-verifie`, `node reports/lot-1-carte/android-carte.mjs apres`.
 Code testé : base `2c8367cd` + diff du présent lot. Les instantanés Windows
 préexistants des sachets sont conservés localement, exclus du commit.
-Prochaine action : commit ciblé et push normal sur main, vérifier le SHA
-distant, les contrôles GitHub et le déploiement Production. Puis attendre Malik.
+Code commité et **vérifié sur GitHub** : [36839abb](https://github.com/GoodFight37/CreatorDeck/commit/36839abb80ed79619e8142510db19bfc72e6d935),
+push normal main, SHA distant identique. [Vercel Production](https://creator-deckk-81ig9m7iy-hafsi37-2386.vercel.app)
+réussi pour ce SHA : déploiement GitHub 7324896011, état `success`,
+description « Deployment has completed ». Le connecteur Vercel disponible
+ne retourne aucun projet ; preuve obtenue via l'API de déploiement GitHub.
+[CI 40275117746](https://github.com/GoodFight37/CreatorDeck/actions/runs/40275117746)
+encore en cours au relevé : Postgres jetable vert, tests statiques/cloud/E2E
+en cours. Ne pas annoncer la CI ni une APK officielle verte avant leur fin.
+La passation seule peut avoir un commit ultérieur ; le code audité reste 36839abb.
+Prochaine action joueur : attendre le retour de Malik sur le lot 1.
 Redmi non connecté au relevé, aucune validation physique revendiquée.
 Préserver les modifications préexistantes de cette passation et snapshots
 sachets ; ne pas les indexer avec le lot. L'accueil et les lots suivants
