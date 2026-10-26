@@ -83,17 +83,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Le bilan est terminé. À la place des notifications, un mail du propriétaire : le loyer augmente. Sur le bureau, le bouton « relancer un live » attend.",
     "choices": {
       "left": {
-        "label": "Prévoir un vrai budget",
-        "effects": {
-          "argent": 6,
-          "energie": 4,
-          "public": -3
-        },
-        "addFlags": [
-          "budget_pose"
-        ]
-      },
-      "right": {
         "label": "Annoncer une nouvelle série",
         "effects": {
           "public": 7,
@@ -102,6 +91,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "nouvelle_serie"
+        ]
+      },
+      "right": {
+        "label": "Prévoir un vrai budget",
+        "effects": {
+          "argent": 6,
+          "energie": 4,
+          "public": -3
+        },
+        "addFlags": [
+          "budget_pose"
         ]
       }
     }
@@ -116,17 +116,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Ton meilleur clip a changé de catégorie sans prévenir. La plateforme promet de te pousser si tu publies quotidiennement pendant quinze jours.",
     "choices": {
       "left": {
-        "label": "Publier moins, mais mieux",
-        "effects": {
-          "energie": 7,
-          "confiance": 4,
-          "public": -5
-        },
-        "addFlags": [
-          "rythme_choisi"
-        ]
-      },
-      "right": {
         "label": "Tester le défi des quinze jours",
         "effects": {
           "public": 10,
@@ -135,6 +124,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "defi_algo"
+        ]
+      },
+      "right": {
+        "label": "Publier moins, mais mieux",
+        "effects": {
+          "energie": 7,
+          "confiance": 4,
+          "public": -5
+        },
+        "addFlags": [
+          "rythme_choisi"
         ]
       }
     }
@@ -152,17 +152,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Créditer son travail publiquement",
-        "effects": {
-          "confiance": 8,
-          "public": -3,
-          "energie": -3
-        },
-        "addFlags": [
-          "credit_flo"
-        ]
-      },
-      "right": {
         "label": "Reprendre les règles sans la citer",
         "effects": {
           "energie": 4,
@@ -171,6 +160,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "effacement_flo"
+        ]
+      },
+      "right": {
+        "label": "Créditer son travail publiquement",
+        "effects": {
+          "confiance": 8,
+          "public": -3,
+          "energie": -3
+        },
+        "addFlags": [
+          "credit_flo"
         ]
       }
     }
@@ -221,17 +221,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Une polémique ailleurs déborde sur ta chaîne. Trois personnes proposent d'aider gratuitement ; aucune n'a encore lu les règles de modération.",
     "choices": {
       "left": {
-        "label": "Former l'équipe avant le direct",
-        "effects": {
-          "energie": -4,
-          "confiance": 7,
-          "public": -2
-        },
-        "addFlags": [
-          "formation_modo"
-        ]
-      },
-      "right": {
         "label": "Ouvrir tout de suite",
         "effects": {
           "public": 7,
@@ -240,6 +229,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "moderation_rapide"
+        ]
+      },
+      "right": {
+        "label": "Former l'équipe avant le direct",
+        "effects": {
+          "energie": -4,
+          "confiance": 7,
+          "public": -2
+        },
+        "addFlags": [
+          "formation_modo"
         ]
       }
     }
@@ -257,17 +257,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Exiger une clause de recours",
-        "effects": {
-          "argent": -7,
-          "energie": -3,
-          "confiance": 8
-        },
-        "addFlags": [
-          "recours_contrat"
-        ]
-      },
-      "right": {
         "label": "Laisser l'agence filtrer",
         "effects": {
           "argent": 7,
@@ -276,6 +265,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "filtre_agence"
+        ]
+      },
+      "right": {
+        "label": "Exiger une clause de recours",
+        "effects": {
+          "argent": -7,
+          "energie": -3,
+          "confiance": 8
+        },
+        "addFlags": [
+          "recours_contrat"
         ]
       }
     }
@@ -362,17 +362,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Exiger des règles communes",
-        "effects": {
-          "confiance": 8,
-          "public": -5,
-          "energie": -3
-        },
-        "addFlags": [
-          "mediation_nox"
-        ]
-      },
-      "right": {
         "label": "Accepter le duel surprise",
         "effects": {
           "public": 9,
@@ -381,6 +370,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "duel_antenne"
+        ]
+      },
+      "right": {
+        "label": "Exiger des règles communes",
+        "effects": {
+          "confiance": 8,
+          "public": -5,
+          "energie": -3
+        },
+        "addFlags": [
+          "mediation_nox"
         ]
       }
     }
@@ -428,17 +428,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Un fan poste une photo de l'entrée de ton immeuble : « T'habites juste là ? » Il pense faire plaisir. Les messages privés commencent à s'accumuler.",
     "choices": {
       "left": {
-        "label": "Rappeler les limites et le bloquer",
-        "effects": {
-          "confiance": 8,
-          "public": -5,
-          "energie": 4
-        },
-        "addFlags": [
-          "limites_vie_privee"
-        ]
-      },
-      "right": {
         "label": "Rire pour désamorcer",
         "effects": {
           "public": 6,
@@ -447,6 +436,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "frontieres_floues"
+        ]
+      },
+      "right": {
+        "label": "Rappeler les limites et le bloquer",
+        "effects": {
+          "confiance": 8,
+          "public": -5,
+          "energie": 4
+        },
+        "addFlags": [
+          "limites_vie_privee"
         ]
       }
     }
@@ -497,17 +497,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Lina veut illustrer son reportage avec les images de ton premier live. On y voit Flo et son ancien pseudo, qu'elle ne souhaite plus utiliser.",
     "choices": {
       "left": {
-        "label": "Demander l'accord des personnes filmées",
-        "effects": {
-          "confiance": 7,
-          "energie": -3,
-          "public": -2
-        },
-        "addFlags": [
-          "consentement_archives"
-        ]
-      },
-      "right": {
         "label": "Autoriser les images tout de suite",
         "effects": {
           "public": 6,
@@ -516,6 +505,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "archives_exposees"
+        ]
+      },
+      "right": {
+        "label": "Demander l'accord des personnes filmées",
+        "effects": {
+          "confiance": 7,
+          "energie": -3,
+          "public": -2
+        },
+        "addFlags": [
+          "consentement_archives"
         ]
       }
     }
@@ -530,17 +530,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Une association te propose une collecte pendant un tournoi. Elle apporte les preuves de ses comptes ; ton équipe veut savoir qui gérera les dons.",
     "choices": {
       "left": {
-        "label": "Déléguer la collecte à l'association",
-        "effects": {
-          "confiance": 8,
-          "argent": -4,
-          "energie": 3
-        },
-        "addFlags": [
-          "collecte_verifiee"
-        ]
-      },
-      "right": {
         "label": "Tout encaisser puis reverser",
         "effects": {
           "public": 8,
@@ -549,6 +538,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "collecte_personnelle"
+        ]
+      },
+      "right": {
+        "label": "Déléguer la collecte à l'association",
+        "effects": {
+          "confiance": 8,
+          "argent": -4,
+          "energie": 3
+        },
+        "addFlags": [
+          "collecte_verifiee"
         ]
       }
     }
@@ -563,17 +563,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Lina a parlé à Flo, à Nox et à une ancienne salariée de Mona. Elle pose trois questions simples. Tu n'aimes pas toutes les réponses possibles.",
     "choices": {
       "left": {
-        "label": "Répondre avec les documents",
-        "effects": {
-          "confiance": 9,
-          "energie": -6,
-          "public": -3
-        },
-        "addFlags": [
-          "interview_complete"
-        ]
-      },
-      "right": {
         "label": "Exiger de relire l'article",
         "effects": {
           "energie": 3,
@@ -582,6 +571,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "pression_presse"
+        ]
+      },
+      "right": {
+        "label": "Répondre avec les documents",
+        "effects": {
+          "confiance": 9,
+          "energie": -6,
+          "public": -3
+        },
+        "addFlags": [
+          "interview_complete"
         ]
       }
     }
@@ -599,17 +599,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "La contacter et revoir les signalements",
-        "effects": {
-          "confiance": 9,
-          "energie": -5,
-          "public": -4
-        },
-        "addFlags": [
-          "reparation_chat"
-        ]
-      },
-      "right": {
         "label": "Dire que le chat n'est pas toi",
         "effects": {
           "public": 6,
@@ -618,6 +607,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "deni_chat"
+        ]
+      },
+      "right": {
+        "label": "La contacter et revoir les signalements",
+        "effects": {
+          "confiance": 9,
+          "energie": -5,
+          "public": -4
+        },
+        "addFlags": [
+          "reparation_chat"
         ]
       }
     }
@@ -737,17 +737,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Une nouvelle marque accepte ton principe : annoncer la publicité avant le direct. En échange, elle ne financera qu'une seule émission.",
     "choices": {
       "left": {
-        "label": "Tester un épisode déclaré",
-        "effects": {
-          "argent": 7,
-          "confiance": 5,
-          "energie": -4
-        },
-        "addFlags": [
-          "marque_declaree"
-        ]
-      },
-      "right": {
         "label": "Produire sans partenaire",
         "effects": {
           "energie": 4,
@@ -756,6 +745,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "production_solo"
+        ]
+      },
+      "right": {
+        "label": "Tester un épisode déclaré",
+        "effects": {
+          "argent": 7,
+          "confiance": 5,
+          "energie": -4
+        },
+        "addFlags": [
+          "marque_declaree"
         ]
       }
     }
@@ -770,17 +770,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Il est presque minuit. Tu réécoutes un vieux message où tu disais vouloir créer « quand ça me rend heureux ». Demain matin, tu as une réunion à huit heures.",
     "choices": {
       "left": {
-        "label": "Éteindre et dormir",
-        "effects": {
-          "energie": 10,
-          "public": -5,
-          "confiance": 3
-        },
-        "addFlags": [
-          "nuit_repos"
-        ]
-      },
-      "right": {
         "label": "Terminer le montage maintenant",
         "effects": {
           "public": 7,
@@ -789,6 +778,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "nuit_blanche"
+        ]
+      },
+      "right": {
+        "label": "Éteindre et dormir",
+        "effects": {
+          "energie": 10,
+          "public": -5,
+          "confiance": 3
+        },
+        "addFlags": [
+          "nuit_repos"
         ]
       }
     }
@@ -839,17 +839,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Une compilation ressort ton vieux conflit avec Nox. Personne ne connaît la suite. Les commentaires inventent la conversation à votre place.",
     "choices": {
       "left": {
-        "label": "Publier le contexte complet",
-        "effects": {
-          "confiance": 8,
-          "public": -4,
-          "energie": -3
-        },
-        "addFlags": [
-          "contexte_nox"
-        ]
-      },
-      "right": {
         "label": "Laisser le clip tourner",
         "effects": {
           "public": 8,
@@ -858,6 +847,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "nostalgie_clash"
+        ]
+      },
+      "right": {
+        "label": "Publier le contexte complet",
+        "effects": {
+          "confiance": 8,
+          "public": -4,
+          "energie": -3
+        },
+        "addFlags": [
+          "contexte_nox"
         ]
       }
     }
@@ -908,17 +908,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Une petite chaîne ressort ton premier direct. On voit la chaise bancale, la lumière bleue, un sourire que tu avais oublié. Le chat demande ce que tu as perdu depuis.",
     "choices": {
       "left": {
-        "label": "Reconnaître ce qui a changé",
-        "effects": {
-          "confiance": 7,
-          "energie": 4,
-          "public": -3
-        },
-        "addFlags": [
-          "aveu_changement"
-        ]
-      },
-      "right": {
         "label": "Transformer l'archive en publicité",
         "effects": {
           "public": 8,
@@ -927,6 +916,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "archive_marketing"
+        ]
+      },
+      "right": {
+        "label": "Reconnaître ce qui a changé",
+        "effects": {
+          "confiance": 7,
+          "energie": 4,
+          "public": -3
+        },
+        "addFlags": [
+          "aveu_changement"
         ]
       }
     }
@@ -944,17 +944,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Publier les comptes et rembourser l'écart",
-        "effects": {
-          "argent": -10,
-          "confiance": 10,
-          "public": -5
-        },
-        "addFlags": [
-          "audit_dons"
-        ]
-      },
-      "right": {
         "label": "Attendre que l'orage passe",
         "effects": {
           "argent": 5,
@@ -963,6 +952,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "dons_opacite"
+        ]
+      },
+      "right": {
+        "label": "Publier les comptes et rembourser l'écart",
+        "effects": {
+          "argent": -10,
+          "confiance": 10,
+          "public": -5
+        },
+        "addFlags": [
+          "audit_dons"
         ]
       }
     }
@@ -1010,17 +1010,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Le disjoncteur coupe dix minutes avant un direct important. Tu pourrais diffuser depuis ton téléphone, comme le premier soir. Le technicien peut venir demain.",
     "choices": {
       "left": {
-        "label": "Revenir au téléphone",
-        "effects": {
-          "argent": 6,
-          "energie": 4,
-          "public": -5
-        },
-        "addFlags": [
-          "retour_telephone"
-        ]
-      },
-      "right": {
         "label": "Louer un studio pour la soirée",
         "effects": {
           "argent": -11,
@@ -1029,6 +1018,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "studio_loue"
+        ]
+      },
+      "right": {
+        "label": "Revenir au téléphone",
+        "effects": {
+          "argent": 6,
+          "energie": 4,
+          "public": -5
+        },
+        "addFlags": [
+          "retour_telephone"
         ]
       }
     }
@@ -1046,17 +1046,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Accepter la décision commune",
-        "effects": {
-          "confiance": 10,
-          "argent": -7,
-          "energie": 5
-        },
-        "addFlags": [
-          "vote_respecte"
-        ]
-      },
-      "right": {
         "label": "Passer outre le vote",
         "effects": {
           "argent": 9,
@@ -1065,6 +1054,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "vote_trahi"
+        ]
+      },
+      "right": {
+        "label": "Accepter la décision commune",
+        "effects": {
+          "confiance": 10,
+          "argent": -7,
+          "energie": 5
+        },
+        "addFlags": [
+          "vote_respecte"
         ]
       }
     }
@@ -1118,16 +1118,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Lui présenter des excuses sans exigence",
-        "effects": {
-          "confiance": 8,
-          "energie": -5
-        },
-        "addFlags": [
-          "excuses_flo_tardives"
-        ]
-      },
-      "right": {
         "label": "Retirer son nom du document",
         "effects": {
           "public": 4,
@@ -1136,6 +1126,16 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "memoire_flo_effacee"
+        ]
+      },
+      "right": {
+        "label": "Lui présenter des excuses sans exigence",
+        "effects": {
+          "confiance": 8,
+          "energie": -5
+        },
+        "addFlags": [
+          "excuses_flo_tardives"
         ]
       }
     }
@@ -1186,17 +1186,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Payer et corriger le relevé",
-        "effects": {
-          "argent": -10,
-          "confiance": 9,
-          "energie": -2
-        },
-        "addFlags": [
-          "dette_nox_reglee"
-        ]
-      },
-      "right": {
         "label": "Lui proposer de l'exposition",
         "effects": {
           "public": 8,
@@ -1205,6 +1194,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "dette_nox_refusee"
+        ]
+      },
+      "right": {
+        "label": "Payer et corriger le relevé",
+        "effects": {
+          "argent": -10,
+          "confiance": 9,
+          "energie": -2
+        },
+        "addFlags": [
+          "dette_nox_reglee"
         ]
       }
     }
@@ -1291,17 +1291,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Faire relire le contrat et témoigner",
-        "effects": {
-          "argent": -9,
-          "confiance": 10,
-          "energie": -5
-        },
-        "addFlags": [
-          "rupture_silence_mona"
-        ]
-      },
-      "right": {
         "label": "Protéger ton compte bancaire",
         "effects": {
           "argent": 8,
@@ -1310,6 +1299,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "loyaute_mona"
+        ]
+      },
+      "right": {
+        "label": "Faire relire le contrat et témoigner",
+        "effects": {
+          "argent": -9,
+          "confiance": 10,
+          "energie": -5
+        },
+        "addFlags": [
+          "rupture_silence_mona"
         ]
       }
     }
@@ -1393,17 +1393,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Lina t'avoue qu'une source lui a demandé de masquer son nom. Ton chat veut connaître cette personne ; Lina refuse. Même un bon article peut mettre quelqu'un en danger.",
     "choices": {
       "left": {
-        "label": "Défendre le secret de la source",
-        "effects": {
-          "confiance": 8,
-          "public": -4,
-          "energie": 3
-        },
-        "addFlags": [
-          "source_protegee"
-        ]
-      },
-      "right": {
         "label": "Exiger le nom en direct",
         "effects": {
           "public": 8,
@@ -1412,6 +1401,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "source_menacee"
+        ]
+      },
+      "right": {
+        "label": "Défendre le secret de la source",
+        "effects": {
+          "confiance": 8,
+          "public": -4,
+          "energie": 3
+        },
+        "addFlags": [
+          "source_protegee"
         ]
       }
     }
@@ -1466,17 +1466,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Faire retirer les informations privées",
-        "effects": {
-          "energie": -5,
-          "public": -4,
-          "confiance": 8
-        },
-        "addFlags": [
-          "adresse_protegee"
-        ]
-      },
-      "right": {
         "label": "Quitter le live sans explication",
         "effects": {
           "energie": 5,
@@ -1485,6 +1474,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "depart_sans_expliquer"
+        ]
+      },
+      "right": {
+        "label": "Faire retirer les informations privées",
+        "effects": {
+          "energie": -5,
+          "public": -4,
+          "confiance": 8
+        },
+        "addFlags": [
+          "adresse_protegee"
         ]
       }
     }
@@ -1532,17 +1532,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "La plateforme suspend les recommandations de ton prochain direct pendant 48 heures. Motif : plusieurs signalements. Rien ne dit encore s'ils sont justifiés.",
     "choices": {
       "left": {
-        "label": "Contester avec un dossier vérifiable",
-        "effects": {
-          "confiance": 7,
-          "energie": -6,
-          "public": -4
-        },
-        "addFlags": [
-          "recours_plateforme"
-        ]
-      },
-      "right": {
         "label": "Déplacer le live sans expliquer",
         "effects": {
           "public": 6,
@@ -1551,6 +1540,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "live_deplace"
+        ]
+      },
+      "right": {
+        "label": "Contester avec un dossier vérifiable",
+        "effects": {
+          "confiance": 7,
+          "energie": -6,
+          "public": -4
+        },
+        "addFlags": [
+          "recours_plateforme"
         ]
       }
     }
@@ -1598,17 +1598,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Tu revisionnes ton premier direct. Au fond, la lumière grésille. À l'écran, tu remercies une personne d'être venue, sans regarder le compteur.",
     "choices": {
       "left": {
-        "label": "Enregistrer un message pour cette personne",
-        "effects": {
-          "confiance": 8,
-          "energie": 4,
-          "public": -2
-        },
-        "addFlags": [
-          "message_origine"
-        ]
-      },
-      "right": {
         "label": "Préparer un clip anniversaire",
         "effects": {
           "public": 8,
@@ -1617,6 +1606,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "anniversaire_viral"
+        ]
+      },
+      "right": {
+        "label": "Enregistrer un message pour cette personne",
+        "effects": {
+          "confiance": 8,
+          "energie": 4,
+          "public": -2
+        },
+        "addFlags": [
+          "message_origine"
         ]
       }
     }
@@ -1631,17 +1631,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Un annonceur propose de financer le grand direct de clôture. Une condition : remplacer les questions spontanées par un texte validé avant l'émission.",
     "choices": {
       "left": {
-        "label": "Garder les questions libres",
-        "effects": {
-          "confiance": 9,
-          "argent": -7,
-          "energie": 3
-        },
-        "addFlags": [
-          "questions_libres"
-        ]
-      },
-      "right": {
         "label": "Accepter le texte préparé",
         "effects": {
           "argent": 11,
@@ -1650,6 +1639,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "direct_scripte"
+        ]
+      },
+      "right": {
+        "label": "Garder les questions libres",
+        "effects": {
+          "confiance": 9,
+          "argent": -7,
+          "energie": 3
+        },
+        "addFlags": [
+          "questions_libres"
         ]
       }
     }
@@ -1700,17 +1700,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Flo t'envoie : « Pour le dernier direct, je resterai jusqu'à vingt-deux heures. Après, j'ai ma vie. Tu n'as pas besoin d'y mettre un compteur. »",
     "choices": {
       "left": {
-        "label": "Préparer une relève avant vingt-deux heures",
-        "effects": {
-          "confiance": 8,
-          "energie": 5,
-          "argent": -4
-        },
-        "addFlags": [
-          "releve_flo"
-        ]
-      },
-      "right": {
         "label": "Promettre de finir tôt et improviser",
         "effects": {
           "public": 7,
@@ -1719,6 +1708,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "promesse_flo_floue"
+        ]
+      },
+      "right": {
+        "label": "Préparer une relève avant vingt-deux heures",
+        "effects": {
+          "confiance": 8,
+          "energie": 5,
+          "argent": -4
+        },
+        "addFlags": [
+          "releve_flo"
         ]
       }
     }
@@ -1772,17 +1772,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     ],
     "choices": {
       "left": {
-        "label": "Refuser la comparaison en direct",
-        "effects": {
-          "confiance": 8,
-          "public": -5,
-          "energie": 4
-        },
-        "addFlags": [
-          "classement_refuse"
-        ]
-      },
-      "right": {
         "label": "Relancer la rivalité pour la finale",
         "effects": {
           "public": 11,
@@ -1791,6 +1780,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "rivalite_finale"
+        ]
+      },
+      "right": {
+        "label": "Refuser la comparaison en direct",
+        "effects": {
+          "confiance": 8,
+          "public": -5,
+          "energie": 4
+        },
+        "addFlags": [
+          "classement_refuse"
         ]
       }
     }
@@ -1946,17 +1946,6 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "text": "Le compteur défile. Dans le reflet noir de l'écran, tu reconnais la pièce du premier soir. Tu ne contrôles pas les réactions, seulement ce que tu vas dire maintenant.",
     "choices": {
       "left": {
-        "label": "Raconter les choix et leurs coûts",
-        "effects": {
-          "confiance": 10,
-          "energie": 5,
-          "public": -4
-        },
-        "addFlags": [
-          "saison_verite"
-        ]
-      },
-      "right": {
         "label": "Offrir un spectacle sans explication",
         "effects": {
           "public": 10,
@@ -1965,6 +1954,17 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
         },
         "addFlags": [
           "saison_spectacle"
+        ]
+      },
+      "right": {
+        "label": "Raconter les choix et leurs coûts",
+        "effects": {
+          "confiance": 10,
+          "energie": 5,
+          "public": -4
+        },
+        "addFlags": [
+          "saison_verite"
         ]
       }
     }
