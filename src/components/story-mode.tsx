@@ -114,7 +114,11 @@ export function StoryMode() {
   const character = scene?.id === "double_crise" ? "duo"
     : scene?.speaker.startsWith("FLO") ? "flo"
     : scene?.speaker.startsWith("NOX") ? "nox"
-    : scene?.speaker.startsWith("MONA") ? "mona" : "toi";
+    : scene?.speaker.startsWith("MONA") ? "mona"
+    : scene?.speaker.startsWith("LINA") ? "lina"
+    : scene?.speaker.startsWith("PLATEFORME") ? "platform"
+    : /^(SAM|ASSOCIATION|CHAT)\b/.test(scene?.speaker ?? "") ? "community"
+    : "toi";
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
