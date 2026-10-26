@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, chooseStory, currentStoryScene, restoreStory, startStory,
+  STORY_ENDINGS, chooseStory, currentStoryScene, lastStoryAppliedEffects, restoreStory, startStory,
   validateStoryScript, type StoryDirection,
 } from "./story-mode";
 
@@ -20,6 +20,42 @@ describe("mode Histoire : prologue déterministe", () => {
       { ...script.scenes[0], channel: "INCONNU" as typeof script.scenes[0]["channel"] },
       ...script.scenes.slice(1),
     ] })).toContain("Canal invalide : studio");
+  });
+
+
+  it("affiche les points réellement gagnés ou perdus quand une jauge atteint 0 ou 100", () => {
+    const cappedScript = {
+      ...script,
+      id: "test-plafonds",
+      totalSteps: 1,
+      initialStats: { ...script.initialStats, public: 95, argent: 12 },
+      scenes: [{
+        ...script.scenes[0],
+        choices: {
+          left: { label: "Pousser les jauges", effects: { public: 20, argent: -30 } },
+          right: { label: "Attendre", effects: {} },
+        },
+      }],
+    };
+    const initial = startStory(cappedScript);
+    expect(lastStoryAppliedEffects(cappedScript, initial)).toBeNull();
+
+    const ended = chooseStory(cappedScript, initial, "left");
+    expect(ended.stats.public).toBe(100);
+    expect(ended.stats.argent).toBe(0);
+    expect(ended.history[0].effects).toEqual({ public: 20, argent: -30 });
+    expect(lastStoryAppliedEffects(cappedScript, ended)).toEqual({ public: 5, argent: -12 });
+    const restored = restoreStory(cappedScript, JSON.stringify(ended));
+    expect(restored).toEqual(ended);
+    expect(lastStoryAppliedEffects(cappedScript, restored!)).toEqual({ public: 5, argent: -12 });
+  });
+
+  it("conserve les deltas exacts pour une partie normale à plusieurs chapitres", () => {
+    let run = startStory(script);
+    run = chooseStory(script, run, "left");
+    expect(lastStoryAppliedEffects(script, run)).toEqual({ public: -3, energie: 6, argent: 9 });
+    run = chooseStory(script, run, "left");
+    expect(lastStoryAppliedEffects(script, run)).toEqual({ energie: 5, argent: -3, confiance: 10 });
   });
 
   it("un même choix donne le même état, sans IA ni hasard", () => {

@@ -164,6 +164,29 @@ export function chooseStory(script: StoryScript, run: StoryRun, direction: Story
   return next;
 }
 
+
+/**
+ * Variations réellement appliquées par le dernier choix.
+ * Les effets déclarés dans le scénario sont des intentions : à 100 ou à 0,
+ * une jauge est plafonnée et l'affichage ne doit pas inventer des points.
+ * Les sauvegardes V2 conservent les effets bruts pour être rejouées et validées.
+ */
+export function lastStoryAppliedEffects(script: StoryScript, run: StoryRun): Partial<StoryStats> | null {
+  if (!run.history.length) return null;
+  const before = { ...script.initialStats };
+  for (const entry of run.history.slice(0, -1)) {
+    for (const stat of STORY_STATS) {
+      before[stat] = Math.max(0, Math.min(100, before[stat] + (entry.effects[stat] ?? 0)));
+    }
+  }
+  const applied: Partial<StoryStats> = {};
+  for (const stat of STORY_STATS) {
+    const delta = run.stats[stat] - before[stat];
+    if (delta !== 0) applied[stat] = delta;
+  }
+  return applied;
+}
+
 /** Une sauvegarde corrompue ou d'une autre version ne remplace jamais un état sain. */
 export function restoreStory(script: StoryScript, raw: string | null): StoryRun | null {
   if (!raw) return null;

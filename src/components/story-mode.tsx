@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, typ
 import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene,
+  STORY_ENDINGS, STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects,
   restoreStory, startStory, type StoryDirection, type StoryRun, type StoryStat,
 } from "../lib/story-mode";
 import "./story-mode.css";
@@ -78,7 +78,7 @@ export function StoryMode() {
     : scene?.speaker.startsWith("FLO") ? "flo"
     : scene?.speaker.startsWith("NOX") ? "nox"
     : scene?.speaker.startsWith("MONA") ? "mona" : "toi";
-  const lastEffects = run?.history.at(-1)?.effects;
+  const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
   function decide(direction: StoryDirection, focusScene = false) {
