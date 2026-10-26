@@ -312,6 +312,7 @@ test("Histoire : aperçu au glissement, annulation et validation au seuil", asyn
   await expect(preview).toHaveAttribute("data-active", "false");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
+  await expect(page.locator(".story-progress")).toContainText("ACTE I");
 
   await page.mouse.move(x, y);
   await page.mouse.down();
