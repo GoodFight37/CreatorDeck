@@ -143,6 +143,69 @@ function determineEnding(run: StoryRun, totalSteps: number): StoryEndingId | nul
 }
 
 
+/** La cause d'une fin reste chiffrée ; sa formulation tient compte des choix vécus. */
+export function storyEndingNarrative(run: StoryRun): { title: string; text: string; emoji: string } | null {
+  if (!run.ending) return null;
+  const base = STORY_ENDINGS[run.ending];
+  const flags = new Set(run.flags);
+
+  if (run.ending === "independant" && flags.has("agence")) {
+    return {
+      ...base, title: "Une communauté sous contrat",
+      text: "Le public te fait confiance, mais un comité peut encore bloquer tes vidéos. La liberté que tu veux construire devra aussi se négocier.",
+    };
+  }
+  if (run.ending === "phenomene" && flags.has("saison_collective")) {
+    return {
+      ...base, title: "La chaîne à plusieurs voix",
+      text: "Le direct final fait parler de vous. Flo et les autres tiennent leurs micros : cette réussite a plusieurs visages et chacun a sa place.",
+    };
+  }
+  if (run.ending === "phenomene" && flags.has("saison_duo")) {
+    return {
+      ...base, title: "Deux voix, une percée",
+      text: "Le dernier direct propulse vos deux chaînes. Nox n'est plus une menace pour ton succès : il en est devenu un témoin et un partenaire.",
+    };
+  }
+  if (run.ending === "business" && flags.has("agence")) {
+    return {
+      ...base, title: "Le succès sous signature",
+      text: "Le studio rapporte enfin de l'argent. Mona a rempli sa promesse, mais les prochains contenus devront toujours passer par le contrat.",
+    };
+  }
+  if (run.ending === "business" && flags.has("libre") && !flags.has("agence")) {
+    return {
+      ...base, title: "Une entreprise à ton nom",
+      text: "Tu peux payer le studio sans céder ta chaîne. C'est une victoire concrète, avec les factures, les choix difficiles et la liberté qui vont avec.",
+    };
+  }
+  if (run.ending === "epuisement" && (flags.has("nuit_blanche") || flags.has("marathon") || flags.has("defi_algo"))) {
+    return {
+      ...base, title: "La dernière nuit blanche",
+      text: "Tu avais promis encore un direct, encore un montage, encore un effort. Ton énergie atteint zéro avant que la liste soit terminée.",
+    };
+  }
+  if (run.ending === "scandale" && (flags.has("double_mensonge") || flags.has("preuve_effacee"))) {
+    return {
+      ...base, title: "La capture qui revient",
+      text: "Les documents n'ont pas disparu avec les messages. Le chat a continué de regarder, mais il ne sait plus à quoi te croire.",
+    };
+  }
+  if (run.ending === "surexposition" && (flags.has("defi_algo") || flags.has("marathon"))) {
+    return {
+      ...base, title: "Tout le monde te regarde",
+      text: "Le compteur a atteint cent. La cadence qui t'a rendu visible exige maintenant chaque minute de ton temps, même hors caméra.",
+    };
+  }
+  if (run.ending === "survivant" && flags.has("saison_verite")) {
+    return {
+      ...base, title: "Une histoire encore ouverte",
+      text: "Tu n'as pas battu de record. Tu as raconté les erreurs aussi bien que les victoires, puis éteint le direct sans tout résoudre.",
+    };
+  }
+  return base;
+}
+
 /** Épilogue personnel : les décisions mémorisées comptent au-delà des jauges. */
 export function storyEpilogue(run: StoryRun): string[] {
   if (!run.ending) return [];
