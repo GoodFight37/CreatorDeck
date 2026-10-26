@@ -60,6 +60,22 @@ test("Histoire : le geste vertical ne décide rien, l'horizontal choisit", async
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
+test("Histoire : l’interlude du deuxième acte persiste après rechargement", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  for (let chapter = 0; chapter < 12; chapter++) {
+    await page.locator(".story-actions .story-choice").first().click();
+    await page.waitForTimeout(470);
+  }
+  await expect(page.locator(".story-progress")).toContainText("13 / 40");
+  await expect(page.locator(".story-act-interlude")).toContainText("ACTE II · LE PRIX DES VUES");
+  await expect(page.locator(".story-act-interlude")).toContainText("Flo");
+  await page.reload();
+  await expect(page.locator(".story-progress")).toContainText("13 / 40");
+  await expect(page.locator(".story-act-interlude")).toContainText("Flo");
+});
+
 test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.locator(".story-play-card")).toBeVisible();
