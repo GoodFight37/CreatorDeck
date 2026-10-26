@@ -71,6 +71,8 @@ test("Histoire : la fin offre une nouvelle partie", async ({ page }) => {
     await page.waitForTimeout(470);
   }
   await expect(page.getByRole("button", { name: /Recommencer l’histoire/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CE QUE TU LAISSES DERRIÈRE TOI" })).toBeVisible();
+  await expect(page.locator(".story-epilogue p").first()).toBeVisible();
   const recap = page.locator(".story-recap");
   await expect(recap).not.toHaveAttribute("open", "");
   await recap.locator("summary").click();
