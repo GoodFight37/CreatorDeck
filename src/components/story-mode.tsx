@@ -34,6 +34,7 @@ const STAT_LABELS: Record<StoryStat, { name: string }> = {
 export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
   const [drag, setDrag] = useState(0);
+  const [restartPending, setRestartPending] = useState(false);
   const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
@@ -103,6 +104,7 @@ export function StoryMode() {
     if (now - lastDecisionAt.current < 450) return;
     lastDecisionAt.current = now;
     focusNextScene.current = focusScene;
+    setRestartPending(false);
     setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
     gesture.current = null;
     setDrag(0);
@@ -157,6 +159,7 @@ export function StoryMode() {
   }
 
   function replay(focusScene = false) {
+    setRestartPending(false);
     focusNextScene.current = focusScene;
     lastDecisionAt.current = Number.NEGATIVE_INFINITY;
     gesture.current = null;
@@ -284,6 +287,21 @@ export function StoryMode() {
                     <strong>{scene.choices.right.label}</strong>
                   </button>
                 </div>
+                {run.step > 0 && (
+                  <div className="story-restart">
+                    {!restartPending ? (
+                      <button className="story-restart-trigger" onClick={() => setRestartPending(true)}>↻ Nouvelle partie</button>
+                    ) : (
+                      <div className="story-restart-confirm" role="group" aria-label="Confirmer une nouvelle partie">
+                        <p>Recommencer depuis le premier direct ? Ta progression actuelle sera remplacée sur cet appareil.</p>
+                        <div className="story-restart-actions">
+                          <button className="story-restart-cancel" onClick={() => setRestartPending(false)}>Garder ma partie</button>
+                          <button className="story-restart-yes" onClick={(event) => replay(event.detail === 0)}>Oui, recommencer</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <p className="story-footnote">Les conséquences ne sont pas toujours immédiates. Sauvegarde automatique sur cet appareil.</p>
               </>
             ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={() => replay()}>recommencer</button>.</p>}
