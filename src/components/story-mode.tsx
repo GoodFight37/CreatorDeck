@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, typ
 import Link from "next/link";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_ENDINGS, STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects,
+  STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative,
   restoreStory, startStory, storyEpilogue, storyActInterlude, type StoryDirection, type StoryRun, type StoryStat,
 } from "../lib/story-mode";
 import "./story-mode.css";
@@ -89,6 +89,7 @@ export function StoryMode() {
   }, [step, ending]);
 
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
+  const resolvedEnding = run?.ending ? storyEndingNarrative(run) : null;
   const interlude = run ? storyActInterlude(run) : null;
   const character = scene?.id === "double_crise" ? "duo"
     : scene?.speaker.startsWith("FLO") ? "flo"
@@ -213,10 +214,10 @@ export function StoryMode() {
             </div>
             {run.ending ? (
               <section ref={endingRef} tabIndex={-1} className="story-card story-ending" aria-live="polite">
-                <div className="story-face" aria-hidden="true">{STORY_ENDINGS[run.ending].emoji}</div>
+                <div className="story-face" aria-hidden="true">{resolvedEnding?.emoji}</div>
                 <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
-                <h2>{STORY_ENDINGS[run.ending].title}</h2>
-                <p>{STORY_ENDINGS[run.ending].text}</p>
+                <h2>{resolvedEnding?.title}</h2>
+                <p>{resolvedEnding?.text}</p>
                 <div className="story-epilogue" aria-label="Ce que tes choix ont changé">
                   <h3>CE QUE TU LAISSES DERRIÈRE TOI</h3>
                   {storyEpilogue(run).map((memory, index) => <p key={index}>{memory}</p>)}
