@@ -231,6 +231,31 @@ describe("mode Histoire : prologue déterministe", () => {
     expect(currentStoryScene(script, exposedAddress)?.id).toBe("fan_dox");
   });
 
+  it("atteint les neuf fins avec des parcours reproductibles et des sauvegardes restaurables", () => {
+    const endings = {
+      independant: "LRRLLLRLLRRRLRRLRRLLLRRRRLRRLRRRLLLRRRRL",
+      surexposition: "RLLRRLRLRRL",
+      phenomene: "RLLRRRLLRLLRRRLRLLLLRLLRLRLLRLRLLRRRRLLL",
+      epuisement: "LRRLLLRRLRRLLRRLLRRLRLRLRLLLRLR",
+      faillite: "LRLLLLRRLLRLLRLRRLRRRLLLRRRLR",
+      scandale: "RLRRRLRRR",
+      business: "RLRRRRLLLRLLRRRLLLRLLRLRLLLRLRRLLRLRLLRL",
+      survivant: "LLRLRLRLRLRRRLRLRLRLRLLRRRRLRLLRRRRLRLLL",
+      silence: "RLLRLRRLLLRLLRRRRRRLRLRRRRRRLRRRLRL",
+    };
+    expect(Object.keys(endings)).toHaveLength(Object.keys(STORY_ENDINGS).length);
+    for (const [expected, path] of Object.entries(endings)) {
+      let run = startStory(script);
+      for (const direction of path) {
+        expect(run.ending).toBeNull();
+        run = chooseStory(script, run, direction === "L" ? "left" : "right");
+      }
+      expect(run.ending).toBe(expected);
+      expect(run.step).toBe(path.length);
+      expect(restoreStory(script, JSON.stringify(run))).toEqual(run);
+    }
+  }, 30_000);
+
   it("protège de la double décision après une fin de saison", () => {
     let run = startStory(script);
     for (let step = 0; step < script.totalSteps && !run.ending; step++) run = chooseStory(script, run, "left");
