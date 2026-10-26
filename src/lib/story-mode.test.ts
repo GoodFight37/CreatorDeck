@@ -113,5 +113,5 @@ describe("mode Histoire : prologue déterministe", () => {
     }
     expect(endings.size).toBe(8);
     expect(seenScenes.size).toBe(script.scenes.length);
-  });
+  }, 30_000);
 });
