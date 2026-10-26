@@ -159,6 +159,10 @@ export function storyEpilogue(run: StoryRun): string[] {
   if (flags.has("nox_allie_final") || flags.has("duo_nox")) memories.push("Nox t'envoie un dernier message : « On remet ça ? » Cette fois, c'est une invitation.");
   else if (flags.has("guerre_nox") && !flags.has("paix_nox")) memories.push("Nox ne te parle plus. Vos deux communautés connaissent encore chaque épisode du conflit.");
   else if (flags.has("respect_nox")) memories.push("Nox continue de saluer ton travail, même lorsque vos chaînes prennent des chemins différents.");
+  if (flags.has("collectif_autonome")) memories.push("Flo choisit elle-même son rôle. Le collectif continue sans que son nom soit à vendre.");
+  else if (flags.has("collectif_commercial")) memories.push("La campagne a payé le studio, mais Flo n'a pas oublié que tu as décidé pour elle.");
+  if (flags.has("pacte_tenu")) memories.push("Nox signe le générique avec toi. Vos deux chaînes restent distinctes, et la promesse tient.");
+  else if (flags.has("pacte_brise")) memories.push("Nox a coupé son direct avant la fin. La promesse était écrite, la rupture est publique.");
   if (flags.has("agence")) memories.push("Le contrat d'exclusivité est toujours sur ton bureau. Les prochains choix ne seront plus seulement les tiens.");
   else if (flags.has("libre")) memories.push("Tu gardes les clés de ta chaîne. Cette liberté a un prix, mais tu l'as choisi.");
   return memories;
