@@ -141,3 +141,32 @@ test("Histoire : le titre et les choix se réorganisent en très petit viewport"
   expect(second).not.toBeNull();
   if (first && second) expect(second.y).toBeGreaterThan(first.y + first.height - 1);
 });
+
+test.describe("Histoire : interactions sur écran tactile", () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test("le choix tapé ne colore ni ne préselectionne celui du chapitre suivant", async ({ page }) => {
+    await page.goto("/histoire");
+    await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+    const left = page.locator(".story-actions .story-choice").first();
+    const right = page.locator(".story-actions .story-choice").last();
+    const restingBackground = await right.evaluate((element) => getComputedStyle(element).backgroundColor);
+
+    await left.tap();
+    await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+    await expect(left).toHaveCSS("background-color", restingBackground);
+    expect(await left.evaluate((element) => document.activeElement === element)).toBe(false);
+    await expect(page.locator(".story-progress")).toContainText("2 / 12");
+  });
+});
+
+test("Histoire : le clavier conserve le focus sans présélection forcée", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
+  const left = page.locator(".story-actions .story-choice").first();
+  await left.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
+  expect(await left.evaluate((element) => document.activeElement === element)).toBe(true);
+  await expect(left).toBeFocused();
+});
