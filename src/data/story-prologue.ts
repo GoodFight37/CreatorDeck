@@ -114,6 +114,22 @@ export const STORY_PROLOGUE: StoryScript = {
       },
     },
     {
+      id: "agence_flo", step: 8, requiresFlags: ["communaute_saine", "flo_protegee"], title: "Les clés du studio", speaker: "FLO · modératrice", emoji: "🔑", channel: "DM",
+      text: "Flo a réuni trois bénévoles pour tenir le chat sans s'épuiser. Mona, elle, propose de racheter les droits sur tes rediffusions. « Une équipe, ça se construit. Une audience, ça se vend », souffle Flo.",
+      choices: {
+        left: { label: "Construire un collectif avec Flo", effects: { confiance: 12, energie: 8, argent: -9, public: -3 }, addFlags: ["collectif_flo", "libre"] },
+        right: { label: "Vendre les rediffusions à Mona", effects: { argent: 19, public: 5, confiance: -8, energie: -5 }, addFlags: ["agence", "catalogue_vendu"] },
+      },
+    },
+    {
+      id: "agence_nox", step: 8, requiresFlags: ["duo_nox"], title: "La chaîne à deux voix", speaker: "NOX · streamer rival", emoji: "🎙️", channel: "DM",
+      text: "Votre duo a attiré une agence. Elle veut vous signer ensemble, mais le contrat autorise l'un de vous à diffuser sans l'autre. Nox demande : « On est partenaires, ou juste une affiche ? »",
+      choices: {
+        left: { label: "Négocier deux contrats indépendants", effects: { confiance: 9, argent: -8, energie: -4 }, addFlags: ["libre", "pacte_nox"] },
+        right: { label: "Signer le contrat commun", effects: { argent: 20, public: 9, confiance: -9, energie: -9 }, addFlags: ["agence", "contrat_duo"] },
+      },
+    },
+    {
       id: "agence", step: 8, title: "L'offre qui change tout", speaker: "MONA · agent artistique", emoji: "📑", channel: "CONTRAT",
       text: "Une agence t'offre un contrat d'exclusivité : argent assuré, calendrier imposé, vidéos validées par un comité que tu ne connais pas.",
       choices: {
