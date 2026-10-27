@@ -12,7 +12,7 @@ import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
   STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative,
-  restoreStory, startStory, storyEpilogue, storyActInterlude, type StoryDirection, type StoryRun, type StoryStat,
+  restoreStory, startStory, storyEpilogue, storyActInterlude, type StoryDirection, type StoryRun, type StoryStat, type StoryChannel,
 } from "../lib/story-mode";
 import "./story-mode.css";
 
@@ -38,6 +38,16 @@ const STAT_LABELS: Record<StoryStat, { name: string }> = {
   confiance: { name: "Confiance" },
 };
 
+// Médias de l'univers des créateurs : présentation seulement, aucune nouvelle règle.
+const STORY_MEDIA: Record<StoryChannel, { name: string; subtitle: string }> = {
+  LIVE: { name: "STREAM", subtitle: "EN DIRECT" },
+  CHAT: { name: "COMMUNAUTÉ", subtitle: "CHAT & MODÉRATION" },
+  CLIP: { name: "VIDÉO", subtitle: "GAMING & CRÉATION" },
+  DM: { name: "MESSAGES", subtitle: "EN COULISSES" },
+  MAIL: { name: "BOÎTE PRO", subtitle: "NOTIFICATIONS" },
+  CONTRAT: { name: "PARTENARIAT", subtitle: "MARQUES & CONTRATS" },
+  ARCHIVE: { name: "ARCHIVES", subtitle: "MÉMOIRE DE CHAÎNE" },
+};
 const STORY_SCENES_BY_ID = new Map(SCRIPT.scenes.map((scene) => [scene.id, scene] as const));
 
 /** Journal consultable pendant la partie ou après la fin, sans scènes futures ni spoilers. */
@@ -439,6 +449,7 @@ export function StoryMode() {
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
                   data-mood={portraitMood}
+                   data-channel={scene.channel}
                   data-pressure={criticalStat ?? "none"}
                   data-event={/^(grand_final|finale|double_crise|archive_mensonge|lina_enquete|contrat_fantome)/.test(scene.id)}
                   data-dragging={dragging}
@@ -465,6 +476,7 @@ export function StoryMode() {
                   </div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span className="story-card-serial"><span className="story-card-monogram">CD</span> S01 / {String(run.step + 1).padStart(2, "0")}</span>
+                     <span className="story-card-medium" aria-hidden="true">{STORY_MEDIA[scene.channel].name}</span>
                   </div>
                   <div className="story-prompt">
                     <h2 aria-live="polite">{scene.title}</h2>
@@ -473,6 +485,7 @@ export function StoryMode() {
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
                     <StorySetPieces channel={scene.channel} />
                     <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
+                     <span className="story-scene-edition" aria-hidden="true">{STORY_MEDIA[scene.channel].subtitle}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>

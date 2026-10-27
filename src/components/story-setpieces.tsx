@@ -6,6 +6,29 @@ export const StorySetPieces = memo(function StorySetPieces({ channel }: { channe
   return (
     <div className="story-set-pieces" data-channel={channel} aria-hidden="true">
       <svg viewBox="0 0 320 220" preserveAspectRatio="xMidYMid slice" focusable="false">
+        {/* Scénographie originale par médium, derrière le portrait. */}
+        <g className="story-world-shapes" fill="currentColor" stroke="none">
+          {channel === "LIVE" ? (
+            <><path d="M0 191V48L43 23H76V191ZM320 191V43L278 18H249V191Z" opacity=".22"/>
+              <path d="M0 210L89 182H226L320 210V220H0Z" opacity=".35"/></>
+          ) : channel === "CLIP" ? (
+            <><path d="M0 182L51 117L91 145L138 96L185 151L232 113L320 179V220H0Z" opacity=".24"/>
+              <path d="M0 198L65 169L110 191L160 146L211 186L275 150L320 184V220H0Z" opacity=".35"/></>
+          ) : channel === "CHAT" ? (
+            <><path d="M0 219V97l72 19v103ZM320 219V103l-70 12v104Z" opacity=".28"/>
+              <rect x="17" y="41" width="61" height="29" rx="10" opacity=".24"/>
+              <rect x="245" y="73" width="62" height="29" rx="10" opacity=".24"/></>
+          ) : channel === "DM" ? (
+            <><rect x="13" y="24" width="78" height="139" rx="9" opacity=".2"/>
+              <rect x="229" y="48" width="77" height="124" rx="9" opacity=".2"/></>
+          ) : channel === "MAIL" || channel === "CONTRAT" ? (
+            <><path d="M0 30L74 15L87 188L0 206ZM320 28L247 10L237 190L320 207Z" opacity=".22"/>
+              <path d="M0 200Q160 171 320 203V220H0Z" opacity=".3"/></>
+          ) : (
+            <><path d="M0 39L72 18V207L0 190ZM320 34L250 15V203L320 189Z" opacity=".25"/>
+              <path d="M0 206L88 184H231L320 207V220H0Z" opacity=".33"/></>
+          )}
+        </g>
         <g fill="none" stroke="currentColor" strokeWidth="1" opacity=".5">
           <path d="M18 25h25M18 25v21M302 25h-25M302 25v21M18 194h25M18 194v-21M302 194h-25M302 194v-21"/>
           <circle cx="160" cy="103" r="92" strokeDasharray="2 8" opacity=".45"/>
