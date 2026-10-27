@@ -1569,7 +1569,7 @@
 .story-page .story-inspection-finding[data-found="true"] { border-left-color: var(--green); }
 .story-page .story-inspection-finding strong { font-size: 12px; color: var(--text); }
 .story-page .story-inspection-finding p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-.story-page .story-inspection-reset { margin-top: 10px; min-height: 36px; border: 0; background: transparent; color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; font: 800 12px/1.4 inherit; cursor: pointer; }
+.story-page .story-inspection-reset { margin-top: 10px; min-height: 36px; border: 0; background: transparent; color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; font-family: inherit; font-size: 12px; font-weight: 800; line-height: 1.4; cursor: pointer; }
 @media (max-width: 480px) {
   .story-page .story-inspection-evidence { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .story-page .story-inspection-piece { min-height: 68px; padding: 9px 12px; gap: 5px; }

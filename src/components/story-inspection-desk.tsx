@@ -38,7 +38,7 @@ export function StoryInspectionDesk({ scene }: { scene: StoryScene }) {
         <div className="story-inspection-finding" role="status" aria-live="polite" data-found={finding?.spotted ?? false}>
           {finding ? (
             <><strong>{finding.spotted ? "✓ " : "◌ "}{finding.heading}</strong><p>{finding.detail}</p></>
-          ) : <p>Sélectionne deux pièces pour les confronter. Rien n'est enregistré tant que tu n'as pas choisi une réponse.</p>}
+          ) : <p>Sélectionne deux pièces pour les confronter. Rien n&apos;est enregistré tant que tu n&apos;as pas choisi une réponse.</p>}
         </div>
         {selected.length > 0 && <button type="button" className="story-inspection-reset" onClick={() => setSelected([])}>Recommencer la comparaison</button>}
       </div>
