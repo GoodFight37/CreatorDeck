@@ -1,3 +1,10 @@
+# Checkpoint Histoire — cadrage diptyque après revue pixels, 27 octobre 2026
+
+- Branche PR #24 brouillon ; base `cafe79a419a6d0da0877a39c1615031ab8d5d404`. WebKit du SHA `cafe79a` : 4/4 tests réussis. CI générale `40448132913` : build/qualité, SQL jetable, RPC simulés et Playwright 1/3 et 2/3 réussis au dernier relevé, Playwright 3/3 encore en cours.
+- Capture réelle `scene-double-crise-390.png` de Playwright shard 2 inspectée : Nox/Mona présents, mais bustes trop petits dans un moniteur haut, vide excessif en haut. Variante 320 mieux proportionnée. Décision D-177 : dimensionner les SVG à 96 % de la hauteur de moniteur, avec cadrage dans chaque demi-panneau et mesure Playwright >=90 % aux deux dimensions.
+- Nouveau commit, CI et nouvelles captures à confirmer après publication. Aucune exécution Windows/Android/iPhone physique, aucune modification de `main`, production, Supabase, économie, audio ou sauvegarde.
+- Prochaine tâche : vérifier nouvelle capture duo à 320/390, valider la suite complète sur le nouveau HEAD, et tester sur téléphone réel seulement pour le rendu/haptique que la simulation ne garantit pas.
+
 # Checkpoint Histoire — diptyque Nox/Mona, 27 octobre 2026
 
 - Base de travail : `5e533f8d572f3b52d7cfb250bcf44f7bb2fbf7f5`, branche `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon. Le nouveau run WebKit `40447426307` est vert ; la Vérification générale `40447432129` a été lancée sur ce même SHA et devait être contrôlée jusqu'à fin avant nouvelle publication.

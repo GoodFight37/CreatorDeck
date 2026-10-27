@@ -611,12 +611,21 @@ test("Histoire : double crise et jauge critique lisibles sans code couleur", asy
   await expect(card.locator(".story-portrait-duo-panel[data-side='nox'] svg")).toBeVisible();
   await expect(card.locator(".story-portrait-duo-panel[data-side='mona'] svg")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Deux affaires, une caméra" })).toBeVisible();
-  await page.setViewportSize({ width: 390, height: 844 });
   await mkdir("test-results/mobile-observation-histoire", { recursive: true });
-  await page.screenshot({ path: "test-results/mobile-observation-histoire/scene-double-crise-390.png", fullPage: true, animations: "disabled" });
-  await page.setViewportSize({ width: 320, height: 568 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
-  await page.screenshot({ path: "test-results/mobile-observation-histoire/scene-double-crise-320.png", fullPage: true, animations: "disabled" });
+  for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 568 }]) {
+    await page.setViewportSize(viewport);
+    const monitor = card.locator(".story-scene-art");
+    const monitorHeight = await monitor.evaluate((el) => el.getBoundingClientRect().height);
+    for (const panel of await card.locator(".story-portrait-duo-panel").all()) {
+      const portraitHeight = await panel.locator("svg").evaluate((el) => el.getBoundingClientRect().height);
+      expect(portraitHeight).toBeGreaterThanOrEqual(monitorHeight * 0.9);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+    await page.screenshot({
+      path: `test-results/mobile-observation-histoire/scene-double-crise-${viewport.width}.png`,
+      fullPage: true, animations: "disabled",
+    });
+  }
 });
 
 test("Histoire : le titre et les choix se réorganisent en très petit viewport", async ({ page }) => {

@@ -1,3 +1,11 @@
+## D-177 — 27 octobre 2026 : portrait diptyque cadré au moniteur
+
+Après récupération de la vraie capture Playwright `scene-double-crise-390.png` du commit `cafe79a`, les deux protagonistes étaient bien présents, mais leurs bustes occupaient la partie basse du moniteur, laissant une grande zone vide dans la partie supérieure. L'image à 320 px était moins touchée : l'ancienne taille dépendait de la largeur de chaque demi-panneau et non de la hauteur de la scène.
+
+Décision : dimensionner chacun des deux bustes SVG à 96 % de la hauteur du moniteur, conserver les demi-panneaux comme cadrage et la lisibilité des deux visages, sans changer la scène, le texte ou les effets. Tester la hauteur réellement rendue (au moins 90 % de celle du moniteur) à 320 et 390 px et joindre les deux nouvelles captures automatiques dans l'artefact GitHub du shard Playwright.
+
+Ce changement vient d'un défaut visuel constaté sur capture et non d'un ajustement arbitraire. Aucun effet sur la sauvegarde V4, la production, le mode de collection ni `main`. À vérifier sur la nouvelle CI et sur appareil mobile réel.
+
 ## D-176 — 27 octobre 2026 : double crise en portrait double
 
 Défaut identifié à la lecture de `StoryPortrait` : la scène `double_crise` affichait bien « NOX + MONA » en légende mais passait `character="duo"` à un portrait qui tombait dans le cas générique « Toi ». Cela faisait disparaître les deux protagonistes précisément au moment de leur confrontation.

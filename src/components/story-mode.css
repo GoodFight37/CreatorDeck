@@ -996,11 +996,12 @@
   justify-content: center;
 }
 .story-portrait-duo-panel .story-portrait-illustration {
+  /* Portrait cadré sur le moniteur : ni petit buste perdu au fond ni débordement vertical. */
   min-width: 0 !important;
-  width: 100% !important;
-  max-width: 165px !important;
-  height: auto !important;
-  max-height: 145% !important;
+  width: auto !important;
+  max-width: none !important;
+  height: 96% !important;
+  max-height: none !important;
 }
 .story-portrait-duo-panel[data-side="nox"] .story-portrait-illustration { transform: translateX(4px); }
 .story-portrait-duo-panel[data-side="mona"] .story-portrait-illustration { transform: translateX(-4px); }

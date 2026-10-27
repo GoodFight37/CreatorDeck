@@ -134,3 +134,7 @@ Deux tests unitaires couvrent un dépassement simultané de 100 et de 0, la rest
 ## Double crise, deux portraits (27 octobre 2026)
 
 La confrontation `double_crise` ne doit plus afficher le personnage générique sous une légende « NOX + MONA ». Les bustes SVG fictifs Nox et Mona se partagent la scène dans une composition en diptyque, avec deux palettes et un séparateur discret. Le parcours E2E existant vérifie les deux personnages et prend des captures à 320 et 390 px. Aucun changement narratif ou économique ni modification du moteur/sauvegarde.
+
+## Cadrage du duo après revue de captures (27 octobre 2026)
+
+Les captures du commit `cafe79a` révélaient une grande zone vide au-dessus des visages dans le moniteur de la scène Nox + Mona, surtout à 390 px. Les SVG sont désormais dimensionnés par la hauteur du moniteur (96 %) plutôt que par la largeur des demi-panneaux. Un test mesure le cadrage réel à 320 et 390 px et conserve des captures après ce correctif. Aucun changement de narration, sauvegarde ou économie.
