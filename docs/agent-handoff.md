@@ -1,3 +1,16 @@
+# Checkpoint Codex — couleurs Manga Drop et premier tap, 27 octobre 2026
+
+Code publié : [`82695241`](https://github.com/GoodFight37/CreatorDeck/commit/82695241d2997757610ba32a8c8aaa99e13cba10),
+`main` distant vérifié. Vercel Production `READY`, même SHA,
+`dpl_8wZLh4Uya5Jxj74T4Bf5HcEAKYcK`. Calque arc-en-ciel supprimé sur Anime ;
+premier tap tactile après swipe validé une seule fois sur les quatre boosters.
+Trois régressions Playwright réussies sur le site publié ; compte/RPC simulés,
+aucun tirage réel. Compilation, DOM et contrôles ciblés réussis. Les résultats
+et la précondition corrigée de quatre E2E sont dans [le suivi des boosters](drop-boosters.md).
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40499006220)
+en cours au relevé. Aucune APK locale construite, aucun essai sur téléphone
+physique. Les checkpoints suivants conservent leur statut historique.
+
 # Checkpoint Codex — réserves des boosters et sachet recentré, 26 octobre 2026
 
 **Code publié et vérifié sur GitHub** :

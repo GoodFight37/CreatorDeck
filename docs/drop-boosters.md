@@ -18,8 +18,17 @@ Suite E2E complète exécutée : 225 réussis, 45 ignorés et quatre nouveaux ca
 arrêtés sur une précondition de compte (le tap ouvrait correctement « Mon
 compte »). Ces quatre cas nécessitent désormais le compte simulé, comme les
 autres scénarios RPC ; relance des six régressions avec cette configuration :
-6/6 réussis. Compilation `npm run build` réussie. Publication à confirmer ;
-aucune APK locale construite et aucun essai sur téléphone physique.
+6/6 réussis. Compilation `npm run build` réussie.
+
+Publié sur `main` : [`82695241`](https://github.com/GoodFight37/CreatorDeck/commit/82695241d2997757610ba32a8c8aaa99e13cba10),
+SHA distant vérifié. Vercel Production `READY`, même SHA,
+`dpl_8wZLh4Uya5Jxj74T4Bf5HcEAKYcK`. Sur le site publié,
+les trois régressions téléphone passent (couleurs et premier tap pendant/après
+transition), avec douze préparations tactiles et aucun RPC de tirage ; les
+réponses de compte sont simulées. Capture du rendu examinée.
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40499006220)
+encore en cours au relevé ; aucune APK locale construite et aucun essai sur
+téléphone physique.
 
 Les sections suivantes décrivent les versions historiques du sélecteur.
 

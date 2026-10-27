@@ -4,7 +4,8 @@
 ciblée de la recoloration de Manga Drop et du premier tap tactile perdu après
 un swipe. Critères : couleurs approuvées, une seule préparation par tap sur les
 quatre univers, aucune préparation lors d’un glissé ou d’une annulation.
-Preuves et publication : [suivi des boosters](drop-boosters.md).
+Publié sur Vercel Production, code `82695241` ; trois régressions téléphone
+réussies sur le site publié (compte simulé). Preuves : [suivi des boosters](drop-boosters.md).
 
 ## Anime — intégration locale du 27 octobre 2026
 
