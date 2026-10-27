@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
+import { StoryPortrait } from "./story-portrait";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
   STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative, storyChoiceSignals,
@@ -56,10 +57,14 @@ const StoryJournal = memo(function StoryJournal({ run, completed = false }: { ru
 export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
   const [drag, setDrag] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [exiting, setExiting] = useState<StoryDirection | null>(null);
   const [restartPending, setRestartPending] = useState(false);
   const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
+  const decisionPending = useRef(false);
+  const transitionTimer = useRef<number | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<HTMLElement | null>(null);
@@ -81,6 +86,10 @@ export function StoryMode() {
     if (!run) return;
     try { window.localStorage.setItem(STORY_SAVE_KEY, JSON.stringify(run)); } catch { /* session en mémoire */ }
   }, [run]);
+
+  useEffect(() => () => {
+    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+  }, []);
 
   // Après un choix, le nouveau dilemme doit être visible même sur un petit
   // écran où le joueur a fait défiler la page pour atteindre les boutons.
@@ -124,17 +133,28 @@ export function StoryMode() {
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
 
+  // Le lancer est une vraie phase visuelle : on verrouille l'entrée jusqu'à la carte suivante.
   function decide(direction: StoryDirection, focusScene = false) {
     const expectedStep = run?.step;
-    if (expectedStep === undefined) return;
+    if (expectedStep === undefined || run?.ending || decisionPending.current) return;
     const now = performance.now();
     if (now - lastDecisionAt.current < 450) return;
     lastDecisionAt.current = now;
+    decisionPending.current = true;
     focusNextScene.current = focusScene;
     setRestartPending(false);
-    setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
     gesture.current = null;
-    setDrag(0);
+    setDragging(false);
+    setExiting(direction);
+    setDrag(direction === "left" ? -135 : 135);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    transitionTimer.current = window.setTimeout(() => {
+      setRun((previous) => previous?.step === expectedStep ? chooseStory(SCRIPT, previous, direction) : previous);
+      setDrag(0);
+      setExiting(null);
+      decisionPending.current = false;
+      transitionTimer.current = null;
+    }, reducedMotion ? 0 : 185);
   }
 
   // Sur un appareil hybride, un tap peut laisser :hover actif même si
@@ -155,22 +175,24 @@ export function StoryMode() {
   }
 
   function pointerDown(event: PointerEvent<HTMLElement>) {
-    if (!scene || gesture.current) return;
+    if (!scene || gesture.current || decisionPending.current) return;
     gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+    setDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function pointerMove(event: PointerEvent<HTMLElement>) {
-    if (!gesture.current || gesture.current.pointerId !== event.pointerId) return;
+    if (!gesture.current || gesture.current.pointerId !== event.pointerId || decisionPending.current) return;
     const dx = event.clientX - gesture.current.x;
     const dy = event.clientY - gesture.current.y;
-    setDrag(Math.abs(dx) >= Math.abs(dy) * 1.2 ? Math.max(-100, Math.min(100, dx)) : 0);
+    setDrag(Math.abs(dx) >= Math.abs(dy) * 1.2 ? Math.max(-135, Math.min(135, dx)) : 0);
   }
 
   function pointerEnd(event: PointerEvent<HTMLElement>, cancelled = false) {
     const start = gesture.current;
     if (!start || start.pointerId !== event.pointerId) return;
     gesture.current = null;
+    setDragging(false);
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     if (!cancelled && Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 1.2) decide(dx < 0 ? "left" : "right");
@@ -186,6 +208,11 @@ export function StoryMode() {
   }
 
   function replay(focusScene = false) {
+    if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+    transitionTimer.current = null;
+    decisionPending.current = false;
+    setExiting(null);
+    setDragging(false);
     setRestartPending(false);
     focusNextScene.current = focusScene;
     lastDecisionAt.current = Number.NEGATIVE_INFINITY;
@@ -201,10 +228,12 @@ export function StoryMode() {
         <div className="story-brand">MODE HISTOIRE <span>· PILOTE</span></div>
       </header>
       <div className="story-shell">
-        <div className="story-intro">
-          <h1>{SCRIPT.title}</h1>
-          <p>{SCRIPT.subtitle}</p>
-        </div>
+        {(!run || (run.step === 0 && !run.ending)) && (
+          <div className="story-intro">
+            <h1>{SCRIPT.title}</h1>
+            <p>{SCRIPT.subtitle}</p>
+          </div>
+        )}
         {!run ? <p role="status" className="story-loading">Chargement de la partie…</p> : (
           <>
             <section className="story-stats" aria-label="Tes quatre jauges">
@@ -259,18 +288,22 @@ export function StoryMode() {
                 </div>
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
                 <section
-                  ref={sceneRef} className="story-card story-play-card" tabIndex={0}
+                  key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
-                  aria-label={`Scène : ${scene.title}. Utilise les flèches gauche et droite du clavier ou les boutons de choix.`}
+                  data-dragging={dragging}
+                  data-exiting={exiting ?? "none"}
+                  aria-label={`Scène : ${scene.title}. Glisse la carte à gauche ou à droite pour découvrir un choix, puis relâche pour décider. Les boutons et les flèches du clavier fonctionnent aussi.`}
                   onKeyDown={keyDown}
                   onPointerDown={pointerDown}
                   onPointerMove={pointerMove}
                   onPointerUp={(event) => pointerEnd(event)}
                   onPointerCancel={(event) => pointerEnd(event, true)}
-                  style={{ transform: `translateX(${drag * 0.32}px) rotate(${drag * 0.045}deg)` }}
+                  style={{ transform: exiting
+                    ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
+                    : `translate3d(${drag * 0.82}px, 0, 0) rotate(${drag * 0.065}deg)` }}
                 >
-                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}>← {scene.choices.left.label}</div>
-                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}>{scene.choices.right.label} →</div>
+                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}><span>← GAUCHE</span><strong>{scene.choices.left.label}</strong></div>
+                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}><span>DROITE →</span><strong>{scene.choices.right.label}</strong></div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
                     <span className="story-card-meta-mark">● EN COURS</span>
@@ -283,13 +316,13 @@ export function StoryMode() {
                   )}
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} aria-hidden="true">
                     <span className="story-scene-art-channel">{scene.channel}</span>
-                    <div className="story-face">{scene.emoji}</div>
+                    <StoryPortrait character={character} emoji={scene.emoji} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
                   <h2 aria-live="polite">{scene.title}</h2>
                   <p>{scene.text}</p>
-                  <div className="story-swipe-hint">← GLISSE POUR VOIR LES CHOIX →</div>
+                  <div className="story-swipe-hint"><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>
                 </section>
                 <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
