@@ -51,3 +51,24 @@ Pour un prochain chantier éditorial, prioriser les familles `debut_modeste`/`mi
 2. Tester sur un vrai Android et sur iOS le geste, les nouveaux indices, la confirmation de redémarrage et l'enregistrement local.
 3. Chronométrer des parties humaines et vérifier si la lecture atteint réellement la cible de 20 à 30 minutes.
 4. Faire une relecture humaine des 84 scènes et des textes personnalisés de fin.
+
+## Passe graphique mobile du 27 octobre 2026 : ADN du mode Histoire
+
+Objectif utilisateur : sortir du questionnaire à textes et donner au mode Histoire une identité visuelle et tactile cohérente avec CreatorDeck, exclusivement sur la PR #24.
+
+### Implémentation constatée dans le code
+- `story-glyphs.tsx` : quatre pictogrammes **SVG originaux** pour Public, Énergie, Argent et Confiance, inscrits dans le même médaillon de carte à coins coupés ; estampilles SVG pour les canaux LIVE, CHAT, DM, MAIL, CONTRAT, ARCHIVE et CLIP.
+- `story-mode.tsx` : pile de cartes derrière la carte principale ; en déplaçant la carte, son inclinaison reste visible et les jauges concernées réagissent. Vibrations très brèves uniquement sur les navigateurs qui exposent `navigator.vibrate`. Aucun son n'est joué.
+- `story-mode.css` : feuille de style de studio noir avec rose/vert acide CreatorDeck ; éclairage et matières selon le canal. Le LIVE a un indicateur lumineux ; les scènes décisives un bord distinct.
+- `story-portrait.tsx` : portraits vectoriels fictifs déjà intégrés et enrichis d'expressions `calm`, `on-air` et `tense`, plus un mouvement de présence désactivé par `prefers-reduced-motion`.
+- La réponse au choix est présentée sous forme de **jetons de jauges** plutôt que d'un rapport permanent ; les instructions répétées disparaissent après le premier chapitre.
+- Le geste reste utilisable si le système demande de réduire les animations. Les deux boutons de choix et le clavier restent des alternatives accessibles, sans modification du moteur ni de la sauvegarde V4.
+- Les changements concernent l'affichage et le feedback, pas les 84 scènes, 40 décisions, neuf fins, points, tirages, cartes, Supabase ni `main`.
+
+### Contrôles et limites
+
+Tests ajoutés : glyphes, profondeur du paquet et canal, glissement annulé/confirmé, rendu 320 px, réaction et expression du portrait, jetons d'effets, mouvement réduit avec doigt/souris et remontée du chapitre suivant dans la fenêtre. Ils doivent être vérifiés sur **le commit exact** ; un déploiement Vercel READY ne vaut pas une CI verte.
+
+Le skill installé **Vercel React Best Practices** a été consulté (réutilisation/memo des composants SVG et portrait, prudence sur les re-renders et l'accessibilité). Le skill **Ponytail** n'était pas disponible dans le catalogue connecté et n'a pas été exécuté ; ne pas présenter son processus comme une preuve acquise.
+
+La vérification sur **vrai Android et iOS** et l'appréciation qualitative des nouvelles matières, des illustrations et du temps de lecture restent à effectuer. Rien n'a été fusionné en production. Les illustrations vectorielles sont une direction temporaire : les portraits définitifs peuvent être refaits après revue sur téléphone.

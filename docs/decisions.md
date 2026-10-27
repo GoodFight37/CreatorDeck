@@ -1,3 +1,11 @@
+## D-173 — 27 octobre 2026 : ADN visuel et cartes tactiles mobiles du mode Histoire (PR #24)
+
+Retour utilisateur : l'expérience était un questionnaire tactile sans personnalité ; les symboles de jauges et les portraits paraissaient génériques. Priorité à un **langage visuel propre à CreatorDeck** plutôt qu'à davantage de scènes. Décision : réemployer les couleurs Pocket et la matière « studio / carton / diffusion » de `DESIGN.md`, mais dessiner quatre emblèmes de jauge en SVG (médaillon à coins coupés) et des estampilles de canal. Les types LIVE, CHAT, CLIP et CONTRAT ont des textures locales différentes. Les personnages fictifs possèdent plusieurs expressions selon l'ambiance ; le plateau et la pile de cartes réagissent au déplacement du doigt.
+
+Geste : conserver le seuil et le verrou anti-double validation, rendre l'empilement visible, proposer un retour léger facultatif par `navigator.vibrate`, et afficher les conséquences immédiates sous forme de jetons. Ne pas ajouter de son local ni de composant payant : l'audio sera mutualisé avec le jeu complet. Protéger `prefers-reduced-motion` **sans désactiver le mouvement fonctionnel de la carte**. Maintenir les deux boutons, le clavier, les libellés accessibles des jauges et les sauvegardes V4.
+
+Le skill Vercel React Best Practices est accessible et a servi pour la mémoïsation des composants visuels ; Ponytail est absent du catalogue disponible, donc non exécuté. Ne pas confondre déploiement de prévisualisation, vérification Playwright/CI et revue réelle sur téléphone. Pas de fusion, d'effet économique, de récompense, de SQL ou de modification de `main`.
+
 ## D-172 — 26 octobre 2026 : identité visuelle du mode Histoire (PR #24 uniquement)
 
 Le prototype narratif fonctionnait mais ressemblait encore à un tableau de bord. Conserver les tokens et polices du design CreatorDeck et redonner la priorité à **la carte événement** : décor de studio composé en CSS local, bord de carte lié au protagoniste (Toi, Flo, Nox, Mona), speaker toujours écrit explicitement, jauges compactes, lecture des conséquences et deux vrais boutons de choix. Pas de sprites téléchargés, de dépendance graphique, d'animations perpétuelles ou d'appel à un service externe ; les emojis existants restent provisoires et peuvent être remplacés ultérieurement par des portraits originaux testés.

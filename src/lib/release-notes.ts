@@ -17,6 +17,10 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Retrouve Flo, Nox et Mona : certains choix refont surface plusieurs chapitres plus tard.",
       "Ta progression se conserve localement sur cet appareil. Aucun point ni jeton de ta collection ne change.",
       "Chaque rencontre se présente comme une carte-événement, dans un décor de studio aux couleurs de son personnage.",
+      "Le paquet réagit au glissement : les réponses se dévoilent, la carte s'envole et la suivante prend sa place.",
+      "Les quatre jauges portent des emblèmes CreatorDeck dessinés pour ce mode et les conséquences s'affichent en jetons.",
+      "Des portraits de personnages changent d'expression et les écrans LIVE, CHAT, CLIP ou CONTRAT ont leurs propres ambiances visuelles.",
+      "Le jeu garde les boutons et les gestes accessibles, y compris avec les animations réduites.",
     ] }],
   },
   {
