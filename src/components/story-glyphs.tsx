@@ -60,4 +60,5 @@ export const StoryChannelGlyph = memo(function StoryChannelGlyph({ channel }: { 
         <><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M4 8L12 14L20 8"/></>
       )}
     </svg>
-  )});
+   );
+});
