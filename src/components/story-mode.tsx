@@ -4,6 +4,8 @@ import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEven
 import Link from "next/link";
 import { StoryPortrait } from "./story-portrait";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
+import { StorySetPieces } from "./story-setpieces";
+import { storyActEchoes } from "../lib/story-echoes";
 import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/story-goals";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
@@ -132,6 +134,7 @@ export function StoryMode() {
   const scene = run ? currentStoryScene(SCRIPT, run) : null;
   const resolvedEnding = run?.ending ? storyEndingNarrative(run) : null;
   const interlude = run ? storyActInterlude(run) : null;
+  const actEchoes = run && interlude ? storyActEchoes(run) : [];
   const character = scene?.id === "double_crise" ? "duo"
     : scene?.speaker.startsWith("FLO") ? "flo"
     : scene?.speaker.startsWith("NOX") ? "nox"
@@ -384,6 +387,15 @@ export function StoryMode() {
                     <span className="story-act-roman" aria-hidden="true">{storyActNumber(run.step)}</span>
                     <strong>{interlude.title}</strong>
                     <p>{interlude.text}</p>
+                    {actEchoes.length > 0 && (
+                      <div className="story-act-echoes" aria-label="Conséquences de tes décisions passées">
+                        {actEchoes.map((echo) => (
+                          <div key={echo.id} className="story-act-echo">
+                            <strong>{echo.title}</strong><p>{echo.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {previousMission && (
                       <div className="story-mission-outcome" data-status={previousMission.status}>
                         <span aria-hidden="true">{previousMission.status === "success" ? "✓" : "×"}</span>
@@ -410,6 +422,7 @@ export function StoryMode() {
                   data-pressure={criticalStat ?? "none"}
                   data-event={/^(grand_final|finale|double_crise|archive_mensonge|lina_enquete|contrat_fantome)/.test(scene.id)}
                   data-dragging={dragging}
+                  data-ready={drag <= -64 ? "left" : drag >= 64 ? "right" : "none"}
                   data-exiting={exiting ?? "none"}
                   aria-label={`Scène : ${scene.title}. Glisse la carte à gauche ou à droite pour découvrir un choix, puis relâche pour décider. Les boutons et les flèches du clavier fonctionnent aussi.`}
                   onKeyDown={keyDown}
@@ -438,6 +451,7 @@ export function StoryMode() {
                     <p>{scene.text}</p>
                   </div>
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
+                    <StorySetPieces channel={scene.channel} />
                     <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>

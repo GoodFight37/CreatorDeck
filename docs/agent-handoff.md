@@ -1,3 +1,10 @@
+# Checkpoint Histoire — scénographie et échos d'actes, 27 octobre 2026
+
+- Base de reprise vérifiée : `95aa70eae945eac7e9e9c73f1e45e6dd5f69e7c6` sur `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon ; CI générale et WebKit vertes sur cette base.
+- Livraison préparée : nouveau décor SVG pour chacun des canaux LIVE/CHAT/DM/MAIL/CONTRAT/ARCHIVE/CLIP, portraits SVG enrichis d'accessoires, contour de carte au seuil de confirmation, `will-change` seulement pendant geste/envol. Rappels narratifs dérivés de flags existants (2 maximum) aux transitions des actes II à V, sans modifier le scénario ni l'état/sauvegarde V4.
+- Tests ciblés : calcul pur d'échos, parcours Playwright pour les supports et échos après 12 décisions, parcours WebKit pour décors et validation par glissement, capture 390 px de l'acte II. Validation sur le nouveau SHA et inspection des captures encore à confirmer.
+- Aucun changement de `main`, production, Supabase, économie, autres modes, ni accès au PC Windows. Ponytail indisponible ; guide React Vercel lu. Limites natives : émulateur APK Android et vrai Safari iPhone indisponibles, chronométrage réel de partie et révision éditoriale humaine encore nécessaires. Ne pas fusionner.
+
 # Checkpoint Histoire — cadrage diptyque après revue pixels, 27 octobre 2026
 
 - Branche PR #24 brouillon ; base `cafe79a419a6d0da0877a39c1615031ab8d5d404`. WebKit du SHA `cafe79a` : 4/4 tests réussis. CI générale `40448132913` : build/qualité, SQL jetable, RPC simulés et Playwright 1/3 et 2/3 réussis au dernier relevé, Playwright 3/3 encore en cours.

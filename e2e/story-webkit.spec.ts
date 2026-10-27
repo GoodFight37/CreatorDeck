@@ -78,3 +78,21 @@ test("Histoire Safari : HUD lisible en 320 px et swipe annulé", async ({ page }
   await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "false");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
+
+test("Histoire Safari : décors des médias et confirmation tactile", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.locator(".story-set-pieces[data-channel='LIVE'] svg")).toBeVisible();
+  const card = page.locator(".story-play-card");
+  await card.scrollIntoViewIfNeeded();
+  const rect = await card.boundingBox();
+  expect(rect).not.toBeNull();
+  if (!rect) return;
+  const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 90, y, { steps: 6 });
+  await expect(card).toHaveAttribute("data-ready", "left");
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  await expect(page.locator(".story-set-pieces[data-channel='CHAT'] svg")).toBeVisible();
+});

@@ -138,3 +138,9 @@ La confrontation `double_crise` ne doit plus afficher le personnage générique 
 ## Cadrage du duo après revue de captures (27 octobre 2026)
 
 Les captures du commit `cafe79a` révélaient une grande zone vide au-dessus des visages dans le moniteur de la scène Nox + Mona, surtout à 390 px. Les SVG sont désormais dimensionnés par la hauteur du moniteur (96 %) plutôt que par la largeur des demi-panneaux. Un test mesure le cadrage réel à 320 et 390 px et conserve des captures après ce correctif. Aucun changement de narration, sauvegarde ou économie.
+
+## Décors et échos de choix (27 octobre 2026)
+
+Chaque carte possède désormais un décor SVG associé à son canal (LIVE, CHAT, DM, MAIL, CONTRAT, ARCHIVE, CLIP). Les personnages existants ont davantage de signes distinctifs sans chargement d'images réseau. Le seuil tactile du geste reçoit un retour visuel et les couches de composition sont allouées pendant le mouvement seulement.
+
+Aux quatre transitions d'acte, un maximum de deux rappels narratifs issus des flags de décisions passées peut apparaître. Ils ne modifient ni règles, ni scène jouée, ni sauvegarde V4. Les résultats de tests et les captures restent à vérifier sur le SHA publié et sur téléphone réel avant conclusion.

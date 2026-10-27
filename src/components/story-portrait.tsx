@@ -113,6 +113,46 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
             {isCommunity && <path d="M68 152 L120 185 L173 151" stroke="var(--portrait-line)" strokeWidth="4" opacity=".5" fill="none" />}
           </>
         )}
+        {/* Signatures lisibles à la taille d'une carte : accessoires personnels. */}
+        {isFlo && (
+          <g>
+            <circle cx="96" cy="116" r="1.7" fill="var(--portrait-hair)" opacity=".7"/>
+            <circle cx="102" cy="118" r="1.5" fill="var(--portrait-hair)" opacity=".7"/>
+            <circle cx="145" cy="116" r="1.7" fill="var(--portrait-hair)" opacity=".7"/>
+            <path d="M30 187l32-19 13 32M210 187l-32-19-13 32" stroke="var(--portrait-line)" fill="none" strokeWidth="2" opacity=".7"/>
+            <rect x="149" y="176" width="25" height="17" rx="3" fill="var(--portrait-line)" opacity=".9"/>
+            <path d="M155 182h13m-13 5h8" stroke="var(--portrait-coat)" strokeWidth="2"/>
+          </g>
+        )}
+        {isNox && (
+          <g fill="none" stroke="var(--portrait-line)" strokeLinecap="round">
+            <path d="M25 188Q47 152 73 156M215 188Q193 152 167 156" strokeWidth="3" opacity=".7"/>
+            <path d="M85 166l-5 25m80-25 5 25" strokeWidth="3"/>
+            <path d="M140 84l5-4" stroke="var(--portrait-skin)" strokeWidth="3"/>
+            <path d="M102 161l18 21 18-21" strokeWidth="2" opacity=".5"/>
+          </g>
+        )}
+        {isMona && (
+          <g>
+            <path d="M51 163l32-12 37 50-20 9zM189 163l-32-12-37 50 20 9z" fill="var(--portrait-coat)" stroke="var(--portrait-line)" strokeWidth="2"/>
+            <path d="M83 153l37 48 37-48" fill="none" stroke="var(--portrait-line)" strokeWidth="2.8" opacity=".8"/>
+            <path d="M117 187h6" stroke="var(--portrait-line)" strokeWidth="3" strokeLinecap="round"/>
+          </g>
+        )}
+        {isLina && (
+          <g fill="none" stroke="var(--portrait-line)">
+            <path d="M68 160l47 50m39-50-27 49" strokeWidth="4" opacity=".58"/>
+            <rect x="157" y="151" width="35" height="23" rx="4" fill="var(--portrait-coat)" strokeWidth="2"/>
+            <circle cx="175" cy="162" r="7" strokeWidth="2.5"/>
+            <path d="M163 151l4-5h13l5 5" strokeWidth="2"/>
+          </g>
+        )}
+        {isCommunity && (
+          <g fill="none" stroke="var(--portrait-line)" strokeWidth="2.4">
+            <path d="M26 191h40l9-11h20M214 191h-40l-9-11h-20"/>
+            <circle cx="47" cy="178" r="5"/><circle cx="193" cy="178" r="5"/>
+          </g>
+        )}
         <path d="M15 208 H225" stroke="var(--portrait-line)" strokeWidth="2" opacity=".45" />
       </svg>
       <span className="story-portrait-stamp">{emoji}</span>

@@ -1005,3 +1005,70 @@
 }
 .story-portrait-duo-panel[data-side="nox"] .story-portrait-illustration { transform: translateX(4px); }
 .story-portrait-duo-panel[data-side="mona"] .story-portrait-illustration { transform: translateX(-4px); }
+
+
+/* Les choix anciens reviennent en deux souvenirs concis aux transitions d'acte. */
+.story-act-echoes {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 8px;
+}
+.story-act-echo {
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 5px;
+  border-left: 2px solid var(--accent-light);
+  background: rgb(255 255 255 / .055);
+}
+.story-act-interlude .story-act-echo strong {
+  display: block;
+  color: var(--accent-tint);
+  font: 800 13px / 1.1 "Barlow Condensed", sans-serif;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+}
+.story-act-interlude .story-act-echo p { color: var(--text); font-size: 12px; line-height: 1.37; }
+@media (max-width: 370px) {
+  .story-act-echoes { gap: 5px; }
+  .story-act-echo { padding: 7px; }
+}
+
+/* Objet gravé suivant le canal de diffusion : derrière les protagonistes. */
+.story-set-pieces {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--story-channel-light);
+  opacity: .42;
+}
+.story-set-pieces svg { width: 100%; height: 100%; display: block; }
+.story-set-pieces[data-channel="CONTRAT"] { color: var(--gold); opacity: .37; }
+.story-set-pieces[data-channel="ARCHIVE"] { color: var(--muted); opacity: .47; }
+.story-set-pieces[data-channel="CHAT"],
+.story-set-pieces[data-channel="DM"] { color: var(--green); }
+.story-set-pieces[data-channel="LIVE"] { color: var(--accent-light); }
+.story-set-pieces[data-channel="CLIP"] { color: var(--accent-light); }
+.story-play-card .story-scene-art-channel { z-index: 3; }
+.story-play-card .story-scene-art-label { z-index: 3; }
+.story-scene-art .story-portrait { z-index: 2; }
+
+/* Le seuil du geste doit se voir et pas seulement vibrer. */
+.story-play-card[data-ready="left"] {
+  box-shadow: -9px 18px 38px rgb(0 0 0 / .40), 0 0 0 2px var(--action);
+}
+.story-play-card[data-ready="right"] {
+  box-shadow: 9px 18px 38px rgb(0 0 0 / .40), 0 0 0 2px var(--action);
+}
+/* N'allouer une couche accélérée que le temps du doigt ou de l'envol. */
+.story-play-card { will-change: auto; }
+.story-play-card[data-dragging="true"],
+.story-play-card[data-exiting="left"],
+.story-play-card[data-exiting="right"] { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .story-play-card[data-ready="left"], .story-play-card[data-ready="right"] {
+    box-shadow: 0 0 0 2px var(--action);
+  }
+}

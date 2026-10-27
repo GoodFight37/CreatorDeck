@@ -1,5 +1,7 @@
 # Roadmap CreatorDeck
 
+**Nouvelle passe Histoire expérimentale (PR #24) :** décors vectoriels de canal, accessoires de personnages et retours narratifs de flags aux transitions d’acte, sans changer les règles ni la sauvegarde V4. CI et captures à valider sur le nouveau SHA. La validation Android/iOS physique reste ouverte.
+
 **Mode Histoire — saison 1 « Zéro spectateur » (PR brouillon #24, 27 octobre 2026) :** jusqu’à 40 décisions, cinq actes, quatre jauges, 84 scènes alternatives et neuf fins accessibles, avec personnages récurrents et conséquences différées. Journal de bord, objectif de chaque acte, points neutres de prévisualisation des jauges affectées, dos de carte CreatorDeck, sauvegarde locale V4 contrôlée par rejeu, reprise et recommencement confirmé. Tests du moteur et Playwright automatisés sur la branche expérimentale `/histoire` ; contrôle Android et iOS physiques et temps de lecture réels à vérifier avant toute intégration. La production, les cartes, les jetons, Supabase et les quatre piliers ne sont pas modifiés. Détails : [mode-histoire.md](mode-histoire.md), [bible narrative](mode-histoire-saison-v3.md), [audit V4](mode-histoire-v4-audit.md).
 
 **Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans

@@ -1,3 +1,9 @@
+## D-178 — 27 octobre 2026 : scénographie des cartes et conséquences rappelées
+
+Sur la PR #24 seulement, chaque canal de diffusion reçoit des accessoires de plateau en SVG local : projecteurs de LIVE, bulles de CHAT/DM, feuilles et annotations de MAIL/CONTRAT, bandes d'ARCHIVE et cadre de CLIP. Les portraits SVG existants sont enrichis d'accessoires lisibles (Flo, Nox, Mona, Lina et la communauté). Le seuil de validation d'une carte donne un contour positif. La réserve GPU `will-change` devient limitée au geste et à la sortie plutôt que permanente.
+
+Le moteur, les scènes et les effets ne sont pas modifiés. `storyActEchoes` dérive deux rappels maximum de drapeaux d'histoire authentifiés, seulement aux transitions des actes II à V. Ils ne sont ni des bonus ni des anticipations : uniquement des souvenirs d'actions réellement prises, sans nouvel état dans les sauvegardes V4. Tests unitaires Chromium/WebKit et capture d'acte II ajoutés. Contrôler les preuves du SHA final, sur navigateur puis appareil natif. Aucun appel Work/Codex, média réseau, SQL, économie ou modification de `main`. Ponytail indisponible ; recommandations React Vercel appliquées.
+
 ## D-177 — 27 octobre 2026 : portrait diptyque cadré au moniteur
 
 Après récupération de la vraie capture Playwright `scene-double-crise-390.png` du commit `cafe79a`, les deux protagonistes étaient bien présents, mais leurs bustes occupaient la partie basse du moniteur, laissant une grande zone vide dans la partie supérieure. L'image à 320 px était moins touchée : l'ancienne taille dépendait de la largeur de chaque demi-panneau et non de la hauteur de la scène.

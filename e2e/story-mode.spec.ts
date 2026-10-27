@@ -877,3 +877,26 @@ test("Histoire : aperçu au glissement, annulation et validation au seuil", asyn
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
   await expect(page.locator(".story-progress")).toContainText("2 / 40");
 });
+
+test("Histoire : les médias ont un décor propre et les choix laissent une trace à l'acte II", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-set-pieces[data-channel='LIVE'] svg")).toBeVisible();
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-set-pieces[data-channel='CHAT'] svg")).toBeVisible();
+  let played = startStory(STORY_PROLOGUE);
+  for (let i = 0; i < 12; i++) played = chooseStory(STORY_PROLOGUE, played, "left");
+  expect(played.ending).toBeNull();
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: STORY_SAVE_KEY, value: JSON.stringify(played),
+  });
+  await page.reload();
+  const { storyActEchoes } = await import("../src/lib/story-echoes");
+  const echoes = storyActEchoes(played);
+  expect(echoes.length).toBeGreaterThan(0);
+  await expect(page.locator(".story-act-echo")).toHaveCount(echoes.length);
+  for (const echo of echoes) await expect(page.locator(".story-act-echo").filter({ hasText: echo.title })).toHaveCount(1);
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/echoes-acte-II-390.png", fullPage: true, animations: "disabled" });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});

@@ -27,6 +27,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Le glissement suit la cadence de l'écran : les mouvements rapides sollicitent moins le téléphone, et la carte se soulève légèrement sous le doigt.",
       "Sur les petits téléphones, les emblèmes restent faciles à toucher. Les informations ouvertes se referment à la décision suivante.",
       "Lors de la double crise, Nox et Mona apparaissent ensemble à l’écran dans une composition en deux portraits, recadrés pour remplir la scène même sur les téléphones hauts.",
+      "Chaque canal de diffusion possède son décor illustré de régie, et les protagonistes gagnent des accessoires distinctifs.",
+      "Entre les actes, certains anciens choix refont surface en deux souvenirs concrets, sans modifier les jauges ni les sauvegardes.",
     ] }],
   },
   {

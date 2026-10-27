@@ -41,3 +41,24 @@ describe("objectifs facultatifs et points de prévisualisation", () => {
     expect(JSON.stringify(played)).toBe(snapshot);
   });
 });
+
+describe("échos narratifs non persistés", () => {
+  it("rend au maximum deux conséquences passées et conserve la sauvegarde intacte", async () => {
+    const { storyActEchoes } = await import("./story-echoes");
+    const initial = startStory(STORY_PROLOGUE);
+    expect(storyActEchoes(initial)).toEqual([]);
+    expect(storyActEchoes({ ...initial, step: 11, flags: ["flo_protegee"] })).toEqual([]);
+    const run = { ...initial, step: 12, flags: ["flo_protegee", "flo_epuisee", "respect_nox"] };
+    const before = JSON.stringify(run);
+    expect(storyActEchoes(run).map(echo => echo.id)).toEqual(["flo_protegee", "respect_nox"]);
+    expect(JSON.stringify(run)).toBe(before);
+    expect(storyActEchoes({ ...run, ending: "survivant" })).toEqual([]);
+  });
+  it("montre une conséquence tardive à l'acte V sans spoiler une scène future", async () => {
+    const { storyActEchoes } = await import("./story-echoes");
+    const base = startStory(STORY_PROLOGUE);
+    expect(storyActEchoes({ ...base, step: 20, flags: ["source_protegee"] })).toEqual([]);
+    expect(storyActEchoes({ ...base, step: 36, flags: ["source_protegee", "vote_trahi"] }).map(e => e.id))
+      .toEqual(["source_protegee", "vote_trahi"]);
+  });
+});
