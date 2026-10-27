@@ -211,6 +211,54 @@ test("Histoire : galerie visuelle des quatre personnages du premier acte", async
   }
 });
 
+test("Histoire : galerie des scènes signature et des épilogues mobiles", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "téléphone", "Captures dédiées au projet mobile.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  const folder = "test-results/mobile-observation-histoire";
+  await mkdir(folder, { recursive: true });
+
+  const show = async (run: ReturnType<typeof startStory>, filename: string) => {
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+      key: STORY_SAVE_KEY, value: JSON.stringify(run),
+    });
+    await page.reload();
+    await expect(page.locator(run.ending ? ".story-ending-cover" : ".story-play-card")).toBeVisible();
+    await page.screenshot({ path: `${folder}/${filename}.png`, fullPage: true, animations: "disabled" });
+  };
+
+  let long = startStory(STORY_PROLOGUE);
+  const route = "LRRLLLRLLRRRLRRLRRLLLRRRRLRRLRRRLLLRRRRL";
+  for (const [index, letter] of [...route].entries()) {
+    long = chooseStory(STORY_PROLOGUE, long, letter === "L" ? "left" : "right");
+    if (index === 12) {
+      expect(long.ending).toBeNull();
+      await show(long, "personnage-plateforme");
+    }
+    if (index === 16) {
+      expect(long.ending).toBeNull();
+      await show(long, "personnage-sam");
+    }
+    if (index === 17) {
+      expect(long.ending).toBeNull();
+      await show(long, "personnage-lina");
+    }
+  }
+  expect(long.ending).not.toBeNull();
+  await show(long, "epilogue-saison-longue");
+
+  let conflict = startStory(STORY_PROLOGUE);
+  for (const letter of "LLRRLRRLL") conflict = chooseStory(STORY_PROLOGUE, conflict, letter === "L" ? "left" : "right");
+  expect(conflict.ending).toBeNull();
+  await show(conflict, "personnage-duo-tension");
+
+  let scandal = startStory(STORY_PROLOGUE);
+  for (const letter of "RLRRRLRRR") scandal = chooseStory(STORY_PROLOGUE, scandal, letter === "L" ? "left" : "right");
+  expect(scandal.ending).toBe("scandale");
+  await show(scandal, "epilogue-scandale");
+});
+
 test("Histoire : les choix persistent après un rechargement", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
