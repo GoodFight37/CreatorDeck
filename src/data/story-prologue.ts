@@ -28,7 +28,7 @@ export const STORY_PROLOGUE: StoryScript = {
     },
     {
       id: "clip_risque", step: 2, title: "Le clip de trop", speaker: "NOX · streamer rival", emoji: "🔥", channel: "CLIP",
-      text: "Nox rate une action spectaculaire en direct. Ton chat réclame un montage humiliant. Une minute de travail peut faire décoller ta chaîne.",
+      text: "Nox rate une action spectaculaire sur un jeu en coop. Ton chat réclame un montage humiliant pour ta chaîne vidéo. Une minute de montage peut faire décoller tes vues.",
       choices: {
         left: { label: "Faire un clip drôle, sans l'afficher", effects: { public: 8, confiance: 5, energie: -5 }, addFlags: ["respect_nox"] },
         right: { label: "Le ridiculiser en public", effects: { public: 18, confiance: -14, energie: -4 }, addFlags: ["humiliation_nox", "clip_viral"] },
@@ -68,7 +68,7 @@ export const STORY_PROLOGUE: StoryScript = {
     },
     {
       id: "nox_revanche", step: 5, title: "Nox a vu ton clip", speaker: "NOX · streamer rival", emoji: "⚡", channel: "CLIP",
-      text: "Nox poste ta vidéo humiliante à ses abonnés avec une seule légende : « Voilà comment il démarre sa carrière. » Le nombre de vues explose.",
+      text: "Nox répond à ton montage sur sa propre chaîne vidéo : « Voilà comment il démarre sa carrière. » La vidéo-réaction explose et entraîne ton audience dans la dispute.",
       choices: {
         left: { label: "Présenter des excuses", effects: { confiance: 11, public: -9, energie: -5 }, addFlags: ["excuses_nox"] },
         right: { label: "En faire un feuilleton", effects: { public: 17, confiance: -15, energie: -8 }, addFlags: ["guerre_nox"] },

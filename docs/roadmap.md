@@ -1,3 +1,5 @@
+**27 octobre 2026 · Monde des créateurs (PR #24 brouillon) :** cartes de jeu et panoramas SVG originaux inspirés de six Reigns, avec décors pour stream, YouTube/gaming, chat, messages, contrats et archives. Glyphes et portraits existants conservés ; 40 décisions, neuf fins, flags, effets, économie et sauvegarde V4 inchangés. Tests/captures 320 et 390 à contrôler au commit livré. Aucun merge, aucune modification de main ou Supabase.
+
 # Roadmap CreatorDeck
 
 **Nouvelle passe Histoire expérimentale (PR #24) :** décors vectoriels de canal, accessoires de personnages et retours narratifs de flags aux transitions d’acte, sans changer les règles ni la sauvegarde V4. CI et captures à valider sur le nouveau SHA. La validation Android/iOS physique reste ouverte.

@@ -118,7 +118,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "speaker": "PLATEFORME · notification",
     "emoji": "📈",
     "channel": "MAIL",
-    "text": "Ton meilleur clip a changé de catégorie sans prévenir. La plateforme promet de te pousser si tu publies quotidiennement pendant quinze jours.",
+    "text": "Ton montage gaming apparaît soudain dans les recommandations d’une plateforme vidéo. L’algorithme promet de pousser ta chaîne si tu publies quotidiennement pendant quinze jours.",
     "choices": {
       "left": {
         "label": "Tester le défi des quinze jours",
@@ -1326,7 +1326,7 @@ export const STORY_SEASON_SCENES: StoryScene[] = [
     "speaker": "MONA · agence",
     "emoji": "📺",
     "channel": "CLIP",
-    "text": "L'agence publie une vidéo approuvée par son comité. Tu y souris sans jamais parler. Des abonnés demandent si tu vas bien.",
+    "text": "L’agence publie une vidéo gaming montée sans ton accord. Tu y souris sans jamais parler. Sous la vidéo, tes abonnés demandent si tu vas bien.",
     "requiresFlags": [
       "filtre_agence"
     ],

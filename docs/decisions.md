@@ -2588,3 +2588,7 @@ La validation porte sur les images du mouvement dans une APK reconstruite,
 avec changements d'univers réellement vérifiés ; un état final correct ou un
 test de propriétés CSS ne suffit pas. Résultats et limites dans le premier
 checkpoint de la [passation](agent-handoff.md).
+
+
+## D-HISTOIRE-6 · Direction artistique des créateurs (27 octobre 2026)
+Inspirations de composition des six Reigns uniquement, sans emprunt de leurs images, personnages, logos, textes ni moteur. Les sept supports existants reçoivent leurs propres panoramas de studio, chaîne vidéo gaming, communautés, backstage, mails, partenariats et archives. Les scènes évoquent davantage YouTube et le jeu vidéo ; la structure de saison, les flags, règles, sauvegardes V4 et la production ne changent pas. Livraison exclusivement sur la PR #24 brouillon, non fusionnée. Vérification par captures et tests 320/390 attendue au SHA final.

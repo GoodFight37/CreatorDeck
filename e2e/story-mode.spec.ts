@@ -1031,3 +1031,45 @@ test("Histoire : les neuf fins ont chacune un visuel différent sur téléphone"
   }
   expect(uniqueArtwork.size).toBe(9);
 });
+
+
+test("Histoire : mondes visuels stream, chat et vidéo gaming", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const stage = page.locator(".story-scene-art");
+  await expect(card).toHaveAttribute("data-channel", "LIVE");
+  await expect(card.locator(".story-card-medium")).toHaveText("STREAM");
+  await expect(stage.locator(".story-scene-edition")).toHaveText("EN DIRECT");
+  const live = await stage.evaluate(el => getComputedStyle(el).backgroundImage);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(card).toHaveAttribute("data-channel", "CHAT");
+  await expect(card.locator(".story-card-medium")).toHaveText("COMMUNAUTÉ");
+  const chat = await stage.evaluate(el => getComputedStyle(el).backgroundImage);
+  expect(chat).not.toBe(live);
+  await page.waitForTimeout(470);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(card).toHaveAttribute("data-channel", "CLIP");
+  await expect(card.locator(".story-card-medium")).toHaveText("VIDÉO");
+  await expect(stage.locator(".story-scene-edition")).toHaveText("GAMING & CRÉATION");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/media-video-390.png", fullPage: true, animations: "disabled" });
+});
+
+test("Histoire : panorama et hiérarchie sur téléphone 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  await expect(card.locator(".story-world-shapes")).toHaveCount(1);
+  const order = await card.evaluate(el => [
+    Number(getComputedStyle(el.querySelector(".story-prompt")!).order),
+    Number(getComputedStyle(el.querySelector(".story-scene-art")!).order),
+  ]);
+  expect(order[0]).toBeLessThan(order[1]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/media-live-320.png", fullPage: true, animations: "disabled" });
+});
