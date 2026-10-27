@@ -2,6 +2,15 @@
 
 ## Manga Drop — 27 octobre 2026
 
+**Publié** : [`82710d56`](https://github.com/GoodFight37/CreatorDeck/commit/82710d56eed9142bdbd0f405e4322085d6d1d946),
+`main` distant vérifié. [Vercel Production](https://creator-deckk-g8x5p16co-hafsi37-2386.vercel.app)
+**READY**, même SHA, deployment `dpl_FSeGt6LKxSJkpa6D9sfFrVmdcuNE`.
+Le média servi par `creator-deckk.vercel.app/packs/anime-opening.webp` est
+identique au fichier validé : HTTP 200, 580 108 octets, SHA-256
+`d6c3fa0863b4da13f6aa329bb15d311380556eb67555c7291dd576dd319692cf`.
+[CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40490778967)
+en cours au relevé ; aucune APK officielle annoncée.
+
 Intégration directe demandée par Malik du visuel approuvé : source raster
 `assets/packs/anime-opening.png`, rendu `public/packs/anime-opening.webp`.
 Le script `build-pack-webp.mjs` utilise ce PNG pour Anime et les SVG existants
