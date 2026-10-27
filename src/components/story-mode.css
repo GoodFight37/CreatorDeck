@@ -747,3 +747,10 @@
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* TALL PHONE COMPOSITION : moins de carton vide, plus de visage.
+   Les petits écrans gardent leur propre variante compacte. */
+@media (min-height: 701px) {
+  .story-play-card { min-height: clamp(350px, calc(100svh - 360px), 480px); }
+  .story-play-card .story-scene-art { height: clamp(190px, 33svh, 265px); }
+}

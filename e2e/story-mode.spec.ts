@@ -46,6 +46,22 @@ test("Histoire : révélation progressive des options pendant un swipe partiel",
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
 });
 
+test("Histoire : le portrait occupe l'espace disponible sur un téléphone haut", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const art = card.locator(".story-scene-art");
+  const full = await card.boundingBox();
+  const illustration = await art.boundingBox();
+  expect(full).not.toBeNull();
+  expect(illustration).not.toBeNull();
+  if (full && illustration) {
+    expect(illustration.height).toBeGreaterThanOrEqual(250);
+    expect(full.height).toBeLessThan(530);
+    expect(illustration.height / full.height).toBeGreaterThan(0.48);
+  }
+});
+
 test("Histoire : paquet souple et reflet proportionnel au mouvement", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
