@@ -11,6 +11,16 @@ test("Histoire : le portrait change d'expression avec le canal", async ({ page }
   await expect(page.locator(".story-play-card")).toHaveAttribute("data-mood", "calm");
 });
 
+test("Histoire : retours sous forme de jetons sans consigne répétée", async ({ page }) => {
+  await page.goto("/histoire");
+  await expect(page.locator(".story-footnote")).toBeVisible();
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-impact-value")).toHaveCount(3);
+  await expect(page.locator(".story-impact-value .story-gauge-glyph")).toHaveCount(3);
+  await expect(page.locator(".story-impact")).toContainText("Argent +9");
+  await expect(page.locator(".story-footnote")).toHaveCount(0);
+});
+
 test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paquet", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");

@@ -278,7 +278,10 @@ export function StoryMode() {
                       const delta = lastEffects[stat] ?? 0;
                       return (
                         <span key={stat} className="story-impact-value" data-trend={delta > 0 ? "up" : "down"}>
-                          {delta > 0 ? "↑" : "↓"} {STAT_LABELS[stat].name} {delta > 0 ? "+" : ""}{delta}
+                          <StoryGaugeIcon stat={stat} />
+                          <span aria-hidden="true">{delta > 0 ? "↑" : "↓"}</span>
+                          <span className="story-impact-name">{STAT_LABELS[stat].name}</span>
+                          <strong>{delta > 0 ? "+" : ""}{delta}</strong>
                         </span>
                       );
                     })}
@@ -313,6 +316,7 @@ export function StoryMode() {
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
                   data-mood={portraitMood}
+                  data-event={/^(grand_final|finale|double_crise|archive_mensonge|lina_enquete|contrat_fantome)/.test(scene.id)}
                   data-dragging={dragging}
                   data-exiting={exiting ?? "none"}
                   aria-label={`Scène : ${scene.title}. Glisse la carte à gauche ou à droite pour découvrir un choix, puis relâche pour décider. Les boutons et les flèches du clavier fonctionnent aussi.`}
@@ -390,7 +394,7 @@ export function StoryMode() {
                     )}
                   </div>
                 )}
-                <p className="story-footnote">Les flèches indiquent jusqu’à deux effets immédiats. D’autres conséquences surgiront plus tard. Sauvegarde automatique sur cet appareil.</p>
+                {run.step === 0 && <p className="story-footnote">Fais glisser la carte pour choisir. Ta progression est sauvegardée automatiquement.</p>}
               </>
             ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={() => replay()}>recommencer</button>.</p>}
           </>
