@@ -256,7 +256,7 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   await page.mouse.up();
   await expect(page.locator(".story-progress")).toContainText("2 / 40");
   await expect(page.locator(".story-play-card")).toHaveAttribute("data-character", "flo");
-  await expect(page.locator(".story-portrait-illustration")).toBeVisible();
+  await expect(page.locator(".story-play-card .story-scene-art .story-portrait-illustration").first()).toBeVisible();
   await page.screenshot({ path: `${screenshotsDir}/scene-02-${suffix}.png`, fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
@@ -276,7 +276,7 @@ test("Histoire : galerie visuelle des quatre personnages du premier acte", async
     await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: STORY_SAVE_KEY, value: JSON.stringify(run) });
     await page.reload();
     await expect(page.locator(".story-play-card")).toHaveAttribute("data-character", characters[index]);
-    await expect(page.locator(".story-portrait-illustration")).toBeVisible();
+    await expect(page.locator(".story-play-card .story-scene-art .story-portrait-illustration").first()).toBeVisible();
     await page.screenshot({ path: `${screens}/personnage-${characters[index]}.png`, fullPage: true, animations: "disabled" });
   }
 });
@@ -945,6 +945,7 @@ test("Histoire : boutons lisibles sur les deux formats de téléphone", async ({
 test("Histoire : les relations montrent les vrais portraits et ne prédisent pas les rencontres", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   const select = page.locator(".story-actions .story-choice").first();
   await select.click();
   await expect(page.locator(".story-progress")).toContainText("2 / 40");

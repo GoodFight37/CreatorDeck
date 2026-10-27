@@ -1,3 +1,10 @@
+# Checkpoint Histoire — sélecteur de galerie après journal illustré, 27 octobre 2026
+
+- Base de reprise `e51a82d98fadc53f3f1dc689097761e11697b07b`, PR brouillon #24. CI générale 40460274862 : 5/6 jobs OK, seul le shard 3/3 a échoué sur une assertion Playwright `locator(".story-portrait-illustration")` devenue ambiguë lorsque le journal contient aussi un portrait. WebKit 40460270324 : SUCCESS.
+- Correction : assertions de galerie limitées à `.story-play-card .story-scene-art .story-portrait-illustration`, qui désigne la carte réellement jouée. Masquage du portail de développement Next.js seulement dans la capture du journal pour ne pas photographier son indicateur N ; aucun CSS produit modifié.
+- Vraie capture du commit e51a82d inspectée : portraits Flo et Nox beaucoup plus grands dans le journal 320 px, aucun débordement observé. Le texte/les règles/les sauvegardes V4 ne changent pas. Nouveau SHA et CI de ce correctif à vérifier avant conclusion.
+- Ne pas merger ni toucher `main`, production, Supabase ou l'économie. Validation Android/iOS physique toujours absente.
+
 # Checkpoint Histoire — gros plan miniature carnet (27 octobre 2026)
 
 - Base : commit c29627068031375463edf0b94e8e4dc9416c0d87, PR #24 brouillon. Playwright 2/3 réussi, dont les neuf fins et les captures. Unitaires/TypeScript/build/SQL/RPC réussis ; Playwright 1/3 et 3/3 à confirmer.
