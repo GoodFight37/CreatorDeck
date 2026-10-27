@@ -1332,3 +1332,10 @@ isolé Edge réussi : contour système de 2 px, décalage de 2 px ; écrans cibl
 l’application n’a pas démarré : le `next dev` préexistant sur le port 3000 ne
 répond pas. Correctif publié dans `f5f27f90` ; GitHub confirme le contrôle
 Vercel `success` sur ce SHA. Résultat CI Actions non vérifiable depuis ce chat.
+
+## H-UI-018 — Échos anciens et statut Nox après apaisement (27 octobre 2026)
+
+- Reproduction sur la PR #24 : une transition d'acte avec flags de plusieurs époques affichait en priorité les premiers souvenirs du prologue au lieu des décisions récentes. Le journal affichait « Rivalité ouverte » si `guerre_nox` persistait après le flag `paix_nox`.
+- Cause : ordre fixe des règles d'échos ; condition du statut Nox incomplète.
+- Correction préparée sur la branche expérimentale : tri statique décroissant des étapes d'échos, sans tri pendant le rendu, et priorité au flag d'apaisement. Tests unitaires ciblés ajoutés.
+- Statut : correction à vérifier sur CI du SHA publié ; non fusionnée sur `main`. Aucun changement du moteur, des sauvegardes V4 ou des autres modes.

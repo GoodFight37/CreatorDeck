@@ -1,3 +1,16 @@
+# Checkpoint Histoire — lisibilité des choix (27 octobre 2026)
+
+- Revue des véritables captures Chromium du SHA `7f747c0` : les textes de décisions étaient encore à 11 px sur mobile. Augmentation des libellés (12–13 px), des cibles (62–65 px) et du padding, tout en conservant une grille à deux choix.
+- Test Playwright dédié aux écrans 320×568 et 390×844. Le correctif est inclus avec le classement des échos récents et le statut de Nox apaisé ; conserver les règles/sauvegardes V4 et ne pas toucher `main`, production, Supabase ni économie.
+- CI générale, WebKit et nouvelles captures à vérifier sur le commit final avant conclusion. Pas de validation native Android ou iPhone réel.
+
+# Checkpoint Histoire — audit mémoire des actes et paix Nox (27 octobre 2026)
+
+- Sur la PR brouillon #24, base `7f747c02b5a6f86f1ffbfcd2240fe40f5871ef86`. Décors et relationnel inclus dans deux précédents commits `09abfbb` et `7f747c0`; WebKit sur `7f747c0` vert 5/5, CI générale à vérifier.
+- Défauts découverts par revue : rappels anciennement présentés avant les décisions plus récentes ; Nox classé « rivalité ouverte » après `paix_nox`. Correction des priorités des échos triée une fois, statut Nox corrigé. Tests unitaires ajoutés. Aucune nouvelle donnée persistée.
+- Tests finaux à vérifier au SHA publié : unitaires, écrans, lint, typecheck, build, Playwright Chromium et WebKit. Relever les captures de l'acte II et leur lisibilité.
+- Sans accès à l'APK Android ni à l'iPhone réel, les performances natifs, l'haptique et le temps de lecture humain restent à examiner. Aucun changement sur `main`, Supabase, économie, production ou autres modes. Ne pas fusionner.
+
 # Checkpoint Histoire — entourage dans le journal, 27 octobre 2026
 
 - Ce lot complète le commit de scénographie `09abfbb32c1908105725c009bc176d021bfc1b05`, sans changer de branche (PR brouillon #24).

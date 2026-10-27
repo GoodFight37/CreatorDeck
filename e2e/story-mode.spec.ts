@@ -922,3 +922,22 @@ test("Histoire : l'entourage du journal suit la partie réellement restaurée", 
   await expect(page.locator(".story-recap-live li")).toHaveCount(12);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
+
+test("Histoire : boutons lisibles sur les deux formats de téléphone", async ({ page }) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/histoire");
+    await expect(page.locator(".story-actions .story-choice")).toHaveCount(2);
+    const controls = await page.locator(".story-actions .story-choice").evaluateAll(buttons =>
+      buttons.map(button => {
+        const style = getComputedStyle(button.querySelector("strong")!);
+        const rect = button.getBoundingClientRect();
+        return { font: Number.parseFloat(style.fontSize), height: rect.height, width: rect.width };
+      }));
+    for (const control of controls) {
+      expect(control.font).toBeGreaterThanOrEqual(12);
+      expect(control.height).toBeGreaterThanOrEqual(60);
+      expect(control.width).toBeGreaterThanOrEqual(44);
+    }
+  }
+});

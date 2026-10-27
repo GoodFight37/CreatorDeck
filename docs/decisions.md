@@ -1,3 +1,13 @@
+## D-181 — 27 octobre 2026 : confort de lecture des deux décisions
+
+Les captures Playwright 320/390 du commit `7f747c0` montrent des choix correctement placés mais une typographie trop petite, héritée des règles compactes (11 px). Les deux boutons sont agrandis à au moins 62 px de haut ; direction à 11 px et libellé principal à au moins 12 px sur 320, 13 px sur 390. Les détails du portrait et le geste restent inchangés. Test d'écran ciblé sur les deux formats ; contrôler le nouveau SHA avant validation. Aucun changement global à la navigation ou aux autres modes.
+
+## D-180 — 27 octobre 2026 : priorité à la mémoire récente et paix reconnue
+
+Après ajout des échos et relations sur la PR #24, audit logique : la liste fixe des échos favorisait toujours deux souvenirs du premier acte, même si des événements plus récents existaient. Décision : prioriser les règles par acte le plus récent (ordre trié une seule fois au chargement), puis conserver le maximum de deux histoires distinctes. Le journal de Nox reconnaît aussi le drapeau `paix_nox` qui apaise une guerre antérieure, sans supprimer l'historique de rivalité. Tests explicites du classement et de la paix.
+
+Correctif narratif d'interface, sans nouveau drapeau, changement du moteur, édition des scènes, récompense ou changement de sauvegarde V4. Ne pas fusionner ; la CI générale et WebKit du nouveau SHA sont requises avant validation.
+
 ## D-179 — 27 octobre 2026 : carte relationnelle dans le journal de bord
 
 La continuité du mode Histoire ne doit pas seulement apparaître aux fins et changements d'acte : le joueur peut relire les conséquences au fil des chapitres. `storyBonds` établit un état de relation descriptif depuis des drapeaux déjà écrits par les scènes (Flo, Nox, Mona, Lina) ; aucun personnage non rencontré n'est affiché et aucun nouveau score n'est inventé. Les situations contradictoires privilégient les événements récents de réparation quand ils sont documentés (notamment réconciliation après rupture).

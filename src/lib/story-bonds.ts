@@ -19,10 +19,10 @@ export function storyBonds(run: StoryRun): StoryBond[] {
       status: repaired ? "Dialogue retrouvé" : broken ? "Lien rompu" : f.has("vote_trahi") ? "Confiance fragilisée" : f.has("flo_epuisee") ? "À bout de souffle" : "Limites respectées",
       detail: repaired ? "Des excuses ont rouvert la discussion, sans effacer le passé." : broken ? "La rupture reste une décision qui pèse." : f.has("vote_trahi") ? "Le vote du collectif a été contourné." : f.has("flo_epuisee") ? "La charge de modération reste lourde." : "Son travail et son temps comptent dans tes choix." });
   }
-  if (["respect_nox","guerre_nox","duo_nox","pacte_brise","paix_durable_nox","dette_nox_refusee","dette_nox_reglee"].some(k => f.has(k))) {
+  if (["respect_nox","guerre_nox","duo_nox","pacte_brise","paix_durable_nox","paix_nox","dette_nox_refusee","dette_nox_reglee"].some(k => f.has(k))) {
     bonds.push({ id:"nox", name:"Nox", initials:"NX",
-      status: f.has("paix_durable_nox") ? "Paix durable" : f.has("pacte_brise") || f.has("dette_nox_refusee") ? "Promesse abîmée" : f.has("guerre_nox") ? "Rivalité ouverte" : f.has("duo_nox") ? "Projet commun" : "Respect mutuel",
-      detail: f.has("paix_durable_nox") ? "La rivalité n'est plus le centre de votre histoire." : f.has("pacte_brise") || f.has("dette_nox_refusee") ? "Nox a de bonnes raisons de garder ses distances." : f.has("guerre_nox") ? "Vos publics voient vos désaccords." : f.has("duo_nox") ? "Un projet oblige à partager le mérite." : "Une bonne relation peut exister entre concurrents." });
+      status: f.has("paix_durable_nox") ? "Paix durable" : f.has("paix_nox") ? "Conflit apaisé" : f.has("pacte_brise") || f.has("dette_nox_refusee") ? "Promesse abîmée" : f.has("guerre_nox") ? "Rivalité ouverte" : f.has("duo_nox") ? "Projet commun" : "Respect mutuel",
+      detail: f.has("paix_durable_nox") ? "La rivalité n'est plus le centre de votre histoire." : f.has("paix_nox") ? "Vous avez choisi de ne plus nourrir l'escalade." : f.has("pacte_brise") || f.has("dette_nox_refusee") ? "Nox a de bonnes raisons de garder ses distances." : f.has("guerre_nox") ? "Vos publics voient vos désaccords." : f.has("duo_nox") ? "Un projet oblige à partager le mérite." : "Une bonne relation peut exister entre concurrents." });
   }
   if (["agence","sponsor_cache","sponsor_clair","refus_sponsor","recours_contrat","filtre_agence"].some(k => f.has(k))) {
     bonds.push({ id:"mona", name:"Mona", initials:"MO",

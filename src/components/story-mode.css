@@ -1116,3 +1116,13 @@
 @media (max-width: 360px) {
   .story-bonds-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Lisibilité des décisions après revue des captures 320/390. */
+.story-actions .story-choice { min-height: 65px; padding: 9px 11px; }
+.story-actions .story-choice-direction { font-size: 11px; line-height: 1.2; letter-spacing: .10em; }
+.story-actions .story-choice strong { font-size: 13px; line-height: 1.27; padding-right: 12px; }
+@media (max-width: 370px) {
+  .story-actions .story-choice { min-height: 62px; padding: 8px 8px; }
+  .story-actions .story-choice strong { font-size: 12px; }
+}

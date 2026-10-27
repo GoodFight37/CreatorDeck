@@ -58,6 +58,8 @@ describe("échos narratifs non persistés", () => {
     const { storyActEchoes } = await import("./story-echoes");
     const base = startStory(STORY_PROLOGUE);
     expect(storyActEchoes({ ...base, step: 20, flags: ["source_protegee"] })).toEqual([]);
+    expect(storyActEchoes({ ...base, step: 20, flags: ["refus_sponsor", "recours_contrat", "flo_protegee"] }).map(e => e.id))
+      .toEqual(["recours_contrat", "flo_protegee"]);
     expect(storyActEchoes({ ...base, step: 36, flags: ["source_protegee", "vote_trahi"] }).map(e => e.id))
       .toEqual(["source_protegee", "vote_trahi"]);
   });
@@ -72,6 +74,7 @@ describe("liens du journal narratif", () => {
     expect(storyBonds(run).map(bond => bond.name)).toEqual(["Flo", "Nox", "Mona", "Lina"]);
     expect(storyBonds({ ...run, flags: [...run.flags, "rupture_flo"] })[0].status).toBe("Lien rompu");
     expect(storyBonds({ ...run, flags: [...run.flags, "rupture_flo", "reconciliation_flo"] })[0].status).toBe("Dialogue retrouvé");
+    expect(storyBonds({ ...run, flags: ["guerre_nox", "paix_nox"] })[0].status).toBe("Conflit apaisé");
     expect(Object.keys(run)).not.toContain("bonds");
   });
 });

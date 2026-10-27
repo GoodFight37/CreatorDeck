@@ -20,7 +20,7 @@ const RULES = [
 export function storyActEchoes(run: StoryRun): StoryEcho[] {
   if (run.ending || ![12,20,28,36].includes(run.step)) return [];
   const flags=new Set(run.flags), seen=new Set<string>(), echoes: StoryEcho[]=[];
-  for (const r of RULES) {
+  for (const r of RECENT_FIRST) {
     if (r.since > run.step || !flags.has(r.flag) || seen.has(r.family)) continue;
     echoes.push({ id:r.flag,family:r.family,title:r.title,text:r.text });
     seen.add(r.family);

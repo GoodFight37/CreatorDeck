@@ -30,6 +30,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Chaque canal de diffusion possède son décor illustré de régie, et les protagonistes gagnent des accessoires distinctifs.",
       "Entre les actes, certains anciens choix refont surface en deux souvenirs concrets, sans modifier les jauges ni les sauvegardes.",
       "Dans le journal de bord, retrouve l’évolution de tes liens avec Flo, Nox, Mona et Lina après leurs rencontres.",
+      "Les souvenirs privilégient les choix récents et le journal reconnaît quand une rivalité a été apaisée.",
+      "Les boutons de décision ont des textes plus lisibles et de plus grandes surfaces tactiles sur Android et iPhone.",
     ] }],
   },
   {
