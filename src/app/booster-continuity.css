@@ -80,6 +80,21 @@
   --back-glow: rgba(129, 255, 221, .3);
   --pack-accent: #81ffdd;
 }
+.booster-presentation[data-universe="anime"] {
+  --scene-background:
+    radial-gradient(ellipse 50% 46% at 50% 54%, rgba(138, 92, 255, .28), transparent 90%),
+    radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 59, 136, .14), transparent 90%),
+    #080718;
+  --back-surface:
+    radial-gradient(circle at 51% 40%, rgba(255, 107, 184, .32), transparent 64%),
+    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .08) 15px 16px),
+    linear-gradient(146deg, #5e35b1, #160a36 52%, #8e24aa);
+  --back-edge: rgba(220, 205, 255, .88);
+  --back-inset: rgba(220, 205, 255, .18);
+  --back-ink: #fcf4ff;
+  --back-glow: rgba(255, 96, 178, .35);
+  --pack-accent: #b49bff;
+}
 .booster-presentation[data-universe="vault"] {
   --scene-background:
     radial-gradient(ellipse 50% 46% at 50% 54%, rgba(46, 230, 255, .26), transparent 90%),

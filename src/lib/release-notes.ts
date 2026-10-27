@@ -14,6 +14,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     summary: "Le Drop accueille un booster Anime et un classeur de vingt cartes conservées sur cet appareil.",
     sections: [{ title: "Anime", items: [
       "Un sachet Anime est accessible dans le carrousel du Drop et utilise l’ouverture à déchirer.",
+      "Le packaging original violet et rose reprend le gabarit du sachet et ses repères de déchirure.",
       "Les illustrations se découvrent en grand format, puis dans un récapitulatif défilable et un classeur dédié.",
       "Cette première version conserve les cartes sur cet appareil ; la collection Anime n’est pas encore synchronisée avec le compte.",
     ] }],

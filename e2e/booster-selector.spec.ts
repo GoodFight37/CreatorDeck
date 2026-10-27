@@ -70,7 +70,12 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   await page.getByRole("button", { name: "Ouvrir le booster Anime", exact: true }).click();
   const scene = page.locator('.opening-continuum[data-universe="anime"]');
   await expect(scene).toBeVisible();
+  await expect.poll(() => scene.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return [style.getPropertyValue("--back-ink").trim(), style.getPropertyValue("--pack-accent").trim()];
+  })).toEqual(["#fcf4ff", "#b49bff"]);
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /anime-opening/);
+  await expect.poll(() => scene.locator(".foil-printed-art").first().evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([1050, 1540]);
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   await expect(page.getByRole("region", { name: "Résultat du booster Anime" })).toBeVisible({ timeout: 10_000 });
 

@@ -2,7 +2,7 @@
 
 ## Anime — intégration locale du 27 octobre 2026
 
-Quatrième booster disponible dans le Drop local, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Sélection intégrée de 20 cartes ; le catalogue importateur de 1 020 n’est pas intégralement raccordé. Parcours navigateur et E2E mobile validés, non publié. Règles/réserve serveur et droits des illustrations requis avant diffusion ; aucune validation APK demandée. Détails : [passation Kyara](passation-kyara.md).
+Quatrième booster disponible dans le Drop local, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Le packaging abstrait refusé a été remplacé par un sachet violet/rose original au gabarit de déchirure CreatorDeck (D-172). Sélection intégrée de 20 cartes ; le catalogue importateur de 1 020 n’est pas intégralement raccordé. Règles/réserve serveur et droits des illustrations des cartes restent requis avant diffusion ; aucune validation APK demandée. Détails : [passation Kyara](passation-kyara.md).
 
 **Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans
 [`ea80907a`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),

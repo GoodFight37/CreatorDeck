@@ -1,3 +1,15 @@
+## D-172 — 27 octobre 2026 : packaging Anime au gabarit des sachets CreatorDeck
+
+Le packaging Anime abstrait de 690 × 1 000 est refusé par Malik. Le nouveau
+visuel reste original, sans personnage ni logo sous licence, et reprend le
+gabarit 1 050 × 1 540, la silhouette et les soudures du sachet. La soudure
+supérieure porte le repère `TEAR ALONG THE SEAL` à 15,45 % de hauteur, la
+soudure basse indique cinq cartes, et la scène de révélation utilise une
+palette violette et rose cohérente avec le dos des cartes. Le SVG demeure la
+source et le WebP est rendu par le script existant. Vérification ciblée : E2E
+Anime bureau/téléphone avec dimensions du média et variables CSS. Aucune règle
+de tirage, donnée de collection ou APK ne change.
+
 ## D-171 — 26 octobre 2026 : une session pour les trois réserves, sachet centré
 
 Malik signale une ouverture intermittente de MEMES/IMGFLIP, avec lecture de

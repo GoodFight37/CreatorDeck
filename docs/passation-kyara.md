@@ -6,9 +6,20 @@
 
 **Code publié et SHA distant vérifié le 27 octobre 2026 :** [`771bb564`](https://github.com/GoodFight37/CreatorDeck/commit/771bb5640d5c6b86c3bd342102d543c386dc1b74). Compilation `npm run build` réussie (code de sortie 0), typecheck/lint ciblé verts, E2E mobile Anime 1/1 et non-régression carrousel 3/3 verts. [CI Vérification](https://github.com/GoodFight37/CreatorDeck/actions/runs/40472592314) en cours lors de ce checkpoint ; [Vercel](https://vercel.com/hafsi37-2386/creator-deckk/FQya83UwoQ2asCvtPj7cEvA8vKRn) signalé `pending` par GitHub. Le connecteur Vercel refuse l’accès à l’équipe (403) et la CLI Vercel n’est pas installée : aucun statut Production READY du même SHA n’est affirmé. Aucune APK locale réalisée. Les anciens fichiers de l’aperçu `/kyara-preview` et les modifications Android/captures préexistantes restent locaux hors de ce commit ; le manifeste `src/data/kyara-preview.json` est bien commité car le catalogue Anime l’utilise.
 
-Malik autorise explicitement le commit et le push sur `main` pour permettre la reprise par une autre IA. Le visuel actuel du booster est **refusé**, il doit être remplacé ; l’intégration reste limitée à vingt cartes par erreur de reprise de l’échantillon. Le catalogue importateur indiqué par cette passation contient 1 020 cartes (Malik évoque 1 200 : vérifier la source avant raccordement). La réserve et les possessions serveur Anime restent à réaliser. Ne pas annoncer l’intégration comme un univers serveur achevé.
+Malik autorise explicitement le commit et le push sur `main` pour permettre la reprise par une autre IA. Le visuel de la première intégration était **refusé** ; son remplacement est décrit ci-dessous. L’intégration reste limitée à vingt cartes par erreur de reprise de l’échantillon. Le catalogue importateur indiqué par cette passation contient 1 020 cartes (Malik évoque 1 200 : vérifier la source avant raccordement). La réserve et les possessions serveur Anime restent à réaliser. Ne pas annoncer l’intégration comme un univers serveur achevé.
 
 Malik précise que la contrainte d’illustration de son brief concernait le booster : un packaging original sans personnages/logos de licences ; elle ne devait pas servir à réduire le nombre de cartes intégrées. Il exclut toute APK locale et demande une transmission rapide avec les vérifications utiles, sans refaire les contrôles déjà verts.
+
+### Mise à jour packaging Anime — 27 octobre 2026
+
+Le sachet abstrait 690 × 1 000 refusé est remplacé par une illustration originale
+violette/rose au `viewBox` 1 050 × 1 540, avec silhouette ajustée au découpage
+Live, soudures crantées, repères de déchirure alignés à 15,45 % et mentions de
+cinq cartes. Le SVG conserve son nom et reste la source du WebP. La scène Anime
+reprend maintenant la palette du packaging sur les dos de cartes. `npm run e2e
+-- --grep "Anime ouvre cinq cartes"` : 2/2, bureau et téléphone ; dimensions
+1050 × 1540 et variables CSS contrôlées. APK locale non construite ; Anime reste
+local et limité à 20 cartes, sans règles ni possessions serveur.
 
 Fichiers du visuel à reprendre : `public/packs/anime-opening.svg` (source), `public/packs/anime-opening.webp` (rendu), `scripts/build-pack-webp.mjs` (génération), `src/components/anime-opening.css` (habillage Anime), `src/app/booster-continuity.css` et `src/components/booster-carousel.css` (matière, forme et position), `src/components/pack-tear.tsx` (découpe physique). Les deux branchements du média sont `booster-carousel.tsx` et `anime-booster-opening.tsx`. Cibler Anime dans les styles pour préserver les autres sachets.
 

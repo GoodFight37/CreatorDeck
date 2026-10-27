@@ -1,54 +1,229 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 1000" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 1540" width="1050" height="1540" role="img" aria-labelledby="title desc">
   <title id="title">Booster Anime CreatorDeck</title>
-  <desc id="desc">Booster abstrait noir, indigo, argent et améthyste, traversé par un sceau orbital.</desc>
+  <desc id="desc">Sachet Anime violet et rose avec une illustration originale, des soudures metalliques et les reperes de dechirure.</desc>
   <defs>
-    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#24243b"/>
-      <stop offset=".42" stop-color="#090a12"/>
-      <stop offset="1" stop-color="#17162c"/>
+    <!-- Palette de fond du sachet -->
+    <linearGradient id="pouch-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140833" />
+      <stop offset="30%" stop-color="#2a0d5c" />
+      <stop offset="55%" stop-color="#4d1275" />
+      <stop offset="80%" stop-color="#230a4e" />
+      <stop offset="100%" stop-color="#0e0424" />
     </linearGradient>
-    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#696b79"/>
-      <stop offset=".28" stop-color="#f2f1f4"/>
-      <stop offset=".55" stop-color="#9698a7"/>
-      <stop offset=".78" stop-color="#e8e9ef"/>
-      <stop offset="1" stop-color="#626471"/>
-    </linearGradient>
-    <radialGradient id="glow">
-      <stop stop-color="#a591ff" stop-opacity=".72"/>
-      <stop offset="1" stop-color="#6f55e4" stop-opacity="0"/>
+
+    <radialGradient id="center-glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#ff3b88" stop-opacity="0.6" />
+      <stop offset="30%" stop-color="#8c25cf" stop-opacity="0.38" />
+      <stop offset="65%" stop-color="#360a63" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
     </radialGradient>
-    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
-      <path d="M42 0H0V42" fill="none" stroke="#eae8ff" stroke-opacity=".055"/>
+
+    <!-- Dégradé métallique des soudures (crimp) -->
+    <linearGradient id="crimp-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8b4f4" />
+      <stop offset="22%" stop-color="#e8dcfc" />
+      <stop offset="48%" stop-color="#8062bc" />
+      <stop offset="78%" stop-color="#a488dc" />
+      <stop offset="100%" stop-color="#56378e" />
+    </linearGradient>
+
+    <!-- Dégradé interne de la carte centrale -->
+    <linearGradient id="card-inner-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5996" />
+      <stop offset="35%" stop-color="#9325d9" />
+      <stop offset="75%" stop-color="#4a158a" />
+      <stop offset="100%" stop-color="#1c0740" />
+    </linearGradient>
+
+    <!-- Dégradé du texte ANIME -->
+    <linearGradient id="title-face-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="60%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#ffe6f3" />
+    </linearGradient>
+
+    <!-- Reflet holographique diagonal -->
+    <linearGradient id="diagonal-foil-sheen" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="38%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="48%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="53%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Silhouette 600x880 mise à l'échelle 1050x1540 (points alignés sur le découpage Live) -->
+    <clipPath id="sachet-clip">
+      <polygon points="
+        39,17 1011,17 1031,62 1016,137 990,243 1010,693 1019,970 992,1339 1022,1463 1003,1522
+        47,1522 28,1463 58,1339 32,970 40,693 60,243 34,137 19,62" />
+    </clipPath>
+
+    <clipPath id="inner-card-frame">
+      <rect x="216" y="356" width="618" height="398" rx="22" />
+    </clipPath>
+
+    <!-- Filtre flou pour les cannelures des soudures -->
+    <pattern id="crimp-fluting" width="12" height="240" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="6" height="240" fill="#ffffff" opacity="0.28" />
+      <rect x="6" y="0" width="6" height="240" fill="#150830" opacity="0.38" />
     </pattern>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="14"/>
-    </filter>
   </defs>
 
-  <path fill="url(#shell)" d="M25 0h640l25 27v946l-25 27H25L0 973V27z"/>
-  <path fill="url(#grid)" d="M25 27h640v946H25z"/>
-  <path fill="url(#silver)" d="M0 0h690v27H0zM0 973h690v27H0z" opacity=".86"/>
-  <path fill="#0b0c16" d="M0 27h690v18H0zM0 955h690v18H0z"/>
-  <path d="M0 27 29 0h35L35 27 64 45H29zm626 0L655 0h35v45h-29zM0 973l29 27h35l-29-27 29-18H29zm626 0 29 27h35v-45h-29z" fill="#d9dbe5" opacity=".42"/>
+  <!-- Groupe principal découpé selon la silhouette du sachet -->
+  <g clip-path="url(#sachet-clip)">
+    <!-- Fond cosmique violet profond -->
+    <rect x="0" y="0" width="1050" height="1540" fill="url(#pouch-bg)" />
 
-  <ellipse cx="356" cy="424" rx="281" ry="112" fill="none" stroke="#a28eff" stroke-width="2" opacity=".62" transform="rotate(-17 356 424)"/>
-  <ellipse cx="356" cy="424" rx="224" ry="74" fill="none" stroke="#e6e5ec" opacity=".25" transform="rotate(24 356 424)"/>
-  <circle cx="356" cy="424" r="190" fill="url(#glow)" opacity=".44" filter="url(#shadow)"/>
-  <path d="M355 234 493 330l-53 161-170 4-56-159z" fill="#10111d" stroke="#dad8e6" stroke-opacity=".48" stroke-width="2"/>
-  <path d="m355 270 101 70-39 118-125 3-41-116z" fill="none" stroke="#9e89ff" stroke-width="3" opacity=".86"/>
-  <path d="m355 310 60 42-23 70-74 1-25-68z" fill="#9480ff" fill-opacity=".08" stroke="#eeedf3" stroke-opacity=".66"/>
-  <circle cx="355" cy="367" r="11" fill="#dcd9ec"/>
-  <circle cx="355" cy="367" r="27" fill="none" stroke="#9e89ff" stroke-width="2"/>
+    <!-- Halo central d'aura anime -->
+    <rect x="0" y="238" width="1050" height="1117" fill="url(#center-glow)" />
 
-  <path d="M76 652h538" stroke="#d8d8e1" stroke-opacity=".42"/>
-  <path d="M76 660h172" stroke="#9c87ff" stroke-width="3"/>
-  <text x="75" y="738" fill="#f0eff3" font-family="Georgia, 'Times New Roman', serif" font-size="112" letter-spacing="-4">ANIME</text>
-  <text x="80" y="782" fill="#aaa8b7" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="7">CINEMATIC COLLECTOR</text>
-  <text x="80" y="853" fill="#777586" font-family="Arial, sans-serif" font-size="13" letter-spacing="3">CREATORDECK · LOCAL RESEARCH EDITION</text>
-  <text x="572" y="862" fill="#d8d7df" font-family="Georgia, serif" font-size="68">05</text>
-  <path d="M78 894h534" stroke="#d8d8e1" stroke-opacity=".18"/>
-  <path d="M80 919h188M80 931h130" stroke="#9f8aff" stroke-width="2" opacity=".55"/>
-  <circle cx="599" cy="916" r="17" fill="none" stroke="#d9d8e2" stroke-opacity=".55"/>
-  <circle cx="599" cy="916" r="5" fill="#a18cff"/>
+    <!-- Rayons d'action / Speed lines (Shuuchuusen) -->
+    <g opacity="0.16" stroke="#ff7ab8" stroke-width="3.5">
+      <line x1="525" y1="650" x2="0" y2="240" /><line x1="525" y1="650" x2="140" y2="240" />
+      <line x1="525" y1="650" x2="280" y2="240" /><line x1="525" y1="650" x2="420" y2="240" />
+      <line x1="525" y1="650" x2="630" y2="240" /><line x1="525" y1="650" x2="770" y2="240" />
+      <line x1="525" y1="650" x2="910" y2="240" /><line x1="525" y1="650" x2="1050" y2="240" />
+      <line x1="525" y1="650" x2="1050" y2="420" /><line x1="525" y1="650" x2="1050" y2="580" />
+      <line x1="525" y1="650" x2="1050" y2="760" /><line x1="525" y1="650" x2="1050" y2="920" />
+      <line x1="525" y1="650" x2="1050" y2="1100" /><line x1="525" y1="650" x2="1050" y2="1355" />
+      <line x1="525" y1="650" x2="880" y2="1355" /><line x1="525" y1="650" x2="700" y2="1355" />
+      <line x1="525" y1="650" x2="525" y2="1355" /><line x1="525" y1="650" x2="350" y2="1355" />
+      <line x1="525" y1="650" x2="170" y2="1355" /><line x1="525" y1="650" x2="0" y2="1355" />
+      <line x1="525" y1="650" x2="0" y2="1100" /><line x1="525" y1="650" x2="0" y2="920" />
+      <line x1="525" y1="650" x2="0" y2="740" /><line x1="525" y1="650" x2="0" y2="540" />
+      <line x1="525" y1="650" x2="0" y2="380" />
+    </g>
+
+    <!-- SOUDURE HAUTE (y = 0 à 238 px = 15.45%) -->
+    <g id="top-crimp-section">
+      <rect x="0" y="0" width="1050" height="238" fill="url(#crimp-grad)" />
+      <rect x="0" y="0" width="1050" height="238" fill="url(#crimp-fluting)" opacity="0.35" />
+      <!-- Couture de découpe -->
+      <line x1="0" y1="236" x2="1050" y2="236" stroke="#0e0422" stroke-width="3.5" />
+      <line x1="0" y1="239" x2="1050" y2="239" stroke="#f1e6ff" stroke-width="2" opacity="0.8" />
+
+      <!-- Capsule supérieure TEAR ALONG THE SEAL -->
+      <rect x="209" y="93" width="632" height="86" rx="43" fill="#090317" opacity="0.55" />
+      <rect x="209" y="88" width="632" height="86" rx="43" fill="#110729" stroke="#cbb2ff" stroke-width="3" />
+      <text x="495" y="145" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="3" text-anchor="middle">TEAR ALONG THE SEAL</text>
+      <path d="M 740,131 L 776,131 M 762,117 L 778,131 L 762,145" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+
+    <!-- Kicker supérieur de marque -->
+    <text x="525" y="306" font-family="'Barlow Condensed', 'Arial Black', sans-serif" font-size="28" font-weight="800" fill="#e0d4ff" letter-spacing="8" text-anchor="middle">CREATORDECK</text>
+
+    <!-- CARTE CENTRALE ILLUSTRÉE ORIGINALE -->
+    <g transform="translate(525, 595) rotate(-2.5) translate(-525, -595)">
+      <rect x="208" y="352" width="650" height="430" rx="32" fill="#090217" opacity="0.65" />
+      <rect x="200" y="340" width="650" height="430" rx="32" fill="#ffffff" />
+      <rect x="216" y="356" width="618" height="398" rx="22" fill="url(#card-inner-bg)" />
+
+      <!-- Dessin original de héros anime -->
+      <g clip-path="url(#inner-card-frame)">
+        <g stroke="#ffffff" stroke-width="2" opacity="0.25">
+          <line x1="525" y1="550" x2="200" y2="350" /><line x1="525" y1="550" x2="360" y2="350" />
+          <line x1="525" y1="550" x2="690" y2="350" /><line x1="525" y1="550" x2="850" y2="350" />
+          <line x1="525" y1="550" x2="850" y2="550" /><line x1="525" y1="550" x2="850" y2="750" />
+          <line x1="525" y1="550" x2="690" y2="750" /><line x1="525" y1="550" x2="360" y2="750" />
+          <line x1="525" y1="550" x2="200" y2="750" /><line x1="525" y1="550" x2="200" y2="550" />
+        </g>
+
+        <!-- Chevelure et silhouette du personnage -->
+        <path d="M 330,760 C 340,630 380,520 440,460 C 480,420 560,420 620,460 C 670,500 700,620 720,760 Z" fill="#14062a" />
+        <path d="M 370,470 L 400,390 L 435,450 L 485,370 L 525,435 L 575,365 L 610,430 L 665,385 L 650,480 Z" fill="#2a0d54" />
+        <path d="M 390,460 L 420,400 L 445,450 L 495,385 L 530,440 L 565,380 L 595,435 L 635,405 L 625,475 Z" fill="#ff3b88" opacity="0.38" />
+
+        <!-- Visage cel-shading -->
+        <path d="M 440,510 C 455,580 480,640 525,665 C 570,640 595,580 610,510 Z" fill="#200a42" />
+
+        <!-- Yeux anime cyan étincelants -->
+        <g transform="translate(445, 528)">
+          <path d="M -8,-10 Q 28,-26 66,-8" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" fill="none" />
+          <path d="M 2,-6 Q 28,12 56,-6 Q 28,-14 2,-6 Z" fill="#ffffff" />
+          <ellipse cx="30" cy="-3" rx="17" ry="12" fill="#00e5ff" />
+          <ellipse cx="30" cy="-3" rx="9" ry="8" fill="#100524" />
+          <circle cx="24" cy="-7" r="4" fill="#ffffff" />
+          <circle cx="36" cy="-1" r="2.5" fill="#ffffff" />
+        </g>
+        <g transform="translate(540, 528)">
+          <path d="M -8,-8 Q 28,-26 66,-10" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" fill="none" />
+          <path d="M 2,-6 Q 28,12 56,-6 Q 28,-14 2,-6 Z" fill="#ffffff" />
+          <ellipse cx="28" cy="-3" rx="17" ry="12" fill="#00e5ff" />
+          <ellipse cx="28" cy="-3" rx="9" ry="8" fill="#100524" />
+          <circle cx="22" cy="-7" r="4" fill="#ffffff" />
+          <circle cx="34" cy="-1" r="2.5" fill="#ffffff" />
+        </g>
+
+        <!-- Ligne du nez et sourire -->
+        <path d="M 522,574 L 526,586 L 518,588" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85" />
+        <path d="M 502,618 Q 525,628 548,615" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" fill="none" />
+
+        <!-- Sceau rouge traditionnel Hanko : 「アニメ」 -->
+        <rect x="236" y="376" width="86" height="46" rx="9" fill="#e61952" stroke="#ffffff" stroke-width="2.5" />
+        <text x="279" y="409" font-family="'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Arial', sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">&#12450;&#12491;&#12513;</text>
+
+        <!-- Badge collection : ★ 5 CARDS ★ -->
+        <rect x="696" y="376" width="122" height="46" rx="23" fill="#100729" stroke="#00e5ff" stroke-width="2.5" />
+        <text x="757" y="407" font-family="'Barlow Condensed', 'Arial Black', sans-serif" font-size="20" font-weight="900" fill="#00e5ff" text-anchor="middle" letter-spacing="1.5">&#9733; 5 CARDS &#9733;</text>
+      </g>
+    </g>
+
+    <!-- Pétales de Sakura volants -->
+    <g fill="#ff6eb4" opacity="0.8">
+      <path d="M 155,420 C 168,405 188,415 192,432 C 196,450 178,460 166,452 C 154,445 148,430 155,420 Z" transform="rotate(28 175 435)" />
+      <path d="M 885,475 C 898,460 918,470 922,487 C 926,505 908,515 896,507 C 884,500 878,485 885,475 Z" transform="rotate(-32 905 490)" />
+      <path d="M 140,885 C 152,870 172,880 176,897 C 180,915 162,925 150,917 C 138,910 132,895 140,885 Z" transform="rotate(45 155 900)" />
+      <path d="M 915,835 C 928,820 948,830 952,847 C 956,865 938,875 926,867 C 914,860 908,845 915,835 Z" transform="rotate(18 930 850)" />
+    </g>
+
+    <!-- Étoiles anime (Kirakira) -->
+    <g fill="#ffffff" opacity="0.95">
+      <path d="M 125,570 Q 125,590 105,590 Q 125,590 125,610 Q 125,590 145,590 Q 125,590 125,570 Z" />
+      <path d="M 920,670 Q 920,690 900,690 Q 920,690 920,710 Q 920,690 940,690 Q 920,690 920,670 Z" />
+      <path d="M 870,340 Q 870,355 855,355 Q 870,355 870,370 Q 870,355 885,355 Q 870,355 870,340 Z" />
+      <path d="M 180,780 Q 180,795 165,795 Q 180,795 180,810 Q 180,795 195,795 Q 180,795 180,780 Z" />
+    </g>
+
+    <!-- TITRE MAJEUR 3D « ANIME » -->
+    <g transform="translate(525, 1070) rotate(-2.5) translate(-525, -1070)">
+      <text x="525" y="1104" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="235" font-weight="900" font-style="italic" fill="#110426" stroke="#110426" stroke-width="26" stroke-linejoin="round" text-anchor="middle" letter-spacing="4">ANIME</text>
+      <text x="525" y="1098" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="235" font-weight="900" font-style="italic" fill="#110426" stroke="#110426" stroke-width="26" stroke-linejoin="round" text-anchor="middle" letter-spacing="4">ANIME</text>
+      <text x="525" y="1092" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="235" font-weight="900" font-style="italic" fill="#5c157d" stroke="#5c157d" stroke-width="24" stroke-linejoin="round" text-anchor="middle" letter-spacing="4">ANIME</text>
+      <text x="525" y="1080" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="235" font-weight="900" font-style="italic" fill="#0d0320" stroke="#0d0320" stroke-width="20" stroke-linejoin="round" text-anchor="middle" letter-spacing="4">ANIME</text>
+      <text x="525" y="1080" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="235" font-weight="900" font-style="italic" fill="url(#title-face-grad)" stroke="#ffffff" stroke-width="3" text-anchor="middle" letter-spacing="4">ANIME</text>
+    </g>
+
+    <!-- SOUS-TITRE EN CAPSULE : CINEMATIC COLLECTOR -->
+    <g transform="translate(525, 1222)">
+      <rect x="-310" y="-31" width="620" height="72" rx="36" fill="#090217" opacity="0.5" />
+      <rect x="-310" y="-36" width="620" height="72" rx="36" fill="#12062b" stroke="#00f0ff" stroke-width="3.2" />
+      <text x="0" y="12" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="34" font-weight="900" fill="#00f0ff" letter-spacing="6" text-anchor="middle">CINEMATIC COLLECTOR</text>
+    </g>
+
+    <!-- SOUDURE BASSE (CRIMP INFÉRIEUR : y = 1350 à 1540 px) -->
+    <g id="bottom-crimp-section">
+      <rect x="0" y="1350" width="1050" height="190" fill="url(#crimp-grad)" />
+      <rect x="0" y="1350" width="1050" height="190" fill="url(#crimp-fluting)" opacity="0.35" />
+      <line x1="0" y1="1350" x2="1050" y2="1350" stroke="#f1e6ff" stroke-width="2.5" opacity="0.8" />
+      <line x1="0" y1="1352" x2="1050" y2="1352" stroke="#0e0422" stroke-width="3" />
+
+      <!-- Capsule inférieure : 5 CARDS · EDITION 01 -->
+      <rect x="226" y="1400" width="598" height="80" rx="40" fill="#090317" opacity="0.55" />
+      <rect x="226" y="1395" width="598" height="80" rx="40" fill="#110729" stroke="#cbb2ff" stroke-width="3" />
+      <text x="525" y="1448" font-family="'Barlow Condensed', 'Arial Black', Impact, sans-serif" font-size="36" font-weight="900" fill="#ffffff" letter-spacing="4" text-anchor="middle">5 CARDS &#183; EDITION 01</text>
+    </g>
+
+    <!-- Voile de reflet métallique diagonal -->
+    <rect x="-200" y="-200" width="1450" height="1940" fill="url(#diagonal-foil-sheen)" pointer-events="none" />
+
+    <!-- Liseré de contour métallique du sachet -->
+    <polygon points="
+      39,17 1011,17 1031,62 1016,137 990,243 1010,693 1019,970 992,1339 1022,1463 1003,1522
+      47,1522 28,1463 58,1339 32,970 40,693 60,243 34,137 19,62"
+      fill="none" stroke="#ffffff" stroke-width="7" opacity="0.9" />
+    <polygon points="
+      42,21 1008,21 1027,64 1012,137 986,243 1006,693 1015,970 988,1339 1018,1463 999,1518
+      51,1518 32,1463 62,1339 36,970 44,693 64,243 38,137 23,64"
+      fill="none" stroke="#bda3ff" stroke-width="3" opacity="0.55" />
+  </g>
 </svg>
