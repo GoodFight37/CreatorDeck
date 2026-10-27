@@ -29,6 +29,8 @@
 }
 .home-view .booster-carousel .booster-pack-slot > button { cursor: pointer; }
 .home-view .booster-carousel .booster-neighbor .pack-idle { animation: none; }
+/* L'illustration Manga Drop contient déjà ses reflets : préserver ses couleurs imprimées. */
+.home-view .booster-carousel [data-booster="anime"] .pack-holo { display: none; }
 .home-view .pack-stage.stage-live.booster-carousel .pack-copy {
   position: absolute; bottom: 5px; left: 0; right: 0; justify-content: center;
 }

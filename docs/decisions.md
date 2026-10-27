@@ -1,3 +1,15 @@
+## D-174 — 27 octobre 2026 : couleurs imprimées et premier appui tactile du sachet
+
+Retour Malik : le visuel Manga Drop est recoloré en vert/rouge et le premier tap
+après un swipe ne prépare aucun sachet. Le calque holographique ajouté est
+retiré pour Anime, dont les reflets font partie de l’illustration approuvée.
+Le tap tactile est traité sur `pointerup`, avec suppression de son clic de
+compatibilité éventuel ; le clavier et la souris gardent le chemin `click`.
+Les seuils de glissé et les annulations continuent à empêcher toute ouverture.
+Reproduction et contrôle : événements tactiles Chromium via Playwright,
+comparaison des captures avec/sans voile, quatre univers et deux états de
+transition. Aucun changement de visuel source, de tirage ou de réserve.
+
 ## D-173 — 27 octobre 2026 : le visuel Manga Drop remplace le sachet Anime
 
 Malik valide l’illustration Manga Drop et demande son intégration directe au

@@ -1,6 +1,6 @@
 import { act } from "react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BoosterCarousel } from "@/components/booster-carousel";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BoosterCarousel, PackArtwork } from "@/components/booster-carousel";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 
 /**
@@ -60,5 +60,30 @@ describe("sachet holographique du Drop", () => {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 120)); });
 
     expect(objet.style.transform).toBe("");
+  });
+
+  it("valide le tap tactile une seule fois et distingue glissé, annulation et clavier", async () => {
+    const open = vi.fn();
+    await banc.monter(<PackArtwork disabled={false} onClick={open} />);
+    const button = document.querySelector("button")!;
+    const pointer = (type: string, x = 10, primary = true) => {
+      const event = new window.MouseEvent(type, { bubbles: true, button: 0, clientX: x, clientY: 10 });
+      Object.defineProperties(event, { pointerType: { value: "touch" }, isPrimary: { value: primary } });
+      act(() => { button.dispatchEvent(event); });
+    };
+    const compatibilityClick = () => act(() => { button.dispatchEvent(new window.MouseEvent("click", { bubbles: true, detail: 1 })); });
+
+    pointer("pointerdown"); pointer("pointerup"); compatibilityClick();
+    expect(open).toHaveBeenCalledTimes(1);
+    pointer("pointerdown"); pointer("pointermove", 50); pointer("pointerup", 50); compatibilityClick();
+    expect(open).toHaveBeenCalledTimes(1);
+    pointer("pointerdown"); pointer("pointercancel"); pointer("pointerup"); compatibilityClick();
+    expect(open).toHaveBeenCalledTimes(1);
+    pointer("pointerdown"); pointer("pointerdown", 20, false); pointer("pointerup"); compatibilityClick();
+    expect(open).toHaveBeenCalledTimes(1);
+    pointer("pointerdown"); pointer("pointerup"); compatibilityClick();
+    expect(open).toHaveBeenCalledTimes(2);
+    act(() => { button.click(); });
+    expect(open).toHaveBeenCalledTimes(3);
   });
 });

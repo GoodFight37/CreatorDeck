@@ -1,5 +1,28 @@
 # Drop : choisir et préparer un booster — D-129
 
+## Correction couleurs et appui tactile — 27 octobre 2026 (D-174)
+
+Base `88bf3aa1`, suivi `CreatorDeck-Codex-ceg`. Playwright reproduit la teinte
+verte/rouge de Manga Drop et le premier tap perdu après un swipe, y compris
+après la transition. Le premier vient du voile `color-dodge`, le second de
+l’absence du `click` de compatibilité après les événements tactiles.
+
+Le voile ajouté est masqué sur Anime, dont les reflets sont déjà imprimés.
+Le tap tactile est validé sur `pointerup` une seule fois ; glissé, annulation,
+second contact, souris et clavier gardent leur traitement. Avant : trois
+cas échoués. Après : six E2E bureau/téléphone réussis, 24 préparations par un
+seul appui, images comparées avec/sans voile identiques. Tests DOM : 11/11
+(dont anti-doublon, annulation, multitouch et clavier) ; typecheck et lint
+ciblé réussis ; nouveautés : 8/8, jargon des 167 fichiers suivis : aucun écart.
+Suite E2E complète exécutée : 225 réussis, 45 ignorés et quatre nouveaux cas
+arrêtés sur une précondition de compte (le tap ouvrait correctement « Mon
+compte »). Ces quatre cas nécessitent désormais le compte simulé, comme les
+autres scénarios RPC ; relance des six régressions avec cette configuration :
+6/6 réussis. Compilation `npm run build` réussie. Publication à confirmer ;
+aucune APK locale construite et aucun essai sur téléphone physique.
+
+Les sections suivantes décrivent les versions historiques du sélecteur.
+
 Lot D-129 livré le 16 octobre 2026 depuis `codex/collaboration` sur `main`, commit `8d99eabd7d016e5a68ba7dbe1510ae5b10e2946b`, base `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`. Push normal vérifié sur GitHub. Vercel Production `READY`, déploiement `dpl_7w6o3KvQA9fhqJvk7hK5ojWZebff`, alias `creator-deckk.vercel.app`. Aucun changement SQL.
 
 ## Évolution D-132 — sélection simplifiée et rituel prioritaire

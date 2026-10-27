@@ -22,7 +22,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
   artwork?: string; label?: string; active?: boolean;
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
-  const dragged = useRef(false);
+  const ignorePointerClick = useRef(false);
   const pack = useRef<HTMLButtonElement>(null);
   const object3d = useRef<HTMLSpanElement>(null);
   const holo = useRef<HTMLSpanElement>(null);
@@ -111,13 +111,28 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
   // faisait sauter l'image et relançait l'arrivée à chaque bascule).
   return <button ref={pack} type="button" className={active ? "pack-artwork pack-live" : "booster-neighbor"}
     inert={!active} aria-hidden={active ? undefined : "true"} tabIndex={active ? undefined : -1}
-    onPointerDown={(event) => { start.current = { x: event.clientX, y: event.clientY }; dragged.current = false; }}
-    onPointerMove={(event) => {
-      if (start.current && Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 8) dragged.current = true;
+    onPointerDown={(event) => {
+      if (event.button !== 0 || event.isPrimary === false) {
+        start.current = null;
+        ignorePointerClick.current = true;
+        return;
+      }
+      start.current = { x: event.clientX, y: event.clientY };
+      ignorePointerClick.current = false;
     }}
-    onPointerUp={() => { start.current = null; }}
-    onPointerCancel={() => { start.current = null; dragged.current = true; }}
-    onClick={(event) => { if (event.detail > 0 && dragged.current) return; onClick(event); }}
+    onPointerMove={(event) => {
+      if (start.current && Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 8) ignorePointerClick.current = true;
+    }}
+    onPointerUp={(event) => {
+      const tap = start.current && !ignorePointerClick.current && event.pointerType === "touch";
+      start.current = null;
+      if (!tap) return;
+      // Après un swipe, le navigateur peut omettre le clic ; ignorer aussi son éventuel doublon.
+      ignorePointerClick.current = true;
+      event.currentTarget.click();
+    }}
+    onPointerCancel={() => { start.current = null; ignorePointerClick.current = true; }}
+    onClick={(event) => { if (event.detail > 0 && ignorePointerClick.current) return; onClick(event); }}
     disabled={active ? disabled : true}>
     {/* Le paquet EST le bouton : son nom est l'action, lue mais pas affichée. */}
     {active ? <span className="sr-only">{label}</span> : null}

@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-27-boosters-couleurs-appui", date: "2026-10-27", title: "Tes boosters au premier appui",
+    summary: "Manga Drop garde ses couleurs, et un seul appui suffit après avoir fait défiler les boosters.",
+    sections: [{ title: "Le Drop", items: [
+      "Le sachet Manga Drop conserve son noir, son or et ses yeux rouges, avec les reflets de son illustration.",
+      "Après un glissement, touche une fois le sachet choisi pour préparer son ouverture.",
+      "Un glissement ou un geste annulé ne prépare aucun booster.",
+    ] }],
+  },
+  {
     id: "2026-10-27-manga-drop", date: "2026-10-27", title: "Le nouveau sachet Manga Drop",
     summary: "Le booster Anime adopte le visuel Manga Drop, noir et or, avec son personnage aux cheveux argentés.",
     sections: [{ title: "Booster Anime", items: [

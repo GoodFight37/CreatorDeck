@@ -114,6 +114,46 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   expect(errors).toEqual([]);
 });
 
+test("Anime garde les couleurs imprimées sans voile arc-en-ciel", async ({ page }) => {
+  await gotoDeck(page, true, { withoutCircle: true });
+  await page.getByRole("button", { name: "ANIME", exact: true }).click();
+  await expect(page.locator(".booster-carousel")).not.toHaveClass(/is-switching/);
+  await page.addStyleTag({ content: ".pack-idle { animation: none !important; } .pack-3d-object { transform: none !important; } .pack-glint { display: none !important; } nextjs-portal { display: none !important; }" });
+  const front = page.locator('[data-booster="anime"] .pack-3d-front');
+  const rendered = await front.screenshot({ path: `reports/booster-couleurs-appui/${test.info().project.name}-couleurs.png` });
+  await page.addStyleTag({ content: '[data-booster="anime"] .pack-holo { display: none !important; }' });
+  const printed = await front.screenshot({ path: `reports/booster-couleurs-appui/${test.info().project.name}-sans-voile.png` });
+  expect(rendered.equals(printed)).toBe(true);
+});
+
+for (const settled of [true, false]) {
+  test(`le premier appui tactile après un swipe ouvre chaque booster ${settled ? "après" : "pendant"} la transition`, async ({ page, context }) => {
+    test.skip(!cloudUrl(), "La préparation MEMES et Imgflip nécessite le compte simulé.");
+    const calls = await fakeAccount(page);
+    await page.goto("/");
+    const stage = page.locator(".booster-carousel");
+    const cdp = await context.newCDPSession(page);
+    for (const [dx, expected] of [[-150, "memes"], [-150, "imgflip"], [-150, "anime"], [150, "imgflip"], [150, "memes"], [150, "live"]] as const) {
+      const box = (await stage.boundingBox())!;
+      const x = box.x + box.width / 2, y = box.y + box.height * .4;
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+      for (let i = 1; i <= 8; i++) await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + dx * i / 8, y }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await expect(stage).toHaveAttribute("data-universe", expected);
+      await expect(page.locator(".opening-continuum")).toHaveCount(0);
+      if (settled) await expect(stage).not.toHaveClass(/is-switching/);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      const scene = page.locator(".opening-continuum");
+      await expect(scene).toBeVisible({ timeout: 2_000 });
+      await expect(scene).toHaveAttribute("data-universe", expected);
+      await scene.getByRole("button", { name: "← Retour", exact: true }).click();
+      await expect(scene).toHaveCount(0);
+    }
+    expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
+  });
+}
+
 test("la pill choisie reste distinguable en couleurs forcées", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });

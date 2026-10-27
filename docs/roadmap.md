@@ -1,5 +1,11 @@
 # Roadmap CreatorDeck
 
+**Couleurs du sachet et appui après glissé — 27 octobre 2026 (D-174) :** correction
+ciblée de la recoloration de Manga Drop et du premier tap tactile perdu après
+un swipe. Critères : couleurs approuvées, une seule préparation par tap sur les
+quatre univers, aucune préparation lors d’un glissé ou d’une annulation.
+Preuves et publication : [suivi des boosters](drop-boosters.md).
+
 ## Anime — intégration locale du 27 octobre 2026
 
 Quatrième booster dans le Drop, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Le visuel Manga Drop noir/or approuvé remplace le sachet Anime dans le carrousel et l’ouverture (D-173), avec la déchirure alignée sur sa soudure. Sélection intégrée de 20 cartes ; le catalogue importateur de 1 020 n’est pas intégralement raccordé. Règles/réserve serveur et droits des illustrations des cartes restent requis avant diffusion ; aucune APK locale demandée. Détails et preuves : [passation Kyara](passation-kyara.md).

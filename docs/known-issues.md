@@ -1,3 +1,18 @@
+## Couleurs Manga Drop et premier appui après swipe — 27 octobre 2026
+
+Base `88bf3aa1`, suivi `CreatorDeck-Codex-ceg`. P2 visuel : le calque
+`pack-holo` en `color-dodge` recouvre toute l’illustration et ajoute du vert/rouge
+au noir/or approuvé. P1 geste : après un vrai swipe tactile Chromium, le premier
+tap reçoit `pointerdown`/`pointerup` mais aucun `click`, même après la transition.
+Les deux reproductions échouent dans Playwright avant correction.
+
+Correction : le calque arc-en-ciel est masqué pour Anime, dont le visuel contient
+déjà les reflets. Un tap tactile est validé au relâchement ; son éventuel clic
+de compatibilité est ignoré. Glissés, annulations, gestes secondaires et clavier
+gardent leurs protections. Trois cas échouent avant ; six cas bureau/téléphone
+passent après, dont 24 préparations par un seul appui. Validation complète et
+publication : [suivi des boosters](drop-boosters.md).
+
 ## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — publiés, 26 octobre 2026
 
 P1, base `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. Malik observe Live fonctionnel
