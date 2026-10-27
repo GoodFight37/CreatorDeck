@@ -1096,3 +1096,35 @@ test("Histoire : les décors de métier et les portraits restent accessibles sur
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.screenshot({ path: "test-results/mobile-observation-histoire/decor-gaming-320.png", fullPage: true, animations: "disabled" });
 });
+
+
+test("Histoire : murmures LIVE uniquement, sans spoiler ni encombrement mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const scene = card.locator(".story-scene-art");
+  await expect(scene).toHaveAttribute("data-career-stage", "debut");
+  await expect(scene.locator(".story-career-gear")).toHaveAttribute("data-stage", "debut");
+  const whispers = card.locator(".story-live-murmur");
+  await expect(whispers).toHaveCount(2);
+  await expect(whispers.first()).toHaveAttribute("data-active", "false");
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 45, y, { steps: 4 });
+  await expect(whispers.first()).toHaveAttribute("data-active", "true");
+  await expect(whispers.last()).toHaveAttribute("data-active", "false");
+  await expect(whispers.first()).toHaveCSS("opacity", "1");
+  await page.mouse.move(x, y, { steps: 4 });
+  await page.mouse.up();
+  await expect(whispers.first()).toHaveAttribute("data-active", "false");
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(card).toHaveAttribute("data-channel", "CHAT");
+  await expect(card.locator(".story-live-murmur")).toHaveCount(0);
+  await expect(scene.locator(".story-career-gear")).toHaveCount(0);
+});

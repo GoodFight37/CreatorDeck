@@ -1,3 +1,11 @@
+## D-184 — 27 octobre 2026 : décor de carrière et murmure discret du chat, PR #24
+
+Suite à la passation Gemini V2, le mode Histoire conserve ses 40 décisions, 84 scènes, neuf fins, quatre jauges, et sauvegarde locale V4 (flags : `string[]`, non le `Record` proposé dans l'audit externe). Les idées de statuts actifs, coûts automatiques par tour, scripts imposés aux semaines 8/24 et remplacement du thème graphique ont été rejetées : elles exigeraient une nouvelle version narrative ou contrediraient les règles existantes.
+
+Deux ajouts **purement visuels** sont retenus : (1) lors d'un geste en direct LIVE, une seule micro-réaction neutre apparaît sur le flanc actif du décor, sans spoiler l'effet, sans nouveau panneau ni nouvelle hauteur ; pas d'effet en CHAT, DM, CLIP, CONTRAT, MAIL ou ARCHIVE ; (2) des accessoires SVG originaux distinguent un début modeste, une équipe et une régie selon l'étape et l'argent disponibles. Le décor avancé n'est donc pas automatiquement offert à une carrière financièrement fragile. Pas d'accès à des médias externes, pas de boucle IA et pas de nouvelle donnée persistée.
+
+Tests ajoutés : calcul pur des seuils de décor, premier direct à 320×568 avec glissement annulé et disparition du murmure en CHAT, absence de débordement. Vérifier sur le nouveau SHA les suites CI/Playwright, puis les captures Android/iOS avant de déclarer les détails visuels terminés. PR reste brouillon : aucune fusion, main, production, économie, Supabase ni mise à jour de sauvegarde.
+
 ## D-183 — 27 octobre 2026 : mémoire narrative renforcée sans réécrire la saison
 
 Après analyse du rapport Gemini et du moteur réel de la PR #24, six conséquences déjà mémorisées sont rendues visibles aux changements d'acte : collecte vérifiée, archives publiées trop tôt, charte du collectif, studio loué, source de Lina menacée et contrôle éditorial de l'agence. Ce sont des échos narratifs, **pas** de nouvelles scènes, jauges ou contraintes de gameplay. Ils utilisent exclusivement les drapeaux existants, aux actes où leur choix peut déjà avoir eu lieu.

@@ -6,6 +6,7 @@ import { StoryPortrait } from "./story-portrait";
 import { StoryEndingArtwork } from "./story-ending-artwork";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { StorySetPieces } from "./story-setpieces";
+import { storyCareerStage } from "../lib/story-presentation";
 import { storyActEchoes } from "../lib/story-echoes";
 import { storyBonds } from "../lib/story-bonds";
 import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/story-goals";
@@ -188,6 +189,10 @@ export function StoryMode() {
   const previewStats = run && scene && previewDirection
     ? affectedStoryStats(run.stats, scene.choices[previewDirection].effects)
     : [];
+  const careerStage = run ? storyCareerStage(run.step, run.stats.argent) : "debut";
+  const liveMurmurSide: StoryDirection | null = scene?.channel === "LIVE" && !exiting
+    ? drag < -25 ? "left" : drag > 25 ? "right" : null
+    : null;
   const mission = run ? currentStoryGoal(run) : null;
   const previousMission = run ? finishedStoryGoal(run) : null;
 
@@ -482,11 +487,21 @@ export function StoryMode() {
                     <h2 aria-live="polite">{scene.title}</h2>
                     <p>{scene.text}</p>
                   </div>
-                  <div key={scene.id} className="story-scene-art" data-channel={scene.channel} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
-                    <StorySetPieces channel={scene.channel} sceneId={scene.id} />
+                  <div key={scene.id} className="story-scene-art" data-channel={scene.channel} data-career-stage={careerStage} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
+                    <StorySetPieces channel={scene.channel} sceneId={scene.id} stage={careerStage} />
                     <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
                      <span className="story-scene-edition" aria-hidden="true">{STORY_MEDIA[scene.channel].subtitle}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />
+                    {scene.channel === "LIVE" && (
+                      <>
+                        <span className="story-live-murmur" data-side="left" data-active={liveMurmurSide === "left"}>
+                          <span>👀</span><small>Le chat suit</small>
+                        </span>
+                        <span className="story-live-murmur" data-side="right" data-active={liveMurmurSide === "right"}>
+                          <span>💬</span><small>Ça réagit</small>
+                        </span>
+                      </>
+                    )}
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker story-visually-hidden">{scene.speaker === "TOI" ? "Ton point de vue" : scene.speaker}</div>

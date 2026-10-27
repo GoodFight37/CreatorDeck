@@ -1,10 +1,11 @@
 import { memo } from "react";
 import type { StoryChannel } from "../lib/story-mode";
+import type { StoryCareerStage } from "../lib/story-presentation";
 
 /** Objets de régie dessinés pour chaque canal, sans image distante. */
-export const StorySetPieces = memo(function StorySetPieces({ channel, sceneId }: { channel: StoryChannel; sceneId?: string }) {
+export const StorySetPieces = memo(function StorySetPieces({ channel, sceneId, stage = "debut" }: { channel: StoryChannel; sceneId?: string; stage?: StoryCareerStage }) {
   return (
-    <div className="story-set-pieces" data-channel={channel} data-scene={sceneId} aria-hidden="true">
+    <div className="story-set-pieces" data-channel={channel} data-scene={sceneId} data-career-stage={channel === "LIVE" ? stage : "hors-live"} aria-hidden="true">
       <svg viewBox="0 0 320 220" preserveAspectRatio="xMidYMid slice" focusable="false">
         {/* Scénographie originale par médium, derrière le portrait. */}
         <g className="story-world-shapes" fill="currentColor" stroke="none">
@@ -140,6 +141,34 @@ export const StorySetPieces = memo(function StorySetPieces({ channel, sceneId }:
             <rect x="17" y="66" width="74" height="87" rx="5"/>
             <path d="M43 90l27 18-27 18z" fill="currentColor" stroke="none" opacity=".7"/>
             <path d="M237 72h70v72h-70zM249 139v-9h46v9M249 82h46M232 166h78" opacity=".8"/>
+          </g>
+        )}
+        {/* Matériel qui évolue uniquement en LIVE, sans cacher les portraits. */}
+        {channel === "LIVE" && (
+          <g className="story-career-gear" data-stage={stage} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.1">
+            {stage === "debut" ? (
+              <>
+                <rect x="12" y="115" width="27" height="44" rx="4"/>
+                <circle cx="25.5" cy="150" r="2" fill="currentColor" stroke="none"/>
+                <path d="M15 123h21M23 160v17m-11 0h23M252 180v-21l13-15 12 7"/>
+                <circle cx="265" cy="141" r="6" />
+              </>
+            ) : stage === "equipe" ? (
+              <>
+                <rect x="7" y="92" width="58" height="44" rx="3"/>
+                <path d="M13 100h46M36 136v12m-15 0h30M8 174h60M253 84h52v38h-52zM260 92h37M279 123v15m-13 0h26"/>
+                <path d="M273 165l-13-17 19-15m-6 32 12 7m-12-7v14"/>
+              </>
+            ) : (
+              <>
+                <path d="M8 71h69v96H8zM17 80v76m12-76v76m12-76v76m12-76v76m12-76v76" strokeWidth="3" opacity=".72"/>
+                <path d="M244 71h69v96h-69zM253 80v76m12-76v76m12-76v76m12-76v76m12-76v76" strokeWidth="3" opacity=".72"/>
+                <rect x="10" y="172" width="71" height="28" rx="4"/>
+                <path d="M20 179h49M20 186h49M20 193h49"/>
+                <circle cx="16" cy="179" r="2" fill="currentColor" stroke="none"/>
+                <path d="M242 191h67M252 187v-16m22 16v-16m22 16v-16"/>
+              </>
+            )}
           </g>
         )}
       </svg>

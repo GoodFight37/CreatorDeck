@@ -1,3 +1,5 @@
+**27 octobre 2026 · Présentation mode Histoire (PR #24 brouillon) :** murmures neutres réservés aux décisions en LIVE lors du swipe, et variations de régie selon le progrès et l'argent. Le mode hors direct reste inchangé. Nouveaux tests de décor et geste mobile ; CI et rendu natif du SHA à vérifier. Moteur, sauvegarde V4, saison, fins, économie et `main` inchangés.
+
 **27 octobre 2026 · Mémoire du mode Histoire (PR #24 brouillon) :** six drapeaux existants reçoivent un rappel narratif dans les interludes appropriés, sans toucher au scénario, aux effets, aux sauvegardes V4 ni à la collection. Test unitaire ajouté ; vérifier CI du nouveau SHA et garder le mode isolé de `main`.
 
 **27 octobre 2026 · Monde des créateurs (PR #24 brouillon) :** cartes de jeu et panoramas SVG originaux inspirés de six Reigns, avec décors pour stream, YouTube/gaming, chat, messages, contrats et archives. Glyphes et portraits existants conservés ; 40 décisions, neuf fins, flags, effets, économie et sauvegarde V4 inchangés. Tests/captures 320 et 390 à contrôler au commit livré. Aucun merge, aucune modification de main ou Supabase.

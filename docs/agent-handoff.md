@@ -1,3 +1,10 @@
+# Checkpoint Histoire — passe Gemini V2 décor de carrière et chat LIVE, 27 octobre 2026
+
+- Base contrôlée : PR #24 brouillon, HEAD `0493cde4cf67c8da5242489e8caa02fe3c262c5a`. Ne pas confondre la CI de cette base avec le nouveau commit.
+- Ajout d'une présentation LIVE seule : accessoires SVG modifiant le setup en fonction de l'acte et de la trésorerie ; petites réactions neutres au déplacement du pouce (>25px), hors du contenu narratif, sans divulguer le résultat. Aucune nouvelle fonction lors des autres canaux, ni nouvel état sauvegardé ; support du mouvement réduit.
+- Les exemples Gemini « HistoireSaveV4 » (`flags: Record` et sauvegarde cloud) sont erronés ; le vrai moteur stocke un `string[]` en local et vérifie l'historique. On n'a ajouté ni traits temporaires, ni scènes ni scripts obligatoires, ni coûts au tour ; aucune modification de moteur, effets, test de balance, économie, production ou `main`.
+- À valider : CI sur le nouveau SHA, rendu Playwright 320/390, haptique et rendu natifs impossibles à déclarer validés ici. Ne pas fusionner.
+
 # Checkpoint Histoire — échos de choix différés après avis Gemini, 27 octobre 2026
 
 - Point de départ : PR #24 brouillon, commit `7b09d23e1fb985d860f2604549bf6e8437630a31` ; CI « Vérification » de ce SHA réussie (run 40487439854). Ne pas extrapoler ce résultat au commit présent.

@@ -30,6 +30,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Chaque canal de diffusion possède son décor illustré de régie, et les protagonistes gagnent des accessoires distinctifs.",
       "Entre les actes, certains anciens choix refont surface en deux souvenirs concrets, sans modifier les jauges ni les sauvegardes.",
       "La collecte, les archives, la charte du collectif, le studio loué, une source exposée et le contrôle de l’agence peuvent désormais ressurgir entre deux actes.",
+      "En direct, de petits murmures du chat accompagnent ton geste sans révéler les conséquences ; les autres canaux restent sobres.",
+      "Le décor du direct évolue selon ton avancée et tes moyens : premier équipement, équipe ou véritable régie.",
       "Dans le journal de bord, retrouve l’évolution de tes liens avec Flo, Nox, Mona et Lina après leurs rencontres.",
       "Le carnet présente les portraits de tes interlocuteurs dès leur première rencontre, sans dévoiler les futurs personnages.",
       "Chaque fin possède sa propre gravure originale : le dernier écran reflète le sort de ta chaîne.",
