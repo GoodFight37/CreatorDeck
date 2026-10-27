@@ -36,7 +36,7 @@ test("Histoire Safari : le swipe et la sauvegarde fonctionnent", async ({ page }
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x - 90, y, { steps: 6 });
-  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator(".story-deck .story-direction-left")).toHaveAttribute("data-ready", "true");
   await page.mouse.up();
   await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
   await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) || "{}").step ?? -1, STORY_SAVE_KEY)).toBe(1);
@@ -72,10 +72,10 @@ test("Histoire Safari : HUD lisible en 320 px et swipe annulé", async ({ page }
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x - 35, y, { steps: 5 });
-  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "true");
+  await expect(page.locator(".story-deck .story-direction-left")).toHaveAttribute("data-active", "true");
   await page.mouse.up();
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
-  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "false");
+  await expect(page.locator(".story-deck .story-direction-left")).toHaveAttribute("data-active", "false");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
