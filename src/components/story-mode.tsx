@@ -116,7 +116,9 @@ export function StoryMode() {
     if (!progress || !actions) return;
     const progressTop = progress.getBoundingClientRect().top;
     const actionsBottom = actions.getBoundingClientRect().bottom;
-    if (progressTop < 12 || actionsBottom > window.innerHeight - 12) {
+    // Le nouveau dilemme doit revenir en tête, même si ses boutons sont déjà visibles.
+    // Sur 320 × 568, sinon le rail peut rester 130 px trop bas après un choix.
+    if (progressTop < 12 || progressTop > 64 || actionsBottom > window.innerHeight - 12) {
       progress.scrollIntoView({ block: "start", behavior: "auto" });
     }
   }, [step, ending]);
