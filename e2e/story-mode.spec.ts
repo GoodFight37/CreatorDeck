@@ -65,6 +65,30 @@ test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paq
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
+test("Histoire : les actes sont des interludes et les fins des affiches de direct", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  let run = startStory(STORY_PROLOGUE);
+  for (let index = 0; index < 12; index++) run = chooseStory(STORY_PROLOGUE, run, "left");
+  expect(run.ending).toBeNull();
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: STORY_SAVE_KEY, value: JSON.stringify(run) });
+  await page.reload();
+  const act = page.locator(".story-act-interlude");
+  await expect(act).toContainText("ACTE II");
+  await expect(act.locator(".story-act-roman")).toHaveText("II");
+  await expect(page.locator(".story-play-card .story-act-interlude")).toHaveCount(0);
+
+  let ending = startStory(STORY_PROLOGUE);
+  for (const d of "RLRRRLRRR") ending = chooseStory(STORY_PROLOGUE, ending, d === "L" ? "left" : "right");
+  expect(ending.ending).toBe("scandale");
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: STORY_SAVE_KEY, value: JSON.stringify(ending) });
+  await page.reload();
+  await expect(page.locator(".story-ending")).toHaveAttribute("data-ending", "scandale");
+  await expect(page.locator(".story-ending-cover")).toContainText("DIRECT TERMINÉ");
+  await expect(page.locator(".story-ending-cover .story-channel-glyph")).toBeVisible();
+  await expect(page.locator(".story-replay")).toBeVisible();
+});
+
 test("Histoire : carte mobile dominante, portrait et options révélées au doigt", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");

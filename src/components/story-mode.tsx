@@ -297,9 +297,18 @@ export function StoryMode() {
               )}
             </div>
             {run.ending ? (
-              <section ref={endingRef} tabIndex={-1} className="story-card story-ending" aria-live="polite">
-                <div className="story-face" aria-hidden="true">{resolvedEnding?.emoji}</div>
-                <div className="story-chapter">FIN DE PARTIE · {run.history.length} DÉCISIONS</div>
+              <section ref={endingRef} tabIndex={-1} className="story-card story-ending" data-ending={run.ending} aria-live="polite">
+                <div className="story-ending-cover" aria-hidden="true">
+                  <span className="story-ending-edition">CREATORDECK / CHRONIQUE N° 01</span>
+                  <div className="story-ending-tower">
+                    <span className="story-ending-tower-ring" />
+                    <StoryChannelGlyph channel="LIVE" />
+                    <span className="story-ending-tower-line" />
+                  </div>
+                  <span className="story-ending-status">● DIRECT TERMINÉ</span>
+                  <span className="story-ending-counter">{String(run.history.length).padStart(2, "0")} / {SCRIPT.totalSteps}</span>
+                </div>
+                <div className="story-chapter">TON ÉPILOGUE · {run.history.length} DÉCISIONS</div>
                 <h2>{resolvedEnding?.title}</h2>
                 <p>{resolvedEnding?.text}</p>
                 <div className="story-epilogue" aria-label="Ce que tes choix ont changé">
@@ -316,6 +325,13 @@ export function StoryMode() {
                   <span>{run.step + 1} / {SCRIPT.totalSteps}</span>
                 </div>
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
+                {interlude && (
+                  <div className="story-act-interlude" role="note">
+                    <span className="story-act-roman" aria-hidden="true">{storyActNumber(run.step)}</span>
+                    <strong>{interlude.title}</strong>
+                    <p>{interlude.text}</p>
+                  </div>
+                )}
                 <div className="story-deck" data-pulling={Math.abs(drag) >= 18} data-exiting={exiting !== null}>
                   <div className="story-deck-back story-deck-back-far" aria-hidden="true" />
                   <div className="story-deck-back story-deck-back-near" aria-hidden="true" />
@@ -342,12 +358,6 @@ export function StoryMode() {
                     <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
                     <span className="story-card-meta-mark">● EN COURS</span>
                   </div>
-                  {interlude && (
-                    <div className="story-act-interlude" role="note">
-                      <strong>{interlude.title}</strong>
-                      <p>{interlude.text}</p>
-                    </div>
-                  )}
                   <div className="story-prompt">
                     <h2 aria-live="polite">{scene.title}</h2>
                     <p>{scene.text}</p>
