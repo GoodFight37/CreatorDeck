@@ -1226,6 +1226,9 @@ test("Histoire : comparer les pièces du premier sponsor sans valider un choix",
   for (let step = 0; step < 3; step++) {
     await firstChoice.click();
     await expect(page.locator(".story-progress")).toContainText(`${step + 2} / 40`);
+    // Le joueur ne peut pas enchaîner deux choix en moins de 450 ms.
+    // L'ancien test cliquait trop vite et restait au chapitre précédent.
+    if (step < 2) await page.waitForTimeout(470);
   }
 
   const desk = page.locator(".story-inspection");
