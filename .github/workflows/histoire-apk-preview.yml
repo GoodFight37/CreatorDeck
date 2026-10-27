@@ -58,6 +58,9 @@ jobs:
           test -f out/histoire.html || test -f out/histoire/index.html
       - name: Compiler l'APK séparée
         run: |
+          # Le package .histoire n'est pas un client Firebase configure :
+          # aucune notification push pour l'APK de verification autonome.
+          rm -f android/app/google-services.json
           SHA="$(git rev-parse --short=7 HEAD)"
           node scripts/android-gradle.mjs assembleDebug --max-workers=2 "-PcdStoryPreview=true" "-PcdVersionName=histoire-${SHA}"
       - name: Préparer l'APK
