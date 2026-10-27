@@ -169,3 +169,6 @@ La capture réelle 320 px du commit c296270 montrait Flo et Nox très petits et 
 Références de composition sans copie des visuels, personnages, logos ou code des jeux : jauges visibles (Reigns), matière de carte (Her Majesty), mise en scène (Game of Thrones), variété de mondes (Beyond), paysages panoramiques (Three Kingdoms) et portraits au premier plan (The Witcher). Sept supports de narration donnent leurs propres teintes et paysages SVG originaux à CreatorDeck : LIVE/STREAM, CHAT/COMMUNAUTÉ, CLIP/VIDÉO GAMING, DM/MESSAGES, MAIL/BOÎTE PRO, CONTRAT/PARTENARIAT, ARCHIVE/ARCHIVES.
 
 Le dilemme précède désormais le portrait. Plusieurs scènes parlent de montage vidéo gaming, vidéo-réaction et recommandations. Rien ne change dans les effets, flags, règles, sauvegarde V4, 40 décisions et neuf fins. Contrôles Playwright 320×568 / 390×844, captures `media-live-320.png` et `media-video-390.png` à vérifier sur le dernier SHA. Pas de preuve native Android/iOS. PR #24 expérimentale, pas de merge.
+
+
+**Correctif de cadrage 390×844 (27 octobre 2026) :** après l'échec Playwright sur le pilote `f07e9246`, la hauteur du portrait a été augmentée en affichage haut. Les variantes courtes restent prioritaires. Contrôle sur le SHA suivant requis avant validation.

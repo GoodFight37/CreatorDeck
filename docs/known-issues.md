@@ -1,3 +1,9 @@
+
+## Histoire pilote · cadrage grands téléphones (27 octobre 2026)
+
+- **Défaut de présentation découvert** sur la PR #24, commit `f07e9246` : Playwright bureau avec viewport 390×844 mesurait 239–240 px pour l'illustration au lieu du minimum de 250 px déjà exigé par la suite. Ce n'est ni un problème de moteur ni une preuve de bug sur iPhone physique.
+- **Correction préparée** : augmenter la hauteur du moniteur sur écrans hauts avec `clamp(260px,33svh,300px)` ; garder le réglage compact spécifique aux écrans de 700px de haut ou moins. Ne pas affaiblir l'assertion Playwright. Résultat à vérifier sur le nouveau SHA, sans changement de sauvegarde V4.
+
 ## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — publiés, 26 octobre 2026
 
 P1, base `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. Malik observe Live fonctionnel

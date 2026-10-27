@@ -1275,7 +1275,7 @@
 .story-page .story-prompt h2 { color:#1d2227;margin:0 0 6px;text-align:left;font:800 clamp(25px,6.6vw,34px)/1.02 "Barlow Condensed",sans-serif; }
 .story-page .story-prompt p { color:#363936;margin:0;max-width:42ch;font-size:clamp(13px,3.35vw,15px);line-height:1.38; }
 .story-page .story-play-card .story-scene-art {
-  order:2;width:100%;height:clamp(166px,29svh,252px);margin:0;
+  order:2;width:100%;height:clamp(260px,33svh,300px);margin:0;
   border:1px solid rgb(21 29 36 / .28);border-radius:5px;outline-offset:-2px;
   box-shadow:inset 0 0 0 5px rgb(0 0 0 / .12);
 }
