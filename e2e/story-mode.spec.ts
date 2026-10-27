@@ -329,10 +329,11 @@ test("Histoire : le clavier conserve le focus sans présélection forcée", asyn
   await expect(page.locator(".story-play-card")).toBeFocused();
 });
 
-test("Histoire : les jauges privilégient la lecture aux émojis", async ({ page }) => {
+test("Histoire : les quatre jauges restent nommées sous leurs pictogrammes", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
-  await expect(page.locator(".story-stat-top > span")).toHaveText(["Public", "Énergie", "Argent", "Confiance"]);
+  await expect(page.locator(".story-stat-name")).toHaveText(["Public", "Énergie", "Argent", "Confiance"]);
+  await expect(page.locator(".story-stat-icon")).toHaveCount(4);
   for (const name of ["Public", "Énergie", "Argent", "Confiance"]) {
     await expect(page.getByRole("progressbar", { name })).toHaveAttribute("aria-valuemin", "0");
   }
