@@ -448,6 +448,7 @@ test("Histoire : double crise et jauge critique lisibles sans code couleur", asy
       const confiance = page.locator(".story-stat").filter({ has: page.getByRole("progressbar", { name: "Confiance" }) });
       await expect(confiance.getByText("NIVEAU CRITIQUE")).toBeVisible();
       await expect(page.getByRole("progressbar", { name: "Confiance" })).toHaveAttribute("aria-valuetext", "11 sur 100, niveau critique");
+      await expect(page.locator(".story-play-card")).toHaveAttribute("data-pressure", "confiance");
     }
     await page.waitForTimeout(470);
   }

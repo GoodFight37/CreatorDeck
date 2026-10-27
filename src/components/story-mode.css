@@ -711,3 +711,23 @@
   .story-play-card .story-scene-art { height: clamp(144px, 27svh, 180px); }
   .story-prompt p { font-size: 13px; }
 }
+
+/* TENSION VISUELLE JEU : les situations critiques teintent la matière
+   de la carte sans cacher la scène, ni ajouter un texte de plus. */
+.story-play-card[data-pressure="public"] { --story-pressure-hue: var(--accent-light); }
+.story-play-card[data-pressure="energie"] { --story-pressure-hue: var(--action); }
+.story-play-card[data-pressure="argent"] { --story-pressure-hue: var(--gold); }
+.story-play-card[data-pressure="confiance"] { --story-pressure-hue: var(--danger); }
+.story-play-card:not([data-pressure="none"]) {
+  box-shadow: 0 16px 30px rgb(0 0 0 / .4), 0 0 0 2px var(--story-pressure-hue);
+}
+.story-play-card:not([data-pressure="none"]) .story-prompt {
+  border-left-color: var(--story-pressure-hue);
+}
+.story-play-card:not([data-pressure="none"]) .story-scene-art {
+  outline: 2px solid var(--story-pressure-hue);
+  outline-offset: -2px;
+}
+.story-play-card[data-pressure="energie"] .story-scene-art {
+  filter: saturate(.82);
+}

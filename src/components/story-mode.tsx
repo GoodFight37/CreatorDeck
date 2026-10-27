@@ -132,8 +132,12 @@ export function StoryMode() {
     : scene?.speaker.startsWith("PLATEFORME") ? "platform"
     : /^(SAM|ASSOCIATION|CHAT)\b/.test(scene?.speaker ?? "") ? "community"
     : "toi";
+  const criticalStat: StoryStat | null = run
+    ? STORY_STATS.filter(stat => run.stats[stat] <= 20)
+      .sort((a, b) => run.stats[a] - run.stats[b])[0] ?? null
+    : null;
   const portraitMood: "calm" | "on-air" | "tense" =
-    (run && run.stats.confiance <= 20) || /(crise|guerre|mensonge|scandale|dox|rupture|trahi|panne)/.test(scene?.id ?? "")
+    criticalStat || /(crise|guerre|mensonge|scandale|dox|rupture|trahi|panne)/.test(scene?.id ?? "")
       ? "tense"
       : scene?.channel === "LIVE" ? "on-air" : "calm";
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
@@ -345,6 +349,7 @@ export function StoryMode() {
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
                   data-mood={portraitMood}
+                  data-pressure={criticalStat ?? "none"}
                   data-event={/^(grand_final|finale|double_crise|archive_mensonge|lina_enquete|contrat_fantome)/.test(scene.id)}
                   data-dragging={dragging}
                   data-exiting={exiting ?? "none"}
