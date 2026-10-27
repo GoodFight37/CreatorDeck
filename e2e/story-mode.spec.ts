@@ -100,12 +100,19 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   expect(portraitBounds).not.toBeNull();
   expect(monitorBounds).not.toBeNull();
   if (portraitBounds && monitorBounds) {
-    // Une illustration surdimensionnée rend le personnage illisible.
+    // Les yeux et l'expression doivent être visibles dans le cadre, pas coupés.
     expect(portraitBounds.width).toBeLessThan(monitorBounds.width * 0.86);
+    const eyes = await card.locator('.story-portrait-illustration path[d^="M93 99"]').boundingBox();
+    expect(eyes).not.toBeNull();
+    if (eyes) {
+      expect(eyes.y).toBeGreaterThan(monitorBounds.y + 8);
+      expect(eyes.y + eyes.height).toBeLessThan(monitorBounds.y + monitorBounds.height - 22);
+    }
   }
   const screenshotsDir = "test-results/mobile-observation-histoire";
   await mkdir(screenshotsDir, { recursive: true });
   const suffix = testInfo.project.name === "téléphone" ? "telephone" : "bureau";
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.screenshot({ path: `${screenshotsDir}/scene-01-${suffix}.png`, fullPage: true, animations: "disabled" });
   await expect(card).toHaveAttribute("data-character", "toi");
   const statsColumns = await page.locator(".story-stats").evaluate(
@@ -139,6 +146,26 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   await expect(page.locator(".story-portrait-illustration")).toBeVisible();
   await page.screenshot({ path: `${screenshotsDir}/scene-02-${suffix}.png`, fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
+
+test("Histoire : galerie visuelle des quatre personnages du premier acte", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "téléphone", "Captures dédiées au projet mobile.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  const screens = "test-results/mobile-observation-histoire";
+  await mkdir(screens, { recursive: true });
+  const characters = ["toi", "flo", "nox", "mona"];
+  let run = startStory(STORY_PROLOGUE);
+  for (let index = 0; index < characters.length; index++) {
+    if (index > 0) run = chooseStory(STORY_PROLOGUE, run, "left");
+    expect(run.ending).toBeNull();
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), { key: STORY_SAVE_KEY, value: JSON.stringify(run) });
+    await page.reload();
+    await expect(page.locator(".story-play-card")).toHaveAttribute("data-character", characters[index]);
+    await expect(page.locator(".story-portrait-illustration")).toBeVisible();
+    await page.screenshot({ path: `${screens}/personnage-${characters[index]}.png`, fullPage: true, animations: "disabled" });
+  }
 });
 
 test("Histoire : les choix persistent après un rechargement", async ({ page }) => {
