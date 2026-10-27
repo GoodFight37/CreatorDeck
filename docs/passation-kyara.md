@@ -24,7 +24,15 @@ conservés après rechargement. Captures 375/768/1440 px examinées, sans
 débordement horizontal. Suite E2E générale : 227 réussis, 49 ignorés (recette
 sans cloud), aucun échec ; 276 cas sélectionnés, deux workers, 9,1 minutes.
 Compilation `npm run build` réussie, avec les 1 020 images dans l'export.
-Publication en cours.
+Code publié : [`f9ec59fd`](https://github.com/GoodFight37/CreatorDeck/commit/f9ec59fd38409cbb8395d0f49027dc2f1cbcb357),
+`main` distant vérifié. Vercel Production `READY`, même SHA,
+`dpl_8bo3uzmGAvBzr1h2Jm1SpzGtAKDL`. Deux E2E téléphone réussis sur le site
+publié : ouverture complète de cinq cartes, progression `5 / 1020`, classeur
+paginé, recherche par nom/série, inspection de la dernière carte et exemplaires
+conservés. Capture publiée examinée. Aucun RPC de tirage Anime, progression
+locale uniquement. [CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40505133038)
+encore en cours au relevé. ZIP vérifié : 1 026 fichiers dont 1 020 WebP,
+31 294 061 octets, avec le catalogue et les fichiers applicatifs nécessaires.
 Aucune APK locale construite ; pas de preuve sur téléphone physique.
 
 Les checkpoints suivants décrivent les étapes historiques.

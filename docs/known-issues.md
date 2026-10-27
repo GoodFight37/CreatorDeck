@@ -6,7 +6,8 @@ Correction locale : 1 000 cartes et médias supplémentaires, manifeste complet,
 compteur dynamique, classeur paginé et recherche par nom/série. Les anciennes
 possessions sont conservées. Vérification des 1 020 fichiers et tests du tirage,
 de la navigation et des exemplaires : [passation Kyara](passation-kyara.md).
-Publication et validation complète à confirmer dans ce checkpoint.
+Publié dans `f9ec59fd`, Vercel Production `READY` avec le même SHA ; les deux
+E2E téléphone du catalogue et de l'ouverture passent aussi sur le site publié.
 
 ## Couleurs Manga Drop et premier appui après swipe — 27 octobre 2026
 

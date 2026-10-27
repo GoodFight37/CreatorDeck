@@ -9,7 +9,7 @@ réussies sur le site publié (compte simulé). Preuves : [suivi des boosters](d
 
 ## Anime — catalogue complet du 27 octobre 2026
 
-Quatrième booster dans le Drop, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Le visuel Manga Drop noir/or approuvé remplace le sachet Anime dans le carrousel et l’ouverture (D-173), avec la déchirure alignée sur sa soudure. Les 1 020 cartes importées sont raccordées (D-175), soit 1 000 ajouts, avec compteur dynamique, pagination et recherche. Les anciennes possessions sont conservées. Validation et publication en cours ; règles/réserve serveur et droits des illustrations restent à établir avant diffusion publique. Aucune APK locale demandée. Détails et preuves : [passation Kyara](passation-kyara.md).
+Quatrième booster dans le Drop, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Le visuel Manga Drop noir/or approuvé remplace le sachet Anime dans le carrousel et l’ouverture (D-173), avec la déchirure alignée sur sa soudure. Les 1 020 cartes importées sont raccordées (D-175), soit 1 000 ajouts, avec compteur dynamique, pagination et recherche. Les anciennes possessions sont conservées. Code `f9ec59fd` publié sur Vercel Production, deux E2E téléphone verts sur le site publié ; règles/réserve serveur et droits des illustrations restent à établir avant diffusion publique. Aucune APK locale demandée. Détails et preuves : [passation Kyara](passation-kyara.md).
 
 **Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans
 [`ea80907a`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
