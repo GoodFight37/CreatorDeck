@@ -79,3 +79,68 @@
 .missions-view .mission-content > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
 .missions-view .mission-content > div:first-child > strong { flex-basis: 100%; }
 .missions-view .mission-content > div:first-child > span { font-size: 12px; }
+
+
+/* Confort de lecture, pas un tableau de bord à badges : calendrier et missions
+ * deviennent des lignes d'information plutôt qu'une grille de cartes IA. */
+.missions-view h1 {
+  font: 600 clamp(26px, 6.5vw, 33px) / 1.13 var(--font-body);
+  letter-spacing: -.025em;
+  text-transform: none;
+}
+.missions-view h2 { font: 600 22px / 1.2 var(--font-body); }
+.missions-view .streak-plan {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.missions-view .plan-cell,
+.missions-view .plan-cell.done,
+.missions-view .plan-cell.today,
+.missions-view .plan-cell.final,
+.missions-view .plan-cell.final.won {
+  align-content: start;
+  justify-items: start;
+  text-align: left;
+  min-height: 92px;
+  padding: 11px 9px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.missions-view .plan-cell .plan-day {
+  font: 600 12px / 1.2 var(--font-body);
+}
+.missions-view .plan-cell.today .plan-day,
+.missions-view .plan-cell.done .plan-day { color: var(--paper); }
+.missions-view .mission-row,
+.missions-view .mission-row[data-state="ready"] {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 14px 0;
+}
+.missions-view .reward-summary-banner {
+  background: var(--panel);
+  border-radius: 3px;
+  box-shadow: none;
+}
+.objectives-seasons .season-row {
+  border-radius: 3px;
+  background: transparent;
+  box-shadow: none;
+}
+.objectives-season-filters button,
+.objectives-season-pages button,
+.objectives-season-empty button {
+  border-radius: 3px;
+}
+@media (max-width: 350px) {
+  .missions-view .streak-plan { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+}

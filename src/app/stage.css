@@ -749,3 +749,138 @@
   .bottom-nav .nav-object, .nav-object-art, .nav-object-label, .top-bar .level-badge, .top-bar .settings-button, .binder-modes button { transition: none; }
   .nav-object.hub.ready:not(.active) .nav-object-art { animation: none; }
 }
+
+
+/* ANTI-IA / coque éditoriale : source DESIGN.md, captures mobiles, skills
+ * Impeccable + Taste + Avoid AI Design + Unslop + UI UX Pro Max + Better UI.
+ * Les visuels de boosters et les règles du jeu ne sont PAS modifiés. */
+.app-shell .bottom-nav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: calc(64px + env(safe-area-inset-bottom));
+  padding: 6px 14px calc(5px + env(safe-area-inset-bottom));
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg-deep);
+  box-shadow: none;
+  align-items: stretch;
+}
+.app-shell .bottom-nav .nav-object,
+.app-shell .bottom-nav .nav-object.hub {
+  flex: 1;
+  margin: 0;
+  min-height: 54px;
+  padding: 8px 4px;
+  gap: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  transform: none;
+  font-weight: 500;
+}
+.app-shell .bottom-nav .nav-object-art {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: .01;
+  filter: none;
+  overflow: hidden;
+  pointer-events: none;
+  transform: none;
+  animation: none !important;
+}
+.app-shell .bottom-nav .nav-object-label,
+.app-shell .bottom-nav .nav-object.active .nav-object-label {
+  opacity: 1;
+  transform: none;
+  color: inherit;
+  font: 500 13px / 1.25 var(--font-body);
+  letter-spacing: .01em;
+}
+.app-shell .bottom-nav .nav-object.active { color: var(--paper); }
+.app-shell .bottom-nav .nav-object::before,
+.app-shell .bottom-nav .nav-object::after { content: none; }
+.app-shell .bottom-nav .nav-object.active .nav-object-label {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--paper);
+  text-underline-offset: 9px;
+  text-decoration-thickness: 2px;
+}
+.app-shell .bottom-nav .nav-object .nav-ready-dot {
+  width: 5px;
+  height: 5px;
+  top: 8px;
+  right: 12px;
+  box-shadow: none;
+  background: var(--live);
+}
+.app-shell .bottom-nav .nav-object:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: -2px;
+}
+.app-shell .top-bar .level-badge-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  font: 600 16px / 1 var(--font-body);
+}
+.app-shell .top-bar .currency-chip,
+.app-shell .top-bar .currency-chip + .currency-chip {
+  min-height: 36px;
+  height: 36px;
+  padding-inline: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+}
+.app-shell .top-bar .settings-button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+}
+.app-shell .binder-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0;
+  gap: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.app-shell .binder-modes button {
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 600 14px / 1.2 var(--font-body);
+}
+.app-shell .binder-modes button[aria-pressed="true"] {
+  color: var(--paper);
+  background: transparent;
+  border-bottom: 2px solid var(--paper);
+}
+.app-shell .circle-avatar {
+  padding: 1px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+}
+.app-shell .circle-strip li[data-live="true"] .circle-avatar {
+  box-shadow: none;
+  border-color: var(--live);
+}
+.app-shell .circle-strip li[data-live="true"] .circle-avatar::before,
+.app-shell .circle-live-face::before { content: none; }
+.app-shell .circle-avatar img { border: 0; }
+.app-shell .circle-live-dot::after { animation: none; content: none; }
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .bottom-nav .nav-object,
+  .app-shell .bottom-nav .nav-object-label { transition: none; }
+}

@@ -177,3 +177,22 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
 
   expect(problems).toEqual([]);
 });
+
+test("Objectifs : calendrier lisible en lignes sans cartes arrondies identiques", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openDeck(page);
+  await tab(page, "Objectifs").click();
+  await expect(page.locator(".missions-view")).toBeVisible();
+  await expect(page.locator(".missions-view .plan-cell")).toHaveCount(7);
+  const styles = await page.locator(".missions-view .plan-cell").evaluateAll(cells => cells.map(cell => ({
+    radius: getComputedStyle(cell).borderRadius,
+    background: getComputedStyle(cell).backgroundColor,
+    width: cell.getBoundingClientRect().width,
+  })));
+  for (const cell of styles) {
+    expect(cell.radius).toBe("0px");
+    expect(cell.background).toBe("rgba(0, 0, 0, 0)");
+    expect(cell.width).toBeGreaterThan(44);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
