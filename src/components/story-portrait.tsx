@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 /** Portraits fictifs vectoriels : style CreatorDeck, sans illustration copiée ni image réseau. */
-export const StoryPortrait = memo(function StoryPortrait({ character, emoji }: { character: string; emoji: string }) {
+export const StoryPortrait = memo(function StoryPortrait({ character, emoji, mood = "calm" }: { character: string; emoji: string; mood?: "calm" | "on-air" | "tense" }) {
   const isPlatform = character === "platform";
   const isFlo = character === "flo";
   const isNox = character === "nox";
@@ -9,7 +9,7 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji }: {
   const isLina = character === "lina";
   const isCommunity = character === "community";
   return (
-    <div className="story-portrait" aria-hidden="true">
+    <div className="story-portrait" data-mood={mood} aria-hidden="true">
       <svg className="story-portrait-illustration" viewBox="0 0 240 210" focusable="false" aria-hidden="true">
         <circle cx="120" cy="106" r="94" fill="var(--portrait-halo)" opacity=".25" />
         <circle cx="120" cy="106" r="76" fill="none" stroke="var(--portrait-line)" strokeWidth="1.5" strokeDasharray="3 9" opacity=".55" />
@@ -43,8 +43,16 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji }: {
             ) : (
               <path d="M64 88 Q64 35 120 35 Q177 34 176 88 Q150 80 140 65 Q99 86 64 88 Z" fill="var(--portrait-hair)" />
             )}
+            {mood === "tense" && (
+              <path d="M90 87L108 92M132 92L150 87" stroke="var(--portrait-eye)" strokeWidth="3.5" strokeLinecap="round" />
+            )}
             <path d="M93 99 h14 M133 99 h14" stroke="var(--portrait-eye)" strokeWidth="5" strokeLinecap="round" />
-            <path d="M107 123 Q120 130 133 122" stroke="var(--portrait-eye)" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+            {mood === "tense"
+              ? <path d="M109 128Q120 118 131 128" stroke="var(--portrait-eye)" strokeWidth="3" strokeLinecap="round" fill="none" />
+              : mood === "on-air"
+                ? <ellipse cx="120" cy="124" rx="7" ry="5.5" fill="var(--portrait-eye)" />
+                : <path d="M107 123Q120 130 133 122" stroke="var(--portrait-eye)" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+
             {isMona && (
               <g fill="none" stroke="var(--portrait-eye)" strokeWidth="3">
                 <rect x="82" y="86" width="34" height="26" rx="8" />

@@ -132,6 +132,10 @@ export function StoryMode() {
     : scene?.speaker.startsWith("PLATEFORME") ? "platform"
     : /^(SAM|ASSOCIATION|CHAT)\b/.test(scene?.speaker ?? "") ? "community"
     : "toi";
+  const portraitMood: "calm" | "on-air" | "tense" =
+    (run && run.stats.confiance <= 20) || /(crise|guerre|mensonge|scandale|dox|rupture|trahi|panne)/.test(scene?.id ?? "")
+      ? "tense"
+      : scene?.channel === "LIVE" ? "on-air" : "calm";
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
   const previewDirection: StoryDirection | null = drag < -18 ? "left" : drag > 18 ? "right" : null;
@@ -308,6 +312,7 @@ export function StoryMode() {
                   <section
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
+                  data-mood={portraitMood}
                   data-dragging={dragging}
                   data-exiting={exiting ?? "none"}
                   aria-label={`Scène : ${scene.title}. Glisse la carte à gauche ou à droite pour découvrir un choix, puis relâche pour décider. Les boutons et les flèches du clavier fonctionnent aussi.`}
@@ -336,9 +341,9 @@ export function StoryMode() {
                     <h2 aria-live="polite">{scene.title}</h2>
                     <p>{scene.text}</p>
                   </div>
-                  <div key={scene.id} className="story-scene-art" data-channel={scene.channel} aria-hidden="true">
+                  <div key={scene.id} className="story-scene-art" data-channel={scene.channel} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
                     <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
-                    <StoryPortrait character={character} emoji={scene.emoji} />
+                    <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>

@@ -2,6 +2,15 @@ import { expect, test } from "@playwright/test";
 import { STORY_PROLOGUE } from "../src/data/story-prologue";
 import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
+test("Histoire : le portrait change d'expression avec le canal", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-portrait")).toHaveAttribute("data-mood", "on-air");
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-portrait")).toHaveAttribute("data-mood", "calm");
+  await expect(page.locator(".story-play-card")).toHaveAttribute("data-mood", "calm");
+});
+
 test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paquet", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");

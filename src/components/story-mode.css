@@ -424,3 +424,21 @@
 /* MOBILE SCROLL INSURANCE: espace pour recadrer le chapitre suivant. */
 .story-page { padding-bottom: max(148px, env(safe-area-inset-bottom)); }
 @media (max-height: 640px) { .story-page { padding-bottom: max(158px, env(safe-area-inset-bottom)); } }
+
+/* EXPRESSIVE STREAM PORTRAITS: léger souffle, visages selon la situation. */
+.story-play-card[data-mood="tense"] { box-shadow: 0 20px 35px rgb(var(--ink-rgb) / .35), 0 0 0 2px rgb(225 29 63 / .42); }
+.story-portrait[data-mood="tense"] .story-portrait-stamp { filter: drop-shadow(0 0 5px rgb(225 29 63 / .55)); }
+.story-scene-art { will-change: translate; }
+@media (prefers-reduced-motion: no-preference) {
+  .story-portrait { animation: story-character-breathe 4s ease-in-out infinite; }
+  .story-portrait[data-mood="on-air"] { animation-duration: 2.8s; }
+  .story-portrait[data-mood="tense"] { animation-duration: 5.1s; }
+  .story-play-card[data-dragging="true"] .story-portrait { animation-play-state: paused; }
+}
+@keyframes story-character-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-portrait { animation: none !important; }
+}
