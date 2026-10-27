@@ -683,3 +683,31 @@
   .story-touch-sheen { opacity: 0 !important; }
   .story-deck .story-deck-back-far, .story-deck .story-deck-back-near { transition:none !important; }
 }
+
+/* TACTILE SHORT SCREEN V6: sur un téléphone 320 × 568, garder l'essentiel jouable sans
+   sacrifier la lisibilité de la question. Les 40 scènes restent accessibles. */
+@media (max-height: 700px) {
+  .story-page { padding-top: max(5px, env(safe-area-inset-top)); }
+  .story-header { margin-bottom: 3px; }
+  .story-intro { padding: 1px 0 5px; }
+  .story-intro h1 { font-size: clamp(29px, 7vw, 33px); }
+  .story-intro > p:last-child { display: none; }
+  .story-stats { padding: 4px 4px 5px; margin-bottom: 5px; }
+  .story-stat-icon, .story-gauge-glyph { width: 28px; height: 28px; }
+  .story-stat-name { font-size: 10px; }
+  .story-progress-track { margin: 4px 0 8px; }
+  .story-play-card { min-height: 0; padding: 10px 12px 12px; gap: 5px; }
+  .story-play-card .story-scene-art { height: clamp(128px, 26svh, 166px); margin-top: 1px; }
+  .story-prompt { padding: 8px; margin-top: 1px; }
+  .story-prompt h2 { font-size: 24px; margin-bottom: 4px; }
+  .story-prompt p { font-size: 12px; line-height: 1.32; }
+  .story-play-card .story-speaker { font-size: 9px; }
+  .story-swipe-hint { font-size: 9px; }
+  .story-actions { gap: 6px; margin: 6px 0 0; }
+  .story-choice { min-height: 52px; padding: 6px; }
+  .story-footnote { display: none; }
+}
+@media (max-height: 700px) and (min-width: 371px) {
+  .story-play-card .story-scene-art { height: clamp(144px, 27svh, 180px); }
+  .story-prompt p { font-size: 13px; }
+}

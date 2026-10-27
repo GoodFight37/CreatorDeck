@@ -139,6 +139,7 @@ export function StoryMode() {
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
   const previewDirection: StoryDirection | null = drag < -18 ? "left" : drag > 18 ? "right" : null;
+  const swipeReveal = Math.min(1, Math.max(0, (Math.abs(drag) - 12) / 26));
   const previewStats = run && scene && previewDirection
     ? storyChoiceSignals(run.stats, scene.choices[previewDirection].effects).map(({ stat }) => stat)
     : [];
@@ -358,8 +359,14 @@ export function StoryMode() {
                     : `translate3d(${drag * 0.82}px, 0, 0) rotate(${drag * 0.065}deg)` }}
                 >
                   <div className="story-touch-sheen" aria-hidden="true" />
-                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}><span>← GAUCHE</span><strong>{scene.choices.left.label}</strong></div>
-                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}><span>DROITE →</span><strong>{scene.choices.right.label}</strong></div>
+                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}
+                    style={{ opacity: drag < -12 ? swipeReveal : 0, translate: `${drag < -12 ? -14 * (1 - swipeReveal) : -14}px 0` }}>
+                    <span>← GAUCHE</span><strong>{scene.choices.left.label}</strong>
+                  </div>
+                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}
+                    style={{ opacity: drag > 12 ? swipeReveal : 0, translate: `${drag > 12 ? 14 * (1 - swipeReveal) : 14}px 0` }}>
+                    <span>DROITE →</span><strong>{scene.choices.right.label}</strong>
+                  </div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span className="story-card-serial"><span className="story-card-monogram">CD</span> S01 / {String(run.step + 1).padStart(2, "0")}</span>
                     <span className="story-card-meta-mark">ACTE {storyActNumber(run.step)}</span>
