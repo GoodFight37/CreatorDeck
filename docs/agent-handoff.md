@@ -1,3 +1,10 @@
+# Checkpoint Histoire — vérification des neuf gravures (27 octobre 2026)
+
+- Sur la PR #24, base 89aa26cb0476588d50a5d82723b909a50fe88cea. Build et tests unitaires verts sur cette base ; le shard Playwright 2/3 a trouvé une ancienne assertion qui attendait encore .story-channel-glyph sur la fin. Le produit affiche désormais .story-ending-artwork, conformément à la nouvelle direction artistique.
+- Correction ciblée de l'assertion, test galerie des neuf fins par rejouage déterministe, capture Playwright de chaque gravure à 390 px et portrait du journal à 320 px. Les nouvelles captures ne valent pas preuve Android physique.
+- Captures inspectées du précédent SHA : scène de départ, transition de l'acte II et fin scandale, composition lisible à 390 px ; finaliser le contrôle sur le dernier commit, sans changer main, production, économie, Supabase ni sauvegardes V4.
+- Ne pas fusionner. Les performances haptique/Capacitor Android et l'essai iPhone réel restent à confirmer.
+
 # Checkpoint Histoire — neuf gravures finales et journal illustré, 27 octobre 2026
 
 - Base distante contrôlée : 65b3088df04e7e552a8155e71d7193e7f7169d51, branche feature/histoire-reigns-pilot-20261026, PR #24 brouillon ; six jobs généraux réussis sur cette base.

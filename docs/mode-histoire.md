@@ -154,3 +154,7 @@ Le journal affiche désormais, après la première rencontre concernée, un éta
 Chaque fin reçoit une gravure SVG originale et distincte, sélectionnée par l'identifiant de fin déjà calculé (silence, épuisement, faillite, scandale, surexposition, phénomène, indépendance, business et survivant). Aucun effet sur les règles, récompenses, jauges ou sauvegardes V4.
 
 Le journal affiche les portraits vectoriels de Flo, Nox, Mona et Lina à partir des interactions vécues. Un interlocuteur qui n'a pas été rencontré n'est pas révélé. Le volet journal se referme après chaque décision pour laisser place au prochain dilemme. Tests unitaires, E2E 320 px et capture 390 px à vérifier sur le SHA publié.
+
+## Galerie de contrôle de la livraison (27 octobre 2026)
+
+L'ancien test Playwright attendait une icône LIVE dans chaque fin, alors que la carte finale utilise désormais sa gravure propre. L'assertion a été actualisée sur la nouvelle icône. Une galerie E2E parcourt les neuf chemins connus et restaure neuf sauvegardes valides, contrôle la différence du SVG pour chaque dénouement et capture chaque fin à 390 px ; le journal illustré est capturé ouvert à 320 px. Ces contrôles renforcent la revue visuelle sans modifier la partie réelle.

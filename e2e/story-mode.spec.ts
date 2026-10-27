@@ -198,7 +198,7 @@ test("Histoire : les actes sont des interludes et les fins des affiches de direc
   await page.reload();
   await expect(page.locator(".story-ending")).toHaveAttribute("data-ending", "scandale");
   await expect(page.locator(".story-ending-cover")).toContainText("DIRECT TERMINÉ");
-  await expect(page.locator(".story-ending-cover .story-channel-glyph")).toBeVisible();
+  await expect(page.locator(".story-ending-cover .story-ending-artwork")).toBeVisible();
   await expect(page.locator(".story-replay")).toBeVisible();
 });
 
@@ -962,6 +962,8 @@ test("Histoire : les relations montrent les vrais portraits et ne prédisent pas
   await expect(page.locator(".story-recap-live")).not.toHaveAttribute("open", "");
   await page.locator(".story-recap-live summary").click();
   await expect(page.locator(".story-bond[data-person='nox'] .story-portrait-illustration")).toBeVisible();
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/journal-portraits-320.png", fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
@@ -983,4 +985,43 @@ test("Histoire : le dénouement a une gravure dédiée, enregistrée à la fin d
   await mkdir("test-results/mobile-observation-histoire", { recursive: true });
   await page.screenshot({ path: "test-results/mobile-observation-histoire/fin-gravure-mobile-390.png", fullPage: true, animations: "disabled" });
   await expect(page.locator(".story-replay")).toBeVisible();
+});
+
+test("Histoire : les neuf fins ont chacune un visuel différent sur téléphone", async ({ page }) => {
+  test.slow(); // Neuf rechargements et captures complètes de dénouements.
+  const endingPaths = {
+    independant: "LRRLLLRLLRRRLRRLRRLLLRRRRLRRLRRRLLLRRRRL",
+    surexposition: "RLLRRLRLRRL",
+    phenomene: "RLLRRRLLRLLRRRLRLLLLRLLRLRLLRLRLLRRRRLLL",
+    epuisement: "LRRLLLRRLRRLLRRLLRRLRLRLRLLLRLR",
+    faillite: "LRLLLLRRLLRLLRLRRLRRRLLLRRRLR",
+    scandale: "RLRRRLRRR",
+    business: "RLRRRRLLLRLLRRRLLLRLLRLRLLLRLRRLLRLRLLRL",
+    survivant: "LLRLRLRLRLRRRLRLRLRLRLLRRRRLRLLRRRRLRLLL",
+    silence: "RLLRLRRLLLRLLRRRRRRLRLRRRRRRLRRRLRL",
+  } as const;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  const uniqueArtwork = new Set<string>();
+  for (const [ending, path] of Object.entries(endingPaths)) {
+    let run = startStory(STORY_PROLOGUE);
+    for (const direction of path) run = chooseStory(STORY_PROLOGUE, run, direction === "L" ? "left" : "right");
+    expect(run.ending).toBe(ending);
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+      key: STORY_SAVE_KEY, value: JSON.stringify(run),
+    });
+    await page.reload();
+    await expect(page.locator(".story-ending-artwork")).toHaveAttribute("data-ending-symbol", ending);
+    const drawing = await page.locator(".story-ending-artwork").evaluate(node => node.innerHTML);
+    expect(uniqueArtwork.has(drawing)).toBe(false);
+    uniqueArtwork.add(drawing);
+    await expect(page.locator(".story-ending h2")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+    await page.screenshot({
+      path: `test-results/mobile-observation-histoire/fin-${ending}-390.png`,
+      fullPage: true, animations: "disabled",
+    });
+  }
+  expect(uniqueArtwork.size).toBe(9);
 });
