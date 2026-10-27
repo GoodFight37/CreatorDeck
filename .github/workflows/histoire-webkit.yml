@@ -1,0 +1,50 @@
+name: Histoire mobile WebKit (branche pilote)
+
+on:
+  push:
+    branches:
+      - feature/histoire-reigns-pilot-20261026
+    paths:
+      - "src/components/story-*"
+      - "src/lib/story-mode.ts"
+      - "src/data/story-*"
+      - "e2e/story-webkit.spec.ts"
+      - "playwright.story-webkit.config.ts"
+      - ".github/workflows/histoire-webkit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: histoire-webkit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  safari:
+    name: Contrôles Safari / iPhone simulé (WebKit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Installer le moteur Safari de Playwright
+        run: npx playwright install --with-deps webkit
+      - name: Exécuter les tests iPhone simulé
+        run: npx playwright test --config playwright.story-webkit.config.ts
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Conserver les captures et les traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: histoire-webkit-mobile
+          path: |
+            test-results/histoire-webkit/
+            test-results/**/test-failed-*.png
+            playwright-report/
+          retention-days: 7
