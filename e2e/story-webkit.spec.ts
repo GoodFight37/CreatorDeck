@@ -2,6 +2,11 @@ import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { STORY_SAVE_KEY } from "../src/lib/story-mode";
 
+// Exclure ces tests de la suite Chromium habituelle : WebKit a sa propre CI.
+test.beforeEach(({}, testInfo) => {
+  test.skip(testInfo.project.name !== "Safari iPhone simulé", "Suite réservée au projet WebKit.");
+});
+
 test("Histoire Safari : cartes, jauges et mise en page sur iPhone", async ({ page }) => {
   await page.goto("/histoire");
   const card = page.locator(".story-play-card");
