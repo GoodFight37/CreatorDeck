@@ -88,6 +88,13 @@
   margin: 0 auto;
 }
 
+.anime-deck-search,
+.anime-deck-pages { display: flex; width: min(100%, 1100px); margin: 18px auto; }
+.anime-deck-search input { width: 100%; padding: 12px; border: 1px solid #696375; border-radius: 8px; color: inherit; background: #161521; font: inherit; }
+.anime-deck-pages { align-items: center; justify-content: space-between; gap: 8px; }
+.anime-deck-pages button { display: flex; align-items: center; min-height: 44px; padding: 8px; border: 1px solid #696375; border-radius: 8px; color: inherit; background: #161521; cursor: pointer; }
+.anime-deck-pages button:disabled { opacity: .4; cursor: default; }
+
 .anime-deck-grid > button {
   position: relative;
   min-width: 0;

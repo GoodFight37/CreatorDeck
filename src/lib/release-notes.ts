@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-27-manga-drop-catalogue-complet", date: "2026-10-27", title: "Les 1 020 cartes de Manga Drop",
+    summary: "Les 1 000 cartes manquantes rejoignent les 20 déjà présentes dans le booster Anime.",
+    sections: [{ title: "Ta collection Anime", items: [
+      "Les 1 020 cartes importées sont disponibles dans les boosters et le classeur.",
+      "Tes exemplaires déjà obtenus sont conservés.",
+      "Parcours le classeur par pages ou recherche une carte par son nom ou sa série.",
+    ] }],
+  },
+  {
     id: "2026-10-27-boosters-couleurs-appui", date: "2026-10-27", title: "Tes boosters au premier appui",
     summary: "Manga Drop garde ses couleurs, et un seul appui suffit après avoir fait défiler les boosters.",
     sections: [{ title: "Le Drop", items: [

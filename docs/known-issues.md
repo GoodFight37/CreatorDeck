@@ -1,3 +1,13 @@
+## Catalogue Manga Drop incomplet — 27 octobre 2026
+
+P2, base `42587749`, suivi `CreatorDeck-Codex-lij`. Le jeu raccordait seulement
+20 des 1 020 cartes déjà importées ; le compteur Drop était figé à 20.
+Correction locale : 1 000 cartes et médias supplémentaires, manifeste complet,
+compteur dynamique, classeur paginé et recherche par nom/série. Les anciennes
+possessions sont conservées. Vérification des 1 020 fichiers et tests du tirage,
+de la navigation et des exemplaires : [passation Kyara](passation-kyara.md).
+Publication et validation complète à confirmer dans ce checkpoint.
+
 ## Couleurs Manga Drop et premier appui après swipe — 27 octobre 2026
 
 Base `88bf3aa1`, suivi `CreatorDeck-Codex-ceg`. P2 visuel : le calque

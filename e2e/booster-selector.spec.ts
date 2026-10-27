@@ -2,6 +2,7 @@ import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 import type { Page } from "@playwright/test";
 import source from "../src/data/memes-fr.json";
 import imgflipSource from "../src/data/imgflip.json";
+import animeSource from "../src/data/anime.json";
 
 const imgflipIds = imgflipSource.filter((card) => card.image).slice(0, 5).map((card) => card.id);
 
@@ -66,6 +67,7 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   await page.getByRole("button", { name: "ANIME", exact: true }).click();
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "anime");
+  await expect(page.locator(".stock-row").filter({ hasText: "Booster local" })).toContainText("0 / 1020 découvertes");
   await carousel.evaluate(async (node) => {
     await Promise.all(node.getAnimations({ subtree: true })
       .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
@@ -110,7 +112,55 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   await expect(page.getByRole("button", { name: "Ouvrir le booster Anime", exact: true })).toBeFocused();
 
   await page.getByRole("link", { name: /Voir le classeur Anime/ }).click();
-  await expect(page.locator(".anime-deck-intro strong")).toHaveText("5 / 20");
+  await expect(page.locator(".anime-deck-intro strong")).toHaveText("5 / 1020");
+  expect(errors).toEqual([]);
+});
+
+test("le classeur Anime parcourt les 1 020 cartes et conserve les exemplaires", async ({ page }) => {
+  const first = animeSource.cards[0], added = animeSource.cards[1], last = animeSource.cards.at(-1)!;
+  const collection = { [first.id]: 2, [added.id]: 1, [last.id]: 3 };
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.addInitScript((saved) => {
+    if (!localStorage.getItem("creatordeck.anime.collection.v1")) {
+      localStorage.setItem("creatordeck.anime.collection.v1", JSON.stringify(saved));
+    }
+  }, collection);
+  await page.goto("/anime");
+  await expect(page.locator(".anime-deck-intro strong")).toHaveText("3 / 1020");
+  const grid = page.getByRole("region", { name: "Cartes Anime", exact: true });
+  const pages = page.getByRole("navigation", { name: "Pages des cartes Anime" });
+  await expect(grid.getByRole("button")).toHaveCount(12);
+  await expect(pages).toContainText("1 / 85");
+  await expect(pages.getByRole("button", { name: "Précédente" })).toBeDisabled();
+  for (const width of test.info().project.name === "téléphone" ? [375] : [768, 1440]) {
+    await page.setViewportSize({ width, height: 915 });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `reports/manga-drop-catalogue/classeur-${width}.png`, fullPage: true });
+  }
+  await pages.getByRole("button", { name: "Suivante" }).click();
+  await expect(pages).toContainText("2 / 85");
+  await expect(grid.getByRole("button").first()).toHaveAccessibleName(new RegExp(animeSource.cards[12].name));
+  const search = page.getByRole("textbox", { name: "Rechercher une carte Anime" });
+  await search.fill(last.name);
+  await expect(grid.getByRole("button")).toHaveCount(1);
+  await expect(pages).toContainText("1 / 1");
+  await expect(pages.getByRole("button", { name: "Suivante" })).toBeDisabled();
+  await expect.poll(() => grid.getByAltText(last.name, { exact: true }).evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await grid.getByRole("button").click();
+  await expect(page.getByRole("dialog", { name: `Carte ${last.name}`, exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await search.fill("JUJUTSU KAISEN");
+  await expect(grid.getByRole("button").first()).toHaveAccessibleName(/JUJUTSU KAISEN/);
+  await search.fill("aucune-carte-xyz");
+  await expect(page.getByText("Aucune carte ne correspond à ta recherche.")).toBeVisible();
+  await search.fill("");
+  await page.getByRole("button", { name: "Obtenues", exact: true }).click();
+  await expect(grid.getByRole("button")).toHaveCount(3);
+  await expect(grid.getByRole("button", { name: `${first.name}, ${first.series}, 2 exemplaire`, exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".anime-deck-intro strong")).toHaveText("3 / 1020");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("creatordeck.anime.collection.v1")!))).toEqual(collection);
   expect(errors).toEqual([]);
 });
 

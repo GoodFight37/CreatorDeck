@@ -1,4 +1,4 @@
-import source from "@/data/kyara-preview.json";
+import source from "@/data/anime.json";
 import type { MemeCard, MemeRarity } from "@/lib/memes";
 
 export type AnimeCard = MemeCard & {

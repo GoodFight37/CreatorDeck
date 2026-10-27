@@ -1,5 +1,34 @@
 # Passation CreatorDeck — Kyara
 
+## Catalogue complet Manga Drop — 27 octobre 2026 (D-175)
+
+Base `42587749`, suivi `CreatorDeck-Codex-lij`. À la demande de Malik, les
+1 020 cartes du catalogue importateur sont raccordées au jeu : 1 000 ajouts
+aux 20 cartes historiques, toutes conservées avec leurs identifiants et images.
+Source relue : `D:/Coding/CreatorDeck-Importer-main/data/kyara-real/catalog.json`,
+SHA-256 `fa1d9ccb7d7cc795f7e4c06af5d12883324a5965d90cd28e29e18f93a07907d0`.
+Les 1 020 WebP totalisent 30 925 914 octets ; leurs tailles et empreintes sont
+vérifiées. Le nouveau manifeste `src/data/anime.json` conserve noms, séries,
+raretés, provenance, dates et statuts de licence ; le prototype à 20 cartes
+`kyara-preview` reste indépendant. Répartition : 203 mythic, 471 legendary,
+346 epic, sans changement des règles locales uniformes ni ajout de réserve
+ou possessions serveur. Les exemplaires existants gardent leur clé de stockage.
+
+Le compteur Drop devient dynamique. Le classeur rend 12 cartes par page,
+avec recherche par nom ou série et filtre Obtenues ; aucune grille de
+1 020 cartes simultanées. Tests unitaires Anime 3/3 (dont les 1 020 images),
+typecheck et lint ciblé réussis ; nouveautés 8/8 et jargon suivi sans écart.
+Quatre scénarios navigateur bureau/téléphone réussis : ouverture complète de
+cinq cartes, classeur, recherche jusqu'à la dernière carte et exemplaires
+conservés après rechargement. Captures 375/768/1440 px examinées, sans
+débordement horizontal. Suite E2E générale : 227 réussis, 49 ignorés (recette
+sans cloud), aucun échec ; 276 cas sélectionnés, deux workers, 9,1 minutes.
+Compilation `npm run build` réussie, avec les 1 020 images dans l'export.
+Publication en cours.
+Aucune APK locale construite ; pas de preuve sur téléphone physique.
+
+Les checkpoints suivants décrivent les étapes historiques.
+
 ## Manga Drop — 27 octobre 2026
 
 **Publié** : [`82710d56`](https://github.com/GoodFight37/CreatorDeck/commit/82710d56eed9142bdbd0f405e4322085d6d1d946),

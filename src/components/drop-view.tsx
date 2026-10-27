@@ -11,6 +11,7 @@ export { PackArtwork } from "@/components/booster-carousel";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
 import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
 import { useAnimeBooster } from "@/hooks/use-anime-booster";
+import { ANIME_CARDS } from "@/lib/anime";
 import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-parts";
 
 // Chargé seulement à l'ouverture d'un booster MEMES : l'accueil ne paie pas PackTear ni MemeReveal.
@@ -276,7 +277,7 @@ export function HomeView({
       </section>
       {imgflip.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={imgflip} artwork="/packs/imgflip-opening.svg" /></Suspense> : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "anime"} aria-label="Collection Anime">
-        <p className="stock-row" aria-live="polite">Booster local · 5 cartes · {anime.copies.size} / 20 découvertes</p>
+        <p className="stock-row" aria-live="polite">Booster local · 5 cartes · {anime.copies.size} / {ANIME_CARDS.length} découvertes</p>
         <p className="meme-credit">Illustrations Kyara conservées pour intégration locale · droits d’exploitation à confirmer.</p>
         <Link className="meme-collection-link" href="/anime">Voir le classeur Anime <ChevronRight size={16} aria-hidden="true" /></Link>
       </section>

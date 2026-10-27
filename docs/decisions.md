@@ -1,3 +1,18 @@
+## D-175 — 27 octobre 2026 : catalogue Manga Drop complet
+
+Malik demande de vérifier les cartes Anime présentes et d'ajouter toutes les
+manquantes. Le jeu utilisait une sélection de 20 ; le catalogue importateur
+contient 1 020 identifiants distincts. Les 1 000 absentes et leurs médias sont
+raccordés par `src/data/anime.json`, sans modifier le prototype `kyara-preview`.
+Les 1 020 images (30 925 914 octets) sont relues et vérifiées par SHA-256 ; les
+20 identifiants et illustrations historiques restent identiques, comme la clé
+de sauvegarde des exemplaires. Le compteur Drop utilise la taille du catalogue.
+Le classeur reprend la pagination de 12 cartes du classeur MEMES et permet une
+recherche par nom/série, pour rendre le catalogue parcourable sur téléphone.
+Le tirage local uniforme de cinq cartes distinctes, les raretés importées et
+les statuts de droits restent inchangés. Aucun tirage, réserve ou gain serveur
+n'est ajouté. Preuves et état de publication : [passation Kyara](passation-kyara.md).
+
 ## D-174 — 27 octobre 2026 : couleurs imprimées et premier appui tactile du sachet
 
 Retour Malik : le visuel Manga Drop est recoloré en vert/rouge et le premier tap

@@ -1,3 +1,18 @@
+# Checkpoint Codex — catalogue Manga Drop complet, 27 octobre 2026
+
+Demande de Malik : vérifier les cartes Anime et ajouter toutes les manquantes.
+Base `42587749`, suivi `CreatorDeck-Codex-lij`. Le jeu avait 20 cartes ; le
+catalogue importateur contient 1 020 IDs uniques. Les 1 000 absentes et médias
+sont ajoutés, avec manifeste Anime distinct du prototype, compteur dynamique,
+pagination de 12 et recherche nom/série. Les anciens IDs et exemplaires restent
+conservés ; aucune règle de tirage ni possession serveur n'est modifiée.
+Les 1 020 fichiers (30 925 914 octets) sont vérifiés par SHA-256 ; tests Anime
+3/3 et nouveautés 8/8, typecheck/lint/jargon réussis. Quatre E2E ciblés
+bureau/téléphone verts ; captures 375/768/1440 px examinées. Suite générale :
+227 réussis, 49 ignorés, aucun échec (sans cloud, deux workers, 9,1 minutes).
+Compilation réussie, publication en cours. Aucune APK locale construite.
+État et preuves détaillés : [passation Kyara](passation-kyara.md).
+
 # Checkpoint Codex — couleurs Manga Drop et premier tap, 27 octobre 2026
 
 Code publié : [`82695241`](https://github.com/GoodFight37/CreatorDeck/commit/82695241d2997757610ba32a8c8aaa99e13cba10),
