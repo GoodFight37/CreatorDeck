@@ -1,3 +1,10 @@
+# Checkpoint Histoire — finition des décors et des portraits, 27 octobre 2026
+
+- Base de reprise vérifiée : `77506c48b1609de5866e25a6b2964695821e186c`, 6/6 jobs CI généraux verts, WebKit vert.
+- Code de la passe : `b8cfefd31e927807927948563ccbbc006882ce22`. Mondes média enrichis en SVG, accessoires de personnages, alignement et contraste des textes sur mobile. Scène spécifique pour le studio, le premier clip, le premier sponsor et la double crise. Pas de système externe, pas de changement moteur ni sauvegarde V4.
+- Le premier test E2E de la passe avait une sérialisation Playwright incorrecte de `CSSStyleDeclaration` ; correction immédiate : renvoyer seulement la chaîne `getComputedStyle(el).textAlign`. Révision CI à contrôler sur le dernier SHA, ainsi que les captures Playwright.
+- Aucun merge, aucun changement de main, de production, de Supabase ou d'économie. Vercel nouvelle prévisualisation bloquée par limite des builds ; WebKit simulé n'est pas iPhone physique. Ponytail non disponible dans le catalogue connecté.
+
 # Checkpoint Histoire — sélecteur de galerie après journal illustré, 27 octobre 2026
 
 - Base de reprise `e51a82d98fadc53f3f1dc689097761e11697b07b`, PR brouillon #24. CI générale 40460274862 : 5/6 jobs OK, seul le shard 3/3 a échoué sur une assertion Playwright `locator(".story-portrait-illustration")` devenue ambiguë lorsque le journal contient aussi un portrait. WebKit 40460270324 : SUCCESS.

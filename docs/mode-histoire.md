@@ -172,3 +172,10 @@ Le dilemme précède désormais le portrait. Plusieurs scènes parlent de montag
 
 
 **Correctif de cadrage 390×844 (27 octobre 2026) :** après l'échec Playwright sur le pilote `f07e9246`, la hauteur du portrait a été augmentée en affichage haut. Les variantes courtes restent prioritaires. Contrôle sur le SHA suivant requis avant validation.
+
+
+## Passe finition personnages, médias et typographie (27 octobre 2026)
+
+Base de travail `77506c48` (CI et WebKit SUCCESS). Commit de cette passe `b8cfefd3` et correction de test suivante : enrichissement SVG original des sept mondes LIVE/CLIP/CHAT/DM/MAIL/CONTRAT/ARCHIVE avec objets de studio, lecteur gaming, fils de chat, téléphones, contrats, archive VHS ; quatre scènes-clés possèdent un objet contextuel non interactif. Les visages reçoivent de légers modelés et des accessoires différenciés ; les textes de la carte sont alignés à gauche et gardent une taille lisible à 320 px. Légende décorative uniquement, aucun effet sur le moteur, les flags, les choix, les sauvegardes V4 ou le swipe.
+
+Un test E2E couvre la présence des décors à 320 × 568 sur les trois premières scènes et exporte `decor-gaming-320.png` ; la nouvelle exécution CI et les captures doivent être contrôlées sur le SHA de la correction, sans prétendre à un test physique Android/iOS. Vercel est limité par un quota de builds ; aucun merge ni déploiement production.

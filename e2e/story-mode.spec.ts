@@ -1082,8 +1082,8 @@ test("Histoire : les décors de métier et les portraits restent accessibles sur
   await expect(active.locator(".story-world-details")).toBeVisible();
   await expect(active.locator(".story-event-illustration")).toHaveCount(1);
   await expect(page.locator(".story-set-pieces")).toHaveAttribute("data-scene", "studio");
-  const text = await page.locator(".story-prompt p").evaluate(el => getComputedStyle(el));
-  expect(text.textAlign).toBe("left");
+  const text = await page.locator(".story-prompt p").evaluate(el => getComputedStyle(el).textAlign);
+  expect(text).toBe("left");
   await page.locator(".story-actions .story-choice").first().click();
   await expect(page.locator(".story-set-pieces")).toHaveAttribute("data-scene", "premier_chat");
   await expect(active.locator(".story-event-illustration")).toHaveCount(0);
