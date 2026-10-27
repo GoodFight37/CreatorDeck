@@ -401,6 +401,48 @@ test("Histoire : le titre et les choix se réorganisent en très petit viewport"
   if (first && second) expect(second.y).toBeGreaterThan(first.y + first.height - 1);
 });
 
+test.describe("Histoire : gestes natifs simulés dans Chromium mobile", () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+
+  test("un vrai flux touchStart/touchMove/touchEnd déclenche exactement une carte", async ({ page }) => {
+    await page.goto("/histoire");
+    const card = page.locator(".story-play-card");
+    await card.scrollIntoViewIfNeeded();
+    const box = await card.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y, id: 1 }] });
+    for (const dx of [-18, -37, -58, -79, -99]) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + dx, y, id: 1 }] });
+    }
+    await expect(card.locator(".story-direction-left")).toHaveAttribute("data-ready", "true");
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(page.locator(".story-progress")).toContainText("2 / 40");
+    await expect(page.locator(".story-recap-live li")).toHaveCount(1);
+    await cdp.detach();
+  });
+
+  test("un geste vertical conserve la scène et ne valide pas un choix", async ({ page }) => {
+    await page.goto("/histoire");
+    const card = page.locator(".story-play-card");
+    await card.scrollIntoViewIfNeeded();
+    const box = await card.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    const x = box.x + box.width / 2, y = Math.min(box.y + box.height / 2, 720);
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y, id: 1 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + 5, y: y - 52, id: 1 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + 6, y: y - 106, id: 1 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(page.locator(".story-progress")).toContainText("1 / 40");
+    await expect(page.locator(".story-recap-live")).toHaveCount(0);
+    await cdp.detach();
+  });
+});
+
 test.describe("Histoire : interactions sur écran tactile", () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
 
