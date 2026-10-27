@@ -374,7 +374,6 @@ export function StoryMode() {
                   </div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span className="story-card-serial"><span className="story-card-monogram">CD</span> S01 / {String(run.step + 1).padStart(2, "0")}</span>
-                    <span className="story-card-meta-mark">ACTE {storyActNumber(run.step)}</span>
                   </div>
                   <div className="story-prompt">
                     <h2 aria-live="polite">{scene.title}</h2>
@@ -385,7 +384,7 @@ export function StoryMode() {
                     <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
-                  <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
+                  <div className="story-speaker story-visually-hidden">{scene.speaker === "TOI" ? "Ton point de vue" : scene.speaker}</div>
                   {run.step === 0 && <div className="story-swipe-hint" data-intro={!dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>}
                   </section>
                 </div>
@@ -429,7 +428,6 @@ export function StoryMode() {
                     )}
                   </div>
                 )}
-                {run.step === 0 && <p className="story-footnote">Fais glisser la carte pour choisir. Ta progression est sauvegardée automatiquement.</p>}
               </>
             ) : <p role="alert">Cette scène est introuvable. Tu peux <button onClick={() => replay()}>recommencer</button>.</p>}
           </>

@@ -14,12 +14,13 @@ test("Histoire : le portrait change d'expression avec le canal", async ({ page }
 
 test("Histoire : retours sous forme de jetons sans consigne répétée", async ({ page }) => {
   await page.goto("/histoire");
-  await expect(page.locator(".story-footnote")).toBeVisible();
+  await expect(page.locator(".story-swipe-hint")).toBeVisible();
+  await expect(page.locator(".story-footnote")).toHaveCount(0);
   await page.locator(".story-actions .story-choice").first().click();
   await expect(page.locator(".story-impact-value")).toHaveCount(3);
   await expect(page.locator(".story-impact-value .story-gauge-glyph")).toHaveCount(3);
   await expect(page.locator(".story-impact")).toContainText("Argent +9");
-  await expect(page.locator(".story-footnote")).toHaveCount(0);
+  await expect(page.locator(".story-swipe-hint")).toHaveCount(0);
 });
 
 test("Histoire : révélation progressive des options pendant un swipe partiel", async ({ page }) => {
