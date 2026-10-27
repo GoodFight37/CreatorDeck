@@ -21,6 +21,9 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Les quatre jauges portent des emblèmes CreatorDeck dessinés pour ce mode et les conséquences s'affichent en jetons.",
       "Des portraits de personnages changent d'expression et les écrans LIVE, CHAT, CLIP ou CONTRAT ont leurs propres ambiances visuelles.",
       "Le jeu garde les boutons et les gestes accessibles, y compris avec les animations réduites.",
+      "En haut, l'épisode et un objectif de saison accompagnent quatre jauges sans étiquettes permanentes.",
+      "Incliner la carte révèle seulement les jauges touchées par des points lumineux, sans annoncer si elles montent ou descendent.",
+      "Le dos de la prochaine carte reste caché jusqu'à son arrivée, sous une estampille de collection CreatorDeck.",
     ] }],
   },
   {

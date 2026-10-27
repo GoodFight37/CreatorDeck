@@ -82,7 +82,7 @@ test("Histoire : paquet souple et reflet proportionnel au mouvement", async ({ p
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
 });
 
-test("Histoire : jauges projetées en couleur avant le lancer et remises à zéro après", async ({ page }) => {
+test("Histoire : les points de prévisualisation restent neutres et disparaissent après le geste", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
   const card = page.locator(".story-play-card");
@@ -93,14 +93,47 @@ test("Histoire : jauges projetées en couleur avant le lancer et remises à zér
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + 40, y, { steps: 4 });
-  await expect(page.locator(".story-meter-preview")).toHaveCount(2);
-  await expect(page.locator(".story-meter-preview[data-trend='up']")).toHaveCount(1);
-  await expect(page.locator(".story-meter-preview[data-trend='down']")).toHaveCount(1);
-  await page.mouse.up();
+  await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(3);
+  await expect(page.locator(".story-stat[data-affected='true'] .story-stat-orb")).toHaveCount(3);
   await expect(page.locator(".story-meter-preview")).toHaveCount(0);
+  await page.mouse.up();
+  await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(0);
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
 });
+test("Histoire : objectif, épisode et noms des jauges découvrables au toucher", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-game-hud")).toBeVisible();
+  await expect(page.locator(".story-run-clock")).toContainText("ÉP. 01");
+  await expect(page.locator(".story-mission summary")).toContainText("Premier direct");
+  await page.locator(".story-mission summary").click();
+  await expect(page.locator(".story-mission-panel")).toContainText("Tenir jusqu'à l'acte II");
+  await expect(page.getByRole("progressbar", { name: "Premier direct" })).toHaveAttribute("aria-valuenow", "0");
+  await page.locator(".story-mission summary").click();
+  const gauge = page.getByRole("button", { name: /Public : 35 sur 100/ });
+  await gauge.click();
+  await expect(page.locator(".story-stat").first()).toHaveAttribute("data-inspected", "true");
+  await gauge.click();
+  await expect(page.locator(".story-stat").first()).toHaveAttribute("data-inspected", "false");
+  await expect(page.locator(".story-back-card-seal")).toHaveText("CDHISTOIRE");
+  await expect(page.locator(".story-back-card-edition")).toContainText("S01");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
 
+test("Histoire : la mission passe d'un acte à l'autre sans modifier la sauvegarde", async ({ page }) => {
+  await page.goto("/histoire");
+  let run = startStory(STORY_PROLOGUE);
+  for (let i = 0; i < 12; i++) run = chooseStory(STORY_PROLOGUE, run, "left");
+  expect(run.ending).toBeNull();
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: STORY_SAVE_KEY, value: JSON.stringify(run),
+  });
+  await page.reload();
+  await expect(page.locator(".story-run-clock")).toContainText("ÉP. 13");
+  await expect(page.locator(".story-mission summary")).toContainText("Parole tenue");
+  await expect(page.locator(".story-mission-outcome")).toContainText("Objectif premier direct : réussi");
+  await expect(page.locator(".story-progress")).toContainText("13 / 40");
+});
 test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paquet", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
@@ -314,24 +347,31 @@ test("Histoire : les choix persistent après un rechargement", async ({ page }) 
   await expect(page.getByRole("progressbar", { name: "Argent" })).toHaveAttribute("aria-valuenow", "64");
 });
 
-test("Histoire : les indices expliquent les enjeux sans révéler les nombres", async ({ page }) => {
+test("Histoire : points neutres au-dessus de toutes les jauges touchées sans divulguer l'effet", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
-  const left = page.locator(".story-actions .story-choice").first();
-  const right = page.locator(".story-actions .story-choice").last();
-  await expect(left.locator(".story-choice-signal")).toHaveCount(2);
-  await expect(left.getByLabel("Argent en hausse")).toBeVisible();
-  await expect(left.getByLabel("Énergie en hausse")).toBeVisible();
-  await expect(right.getByLabel("Argent en baisse")).toBeVisible();
-  await expect(right.getByLabel("Public en hausse")).toBeVisible();
-  await expect(right).not.toContainText("+17");
+  const first = page.locator(".story-actions .story-choice").first();
+  await expect(first.locator(".story-choice-signal")).toHaveCount(0);
+  await expect(page.locator(".story-stat-orb")).toHaveCount(4);
+  await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(0);
+  const card = page.locator(".story-play-card");
+  const bounds = await card.boundingBox();
+  expect(bounds).not.toBeNull();
+  if (!bounds) return;
+  const x = bounds.x + bounds.width / 2, y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 40, y, { steps: 3 });
+  await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(3);
+  await expect(page.locator(".story-stat[data-affected='true'] .story-stat-orb")).toHaveCount(3);
+  await expect(page.locator(".story-meter-preview")).toHaveCount(0);
+  await expect(card.locator(".story-direction-left")).toContainText("Rester avec le téléphone");
+  await page.mouse.move(x, y, { steps: 3 });
+  await page.mouse.up();
+  await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(0);
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
-
-  await left.click();
-  await expect(page.getByRole("heading", { name: "Une personne dans le chat" })).toBeVisible();
-  await expect(left.getByLabel("Confiance en hausse")).toBeVisible();
 });
-
 test("Histoire : les nouveaux intervenants ont une identité visuelle propre", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
@@ -538,7 +578,7 @@ test("Histoire : double crise et jauge critique lisibles sans code couleur", asy
     await page.locator(".story-actions .story-choice").nth(direction === "left" ? 0 : 1).click();
     if (index === 6) {
       const confiance = page.locator(".story-stat").filter({ has: page.getByRole("progressbar", { name: "Confiance" }) });
-      await expect(confiance.getByText("NIVEAU CRITIQUE")).toBeVisible();
+      await expect(confiance.locator(".story-stat-alert")).toContainText("NIVEAU CRITIQUE");
       await expect(page.getByRole("progressbar", { name: "Confiance" })).toHaveAttribute("aria-valuetext", "11 sur 100, niveau critique");
       await expect(page.locator(".story-play-card")).toHaveAttribute("data-pressure", "confiance");
     }

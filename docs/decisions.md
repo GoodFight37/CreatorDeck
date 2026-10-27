@@ -1,3 +1,13 @@
+## D-174 — 27 octobre 2026 : tableau de jeu compact, objectifs et prévisualisation neutre
+
+Référence utilisateur : capture Reigns avec les quatre emblèmes au centre, un compteur de temps à gauche, un objectif de partie à droite et des points indiquant **quelles jauges seront affectées**, sans dévoiler si elles gagnent ou perdent. Choix retenu : quatre pictogrammes au centre du HUD sans texte visible permanent, épisode à gauche, mission facultative à droite. Un appui sur une jauge affiche son nom et sa valeur ; ses libellés restent annoncés aux lecteurs d'écran.
+
+Les points neutres au-dessus des emblèmes remplacent les barres vertes/rouges et les indices de direction pendant le glissement. Les effets restent exacts et visibles **après** validation. Une jauge réellement plafonnée et inchangée ne signale aucun effet fictif. Les boutons alternatifs ne divulguent plus les directions de variation.
+
+Cinq objectifs courts accompagnent les cinq actes : survivre au premier direct, protéger la confiance, conserver l'énergie, sécuriser l'argent, terminer la saison. Ils sont dérivés à partir des étapes et des jauges, **non persistés dans la sauvegarde V4** ; leurs résultats apparaissent aux passages d'acte et ne modifient ni économie, ni scène, ni issue. Il ne s'agit pas encore d'une progression de plusieurs heures.
+
+Deux dos de carte sous la scène restent cachés, avec estampille CD/Histoire. Tous les changements demeurent dans le périmètre d'UI pilote PR #24 et conservent le mode audio global pour plus tard.
+
 ## D-173 — 27 octobre 2026 : ADN visuel et cartes tactiles mobiles du mode Histoire (PR #24)
 
 Retour utilisateur : l'expérience était un questionnaire tactile sans personnalité ; les symboles de jauges et les portraits paraissaient génériques. Priorité à un **langage visuel propre à CreatorDeck** plutôt qu'à davantage de scènes. Décision : réemployer les couleurs Pocket et la matière « studio / carton / diffusion » de `DESIGN.md`, mais dessiner quatre emblèmes de jauge en SVG (médaillon à coins coupés) et des estampilles de canal. Les types LIVE, CHAT, CLIP et CONTRAT ont des textures locales différentes. Les personnages fictifs possèdent plusieurs expressions selon l'ambiance ; le plateau et la pile de cartes réagissent au déplacement du doigt.

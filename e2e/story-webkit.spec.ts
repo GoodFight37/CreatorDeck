@@ -13,6 +13,9 @@ test("Histoire Safari : cartes, jauges et mise en page sur iPhone", async ({ pag
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
   await expect(card.locator(".story-portrait-illustration")).toBeVisible();
   await expect(page.locator(".story-gauge-glyph")).toHaveCount(4);
+  await expect(page.locator(".story-run-clock")).toContainText("ÉP. 01");
+  await expect(page.locator(".story-mission summary")).toContainText("Premier direct");
+  await expect(page.locator(".story-stat-orb")).toHaveCount(4);
   const screen = page.viewportSize();
   expect(screen).not.toBeNull();
   const width = await page.evaluate(() => document.documentElement.scrollWidth);

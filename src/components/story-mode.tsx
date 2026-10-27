@@ -4,9 +4,10 @@ import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEven
 import Link from "next/link";
 import { StoryPortrait } from "./story-portrait";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
+import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/story-goals";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
-  STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative, storyChoiceSignals,
+  STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative,
   restoreStory, startStory, storyEpilogue, storyActInterlude, type StoryDirection, type StoryRun, type StoryStat,
 } from "../lib/story-mode";
 import "./story-mode.css";
@@ -61,6 +62,7 @@ export function StoryMode() {
   const [dragging, setDragging] = useState(false);
   const [exiting, setExiting] = useState<StoryDirection | null>(null);
   const [restartPending, setRestartPending] = useState(false);
+  const [inspectedStat, setInspectedStat] = useState<StoryStat | null>(null);
   const gesture = useRef<{ x: number; y: number; pointerId: number; startTime: number } | null>(null);
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
@@ -144,11 +146,13 @@ export function StoryMode() {
       : scene?.channel === "LIVE" ? "on-air" : "calm";
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
-  const previewDirection: StoryDirection | null = drag < -18 ? "left" : drag > 18 ? "right" : null;
+  const previewDirection: StoryDirection | null = exiting ? null : drag < -18 ? "left" : drag > 18 ? "right" : null;
   const swipeReveal = Math.min(1, Math.max(0, (Math.abs(drag) - 12) / 26));
   const previewStats = run && scene && previewDirection
-    ? storyChoiceSignals(run.stats, scene.choices[previewDirection].effects).map(({ stat }) => stat)
+    ? affectedStoryStats(run.stats, scene.choices[previewDirection].effects)
     : [];
+  const mission = run ? currentStoryGoal(run) : null;
+  const previousMission = run ? finishedStoryGoal(run) : null;
 
   // Le lancer est une vraie phase visuelle : on verrouille l'entrée jusqu'à la carte suivante.
   function decide(direction: StoryDirection, focusScene = false) {
@@ -262,28 +266,53 @@ export function StoryMode() {
         )}
         {!run ? <p role="status" className="story-loading">Chargement de la partie…</p> : (
           <>
-            <section className="story-stats" aria-label="Tes quatre jauges">
-              {STORY_STATS.map((key) => (
-                <div key={key} className="story-stat" data-low={run.stats[key] <= 20} data-preview={previewStats.includes(key)}>
-                  <div className="story-stat-top">
-                    <span className="story-stat-icon"><StoryGaugeIcon stat={key} /></span>
-                    <span className="story-stat-name">{STAT_LABELS[key].name}</span>
-                    <strong>{run.stats[key]} <span>/ 100</span></strong>
+            <div className="story-game-hud">
+              <div className="story-run-clock" aria-label={`Épisode ${run.step + 1} de la saison 1`}>
+                <span className="story-run-clock-label">SAISON 01</span>
+                <strong>ÉP. {String(Math.min(run.step + 1, SCRIPT.totalSteps)).padStart(2, "0")}</strong>
+              </div>
+              <section className="story-stats" aria-label="Les quatre jauges de la chaîne">
+                {STORY_STATS.map((key) => (
+                  <div key={key} className="story-stat" data-low={run.stats[key] <= 20}
+                    data-affected={previewStats.includes(key)} data-inspected={inspectedStat === key}>
+                    <button type="button" className="story-stat-top"
+                      onClick={() => setInspectedStat((selected) => selected === key ? null : key)}
+                      aria-label={`${STAT_LABELS[key].name} : ${run.stats[key]} sur 100. Afficher ou masquer le nom.`}
+                      aria-expanded={inspectedStat === key}
+                      title={STAT_LABELS[key].name}>
+                      <span className="story-stat-orb" aria-hidden="true" />
+                      <span className="story-stat-icon"><StoryGaugeIcon stat={key} /></span>
+                      <span className="story-stat-name">{STAT_LABELS[key].name}</span>
+                    </button>
+                    <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name}
+                      aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]}
+                      aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
+                      <div className={`story-meter-fill story-meter-${key}`} style={{ width: `${run.stats[key]}%` }} />
+                    </div>
+                    {run.stats[key] <= 20 && <span className="story-stat-alert" aria-hidden="true">⚠ NIVEAU CRITIQUE</span>}
                   </div>
-                  <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]} aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
-                    <div className={`story-meter-fill story-meter-${key}`} style={{ width: `${run.stats[key]}%` }} />
-                    {scene && previewDirection && previewStats.includes(key) && (() => {
-                      const predicted = Math.max(0, Math.min(100, run.stats[key] + (scene.choices[previewDirection].effects[key] ?? 0)));
-                      const low = Math.min(run.stats[key], predicted);
-                      return <span className="story-meter-preview" aria-hidden="true"
-                        data-trend={predicted >= run.stats[key] ? "up" : "down"}
-                        style={{ left: `${low}%`, width: `${Math.abs(predicted - run.stats[key])}%` }} />;
-                    })()}
+                ))}
+              </section>
+              {mission && (
+                <details className="story-mission" data-status={mission.status}>
+                  <summary aria-label={`Objectif : ${mission.title}. Voir la progression.`}>
+                    <span className="story-mission-check" aria-hidden="true">{mission.status === "success" ? "✓" : "□"}</span>
+                    <span className="story-mission-heading"><small>OBJECTIF</small><strong>{mission.title}</strong></span>
+                  </summary>
+                  <div className="story-mission-panel">
+                    <strong>{mission.title}</strong>
+                    <p>{mission.detail}</p>
+                    <div className="story-mission-track" role="progressbar" aria-label={mission.title}
+                      aria-valuemin={0} aria-valuemax={mission.target}
+                      aria-valuenow={Math.min(mission.progress, mission.target)}>
+                      <span style={{ width: `${Math.round(Math.min(1, mission.progress / mission.target) * 100)}%` }} />
+                    </div>
+                    <span className="story-mission-count">{mission.caption}</span>
+                    <span className="story-mission-status">{mission.status === "failure" ? "ÉCHOUÉ" : mission.status === "success" ? "RÉUSSI" : "EN COURS"}</span>
                   </div>
-                  {run.stats[key] <= 20 && <span className="story-stat-alert" aria-hidden="true">⚠ NIVEAU CRITIQUE</span>}
-                </div>
-              ))}
-            </section>
+                </details>
+              )}
+            </div>
             <div className="story-impact" role="status" aria-live="polite" aria-atomic="true">
               {lastEffects && changedStats.length > 0 && (
                 <>
@@ -337,6 +366,12 @@ export function StoryMode() {
                     <span className="story-act-roman" aria-hidden="true">{storyActNumber(run.step)}</span>
                     <strong>{interlude.title}</strong>
                     <p>{interlude.text}</p>
+                    {previousMission && (
+                      <div className="story-mission-outcome" data-status={previousMission.status}>
+                        <span aria-hidden="true">{previousMission.status === "success" ? "✓" : "×"}</span>
+                        Objectif {previousMission.title.toLowerCase()} : {previousMission.status === "success" ? "réussi" : "manqué"}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="story-deck" data-pulling={Math.abs(drag) >= 18} data-exiting={exiting !== null}
@@ -346,7 +381,10 @@ export function StoryMode() {
                     "--story-glint-shift": `${drag * 0.55}px`,
                   } as CSSProperties}>
                   <div className="story-deck-back story-deck-back-far" aria-hidden="true" />
-                  <div className="story-deck-back story-deck-back-near" aria-hidden="true" />
+                  <div className="story-deck-back story-deck-back-near" aria-hidden="true">
+                    <div className="story-back-card-seal"><span>CD</span><small>HISTOIRE</small></div>
+                    <div className="story-back-card-edition">S01 · CREATORDECK</div>
+                  </div>
                   <section
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
@@ -394,24 +432,10 @@ export function StoryMode() {
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
                     <strong>{scene.choices.left.label}</strong>
-                    <span className="story-choice-signals" aria-label="Deux principales variations">
-                      {storyChoiceSignals(run.stats, scene.choices.left.effects).map(({ stat, direction: trend }) => (
-                        <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
-                          <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
-                        </span>
-                      ))}
-                    </span>
                   </button>
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "right")}>
                     <span className="story-choice-direction">DROITE</span>
                     <strong>{scene.choices.right.label}</strong>
-                    <span className="story-choice-signals" aria-label="Deux principales variations">
-                      {storyChoiceSignals(run.stats, scene.choices.right.effects).map(({ stat, direction: trend }) => (
-                        <span key={stat} className="story-choice-signal" data-trend={trend} aria-label={`${STAT_LABELS[stat].name} en ${trend === "up" ? "hausse" : "baisse"}`}>
-                          <span aria-hidden="true">{trend === "up" ? "↑" : "↓"}</span> {STAT_LABELS[stat].name}
-                        </span>
-                      ))}
-                    </span>
                   </button>
                 </div>
                 {run.history.length > 0 && <StoryJournal run={run} />}
