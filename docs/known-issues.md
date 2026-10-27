@@ -1338,4 +1338,5 @@ Vercel `success` sur ce SHA. Résultat CI Actions non vérifiable depuis ce chat
 - Reproduction sur la PR #24 : une transition d'acte avec flags de plusieurs époques affichait en priorité les premiers souvenirs du prologue au lieu des décisions récentes. Le journal affichait « Rivalité ouverte » si `guerre_nox` persistait après le flag `paix_nox`.
 - Cause : ordre fixe des règles d'échos ; condition du statut Nox incomplète.
 - Correction préparée sur la branche expérimentale : tri statique décroissant des étapes d'échos, sans tri pendant le rendu, et priorité au flag d'apaisement. Tests unitaires ciblés ajoutés.
+- Incident de validation au premier passage : `RECENT_FIRST` était utilisé sans être déclaré dans `story-echoes.ts`, ce qui échouait à la compilation TypeScript et aux tests unitaires. La constante est maintenant explicitement déclarée ; CI du correctif encore à confirmer.
 - Statut : correction à vérifier sur CI du SHA publié ; non fusionnée sur `main`. Aucun changement du moteur, des sauvegardes V4 ou des autres modes.

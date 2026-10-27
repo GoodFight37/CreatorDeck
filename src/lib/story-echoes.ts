@@ -17,6 +17,9 @@ const RULES = [
   { since:36, flag:"vote_trahi", family:"flo", title:"Le vote ignoré", text:"Le procès-verbal du collectif garde la trace de ta décision." },
   { since:36, flag:"dette_nox_reglee", family:"nox", title:"Le reçu de Nox", text:"Le travail de Nox a été payé, pas simplement promis." },
 ] as const;
+// Les règles sont triées une fois, pas à chaque glissement de carte.
+const RECENT_FIRST = [...RULES].sort((a, b) => b.since - a.since);
+
 export function storyActEchoes(run: StoryRun): StoryEcho[] {
   if (run.ending || ![12,20,28,36].includes(run.step)) return [];
   const flags=new Set(run.flags), seen=new Set<string>(), echoes: StoryEcho[]=[];

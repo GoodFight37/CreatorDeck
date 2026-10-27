@@ -1,3 +1,9 @@
+# Checkpoint Histoire — correction de compilation des échos (27 octobre 2026)
+
+- Sur la PR brouillon #24, commit `ec1cb97561fa1bf3bd0e555bf86330eb1095b503` : WebKit vert, mais premier run « Vérification » a fait échouer les tests unitaires et TypeScript.
+- Cause établie dans le fichier du commit : `storyActEchoes` référence `RECENT_FIRST` sans déclaration après réorganisation du tri. Correction : constante module `const RECENT_FIRST = [...RULES].sort((a, b) => b.since - a.since)` placée avant la fonction.
+- Les autres fichiers restent identiques et l'ordre du moteur / sauvegarde V4 est inchangé. Contrôler les runs du commit réparé avant toute revendication de réussite. Ne pas toucher `main`, production, Supabase, économie ou autres modes, ne pas fusionner.
+
 # Checkpoint Histoire — lisibilité des choix (27 octobre 2026)
 
 - Revue des véritables captures Chromium du SHA `7f747c0` : les textes de décisions étaient encore à 11 px sur mobile. Augmentation des libellés (12–13 px), des cibles (62–65 px) et du padding, tout en conservant une grille à deux choix.
