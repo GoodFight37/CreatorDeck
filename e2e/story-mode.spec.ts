@@ -1186,3 +1186,35 @@ test("Histoire : libellés visibles sur plateau au swipe mobile, face opaque au 
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
   }
 });
+
+test("Histoire : lancer rapide conserve le seuil et accélère la sortie", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const deck = page.locator(".story-deck");
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 40, y, { steps: 5 });
+  await expect(deck.locator(".story-direction-left")).toHaveAttribute("data-active", "true");
+  await expect(card).toHaveAttribute("data-dragging", "true");
+  const moved = await card.boundingBox();
+  expect(moved).not.toBeNull();
+  if (moved) expect(Math.abs(moved.x - box.x)).toBeLessThan(52);
+  await page.mouse.move(x, y, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+  await expect(card).toHaveAttribute("data-dragging", "false");
+  await expect(card).toHaveCSS("opacity", "1");
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 99, y, { steps: 2 });
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  await expect(card).toHaveAttribute("data-exiting", "none");
+  await expect(page.locator(".story-recap-live li")).toHaveCount(1);
+});

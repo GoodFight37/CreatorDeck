@@ -1479,3 +1479,23 @@
 @media (prefers-reduced-motion: reduce) {
   .story-page .story-choice-preview-layer .story-direction { transition: none !important; }
 }
+
+
+/* Toucher papier : résistance douce du glissement avant décision, détente
+   accélérée au retour et lancer plus vif si le mouvement est rapide.
+   La direction et le contenu des choix restent figés sur le plateau. */
+.story-page .story-play-card:not([data-dragging="true"]):not([data-exiting="left"]):not([data-exiting="right"]) {
+  transition: transform .24s cubic-bezier(.20, .78, .22, 1.02), opacity .19s ease-out;
+}
+.story-page .story-play-card[data-exiting="left"],
+.story-page .story-play-card[data-exiting="right"] {
+  transition: transform var(--story-exit-duration,185ms) cubic-bezier(.18,.7,.25,1),
+    opacity var(--story-exit-duration,185ms) ease-in;
+}
+.story-page .story-play-card[data-dragging="true"] {
+  transition: none;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-page .story-play-card:not([data-dragging="true"]) { transition: none !important; }
+}

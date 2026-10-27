@@ -7,6 +7,7 @@ import { StoryEndingArtwork } from "./story-ending-artwork";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { StorySetPieces } from "./story-setpieces";
 import { storyCareerStage } from "../lib/story-presentation";
+import { storyThrowMotion, storyVisualAngle, storyVisualDrag } from "../lib/story-motion";
 import { storyActEchoes } from "../lib/story-echoes";
 import { storyBonds } from "../lib/story-bonds";
 import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/story-goals";
@@ -93,6 +94,7 @@ export function StoryMode() {
   const [run, setRun] = useState<StoryRun | null>(null);
   const [drag, setDrag] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [throwMotion, setThrowMotion] = useState(() => storyThrowMotion(0));
   const [exiting, setExiting] = useState<StoryDirection | null>(null);
   const [restartPending, setRestartPending] = useState(false);
   const [inspectedStat, setInspectedStat] = useState<StoryStat | null>(null);
@@ -187,7 +189,7 @@ export function StoryMode() {
   const previewDirection: StoryDirection | null = exiting ? null : drag < -18 ? "left" : drag > 18 ? "right" : null;
   const swipeReveal = Math.min(1, Math.max(0, (Math.abs(drag) - 12) / 26));
   // L\u0027amplitude des gestes reste réelle pour la validation ; seul le visuel est contenu sur petit écran.
-  const mobileVisualDrag = Math.sign(drag) * Math.min(48, Math.abs(drag) * 0.42);
+  const mobileVisualDrag = storyVisualDrag(drag);
   const previewStats = run && scene && previewDirection
     ? affectedStoryStats(run.stats, scene.choices[previewDirection].effects)
     : [];
@@ -199,7 +201,7 @@ export function StoryMode() {
   const previousMission = run ? finishedStoryGoal(run) : null;
 
   // Le lancer est une vraie phase visuelle : on verrouille l'entrée jusqu'à la carte suivante.
-  function decide(direction: StoryDirection, focusScene = false) {
+  function decide(direction: StoryDirection, focusScene = false, swipeSpeed = 0) {
     const expectedStep = run?.step;
     if (expectedStep === undefined || run?.ending || decisionPending.current) return;
     const now = performance.now();
@@ -214,6 +216,8 @@ export function StoryMode() {
     setInspectedStat(null);
     gesture.current = null;
     setDragging(false);
+    const motion = storyThrowMotion(swipeSpeed);
+    setThrowMotion(motion);
     setExiting(direction);
     setDrag(direction === "left" ? -135 : 135);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -223,7 +227,7 @@ export function StoryMode() {
       setExiting(null);
       decisionPending.current = false;
       transitionTimer.current = null;
-    }, reducedMotion ? 0 : 185);
+    }, reducedMotion ? 0 : motion.durationMs);
   }
 
   // Sur un appareil hybride, un tap peut laisser :hover actif même si
@@ -281,7 +285,8 @@ export function StoryMode() {
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     const quickFlick = Math.abs(dx) >= 56 && Math.abs(dx) / Math.max(1, performance.now() - start.startTime) >= 0.9;
-    if (!cancelled && (Math.abs(dx) >= 64 || quickFlick) && Math.abs(dx) > Math.abs(dy) * 1.2) decide(dx < 0 ? "left" : "right");
+    if (!cancelled && (Math.abs(dx) >= 64 || quickFlick) && Math.abs(dx) > Math.abs(dy) * 1.2)
+      decide(dx < 0 ? "left" : "right", false, Math.abs(dx) / Math.max(1, performance.now() - start.startTime));
     else setDrag(0);
   }
 
@@ -301,6 +306,7 @@ export function StoryMode() {
     decisionPending.current = false;
     swipeThresholdReached.current = false;
     setExiting(null);
+    setThrowMotion(storyThrowMotion(0));
     setDragging(false);
     setRestartPending(false);
     setInspectedStat(null);
@@ -474,9 +480,10 @@ export function StoryMode() {
                     "--story-motion-desktop": `${drag * 0.82}px`,
                     "--story-motion-mobile": `${mobileVisualDrag}px`,
                     "--story-tilt-desktop": `${drag * 0.065}deg`,
-                    "--story-tilt-mobile": `${Math.sign(drag) * Math.min(3.6, Math.abs(drag) * 0.035)}deg`,
+                    "--story-tilt-mobile": `${storyVisualAngle(drag)}deg`,
+                    "--story-exit-duration": `${throwMotion.durationMs}ms`,
                     transform: exiting
-                      ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
+                      ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? -throwMotion.angleDegrees : throwMotion.angleDegrees}deg)`
                       : `translate3d(var(--story-motion-x), ${-Math.min(4, Math.abs(drag) * 0.04)}px, 0) rotate(var(--story-tilt))`,
                   } as CSSProperties}
                 >

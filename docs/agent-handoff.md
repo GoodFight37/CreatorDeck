@@ -1,3 +1,9 @@
+# Checkpoint Histoire — audit natif et physique du swipe (27 octobre 2026)
+
+La demande porte explicitement sur l'analyse de l'APK Reigns **au niveau natif**, avant d'adapter CreatorDeck. Les adresses du `types.cs` ont permis de désassembler la bibliothèque ARM64 `libil2cpp.so` : `CardAct.LerpToPos`, `SlerpToPos`, `InputAct.CheckSlide/CheckUp/CheckBounds`. Seuil dynamique observé `2*stopamo`, durée de 50 ms sur un chemin de libération, interpolation bornée [0,1]. Les chemins Unity n'ont **pas été clonés** ; le code C# complet reste compilé et les détails de toutes les interpolations ne sont pas revendiqués.
+
+Après l'ancrage fixe des prévisualisations réalisé avant ce commit, ajout d'un helper pur `story-motion.ts` : résistance exponentielle/déplacement capé, inclinaison limitée et durée/rotation du lancer liée à la vitesse du geste, avec retour CSS souple. Tests pure Vitest et Playwright. Aucun changement des règles de décision (64 px ou flick rapide), contenu, sauvegarde V4, moteur, Supabase, économie ni `main`. Validation par CI du HEAD à lire séparément. Une vérification native Android/émulateur reste distincte des contrôles navigateurs.
+
 # Checkpoint Histoire — correction swipe mobile depuis captures réelles, 27 octobre 2026
 
 - Base distante contrôlée : `0d72d003f29fc3e053f0b9da87012a7dad82a17a` sur la PR #24 brouillon, branche `feature/histoire-reigns-pilot-20261026`. La demande porte sur trois défauts rapportés sur Redmi : cartouches masqués hors écran pendant le swipe gauche/droite, messages LIVE en trop, effet de carte fantôme lors d'un appui immobile.
