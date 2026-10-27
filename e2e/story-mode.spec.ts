@@ -52,6 +52,14 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   const card = page.locator(".story-play-card");
   const art = card.locator(".story-portrait-illustration");
   await expect(art).toBeVisible();
+  const portraitBounds = await art.boundingBox();
+  const monitorBounds = await card.locator(".story-scene-art").boundingBox();
+  expect(portraitBounds).not.toBeNull();
+  expect(monitorBounds).not.toBeNull();
+  if (portraitBounds && monitorBounds) {
+    // Une illustration surdimensionnée rend le personnage illisible.
+    expect(portraitBounds.width).toBeLessThan(monitorBounds.width * 0.86);
+  }
   const screenshotsDir = "test-results/mobile-observation-histoire";
   await mkdir(screenshotsDir, { recursive: true });
   const suffix = testInfo.project.name === "téléphone" ? "telephone" : "bureau";

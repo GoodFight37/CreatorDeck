@@ -463,3 +463,77 @@
   .story-impact-name { font-size: 10px; }
   .story-impact-value .story-gauge-glyph { width: 15px; height: 15px; }
 }
+
+/* VISUAL AUDIT 320 (captures Playwright) :
+   le SVG était rendu beaucoup trop grand, coupé en bas du moniteur et masqué
+   par le nom. Le portrait doit tenir dans son cadre quelle que soit la hauteur. */
+.story-play-card { justify-content: flex-start; gap: 8px; }
+.story-play-card .story-scene-art {
+  order: 1;
+  width: 100%;
+  height: clamp(168px, 31svh, 230px);
+  margin: 5px auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.story-portrait {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.story-portrait-illustration {
+  box-sizing: border-box;
+  display: block;
+  width: 60% !important;
+  min-width: 132px;
+  max-width: 210px !important;
+  height: auto !important;
+  max-height: 145% !important;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+.story-portrait-stamp { display: none; }
+.story-play-card .story-scene-art-label {
+  bottom: 7px;
+  padding: 4px 12px;
+  font-size: 11px;
+  border: 1px solid rgb(255 255 255 / .18);
+  border-radius: 999px;
+  background: rgb(8 8 12 / .78);
+  box-shadow: 0 4px 13px rgb(0 0 0 / .33);
+}
+.story-prompt {
+  order: 2;
+  max-width: 100%;
+  width: 100%;
+  margin: 3px auto 0;
+  padding: 11px 10px 12px;
+  border-left: 3px solid var(--story-character);
+  border-radius: 4px;
+  background: rgb(10 10 13 / .045);
+}
+.story-prompt h2 { font-size: clamp(26px, 7vw, 34px); margin: 0 0 7px; line-height: 1.05; }
+.story-prompt p { font-size: clamp(13px, 3.6vw, 15px); line-height: 1.4; max-width: 340px; }
+.story-play-card .story-speaker { order: 3; margin-top: 0; font-size: 9px; }
+.story-play-card .story-swipe-hint { order: 4; margin-top: 0; padding-bottom: 4px; }
+.story-play-card .story-card-meta { order: 0; }
+.story-play-card .story-act-interlude { order: 0; }
+@media (max-height: 640px) {
+  .story-play-card { gap: 5px; }
+  .story-play-card .story-scene-art { height: clamp(152px, 29svh, 188px); margin-top: 2px; }
+  .story-prompt { padding: 8px 8px 9px; }
+  .story-prompt h2 { font-size: 25px; margin-bottom: 5px; }
+  .story-prompt p { font-size: 13px; line-height: 1.32; }
+}
+@media (max-width: 370px) {
+  .story-portrait-illustration { width: 60% !important; min-width: 128px; }
+  .story-play-card .story-scene-art-label { font-size: 10px; }
+  .story-prompt { padding-inline: 8px; }
+}

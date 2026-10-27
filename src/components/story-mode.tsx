@@ -280,8 +280,7 @@ export function StoryMode() {
                         <span key={stat} className="story-impact-value" data-trend={delta > 0 ? "up" : "down"}>
                           <StoryGaugeIcon stat={stat} />
                           <span aria-hidden="true">{delta > 0 ? "↑" : "↓"}</span>
-                          <span className="story-impact-name">{STAT_LABELS[stat].name}</span>
-                          <strong>{delta > 0 ? "+" : ""}{delta}</strong>
+                          <span className="story-impact-name">{STAT_LABELS[stat].name} {delta > 0 ? "+" : ""}{delta}</span>
                         </span>
                       );
                     })}
@@ -351,7 +350,7 @@ export function StoryMode() {
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
-                  <div className="story-swipe-hint" data-intro={run.step === 0 && !dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>
+                  {run.step === 0 && <div className="story-swipe-hint" data-intro={!dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>}
                   </section>
                 </div>
                 <div ref={actionsRef} className="story-actions">
