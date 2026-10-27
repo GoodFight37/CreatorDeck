@@ -61,6 +61,46 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
               </g>
             )}
             {isNox && <path d="M100 131 Q120 139 141 130" stroke="var(--portrait-hair)" strokeWidth="5" strokeLinecap="round" fill="none" />}
+            {!isFlo && !isNox && !isMona && !isLina && !isCommunity && (
+              <g fill="none" stroke="var(--portrait-line)" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M68 101Q58 28 119 27Q179 28 172 101" strokeWidth="5" />
+                <rect x="60" y="93" width="13" height="28" rx="5" fill="var(--portrait-coat)" strokeWidth="3" />
+                <rect x="167" y="93" width="13" height="28" rx="5" fill="var(--portrait-coat)" strokeWidth="3" />
+                <path d="M65 116Q68 139 99 139" strokeWidth="3.5" />
+                <rect x="95" y="134" width="16" height="7" rx="3.5" fill="var(--portrait-line)" stroke="none" />
+              </g>
+            )}
+            {isFlo && (
+              <g fill="none" stroke="var(--portrait-line)" strokeLinecap="round">
+                <path d="M71 98Q56 34 120 29Q172 35 168 91" strokeWidth="3.5" />
+                <rect x="62" y="91" width="13" height="25" rx="5" fill="var(--portrait-coat)" strokeWidth="2.5" />
+                <path d="M65 114Q69 136 98 136" strokeWidth="2.5" />
+                <circle cx="101" cy="136" r="4" fill="var(--portrait-line)" stroke="none" />
+                <circle cx="97" cy="114" r="2.2" fill="var(--portrait-hair)" stroke="none" />
+                <circle cx="149" cy="114" r="2.2" fill="var(--portrait-hair)" stroke="none" />
+              </g>
+            )}
+            {isNox && (
+              <g fill="none" stroke="var(--portrait-line)" strokeWidth="3">
+                <path d="M172 111Q183 119 171 130Q162 124 171 116" />
+                <path d="M85 89L106 84M132 84L153 89" stroke="var(--portrait-eye)" strokeLinecap="round" />
+                <path d="M99 154L121 170L143 154" strokeWidth="3.5" />
+              </g>
+            )}
+            {isMona && (
+              <g stroke="var(--portrait-line)" fill="none" strokeLinecap="round">
+                <path d="M92 160Q120 180 148 160" strokeWidth="2.3" />
+                <path d="M119 169L125 175L119 181L113 175Z" fill="var(--portrait-line)" strokeWidth="1.5" />
+                <circle cx="174" cy="119" r="5" strokeWidth="2.5" />
+              </g>
+            )}
+            {isLina && (
+              <g>
+                <path d="M103 157L121 183L137 157" stroke="var(--portrait-line)" fill="none" strokeWidth="3.2" />
+                <rect x="135" y="175" width="28" height="16" rx="3" fill="var(--portrait-line)" />
+                <path d="M140 180H158M140 185H152" stroke="var(--portrait-coat)" strokeWidth="2.5" strokeLinecap="round" />
+              </g>
+            )}
             {isCommunity && <path d="M68 152 L120 185 L173 151" stroke="var(--portrait-line)" strokeWidth="4" opacity=".5" fill="none" />}
           </>
         )}
