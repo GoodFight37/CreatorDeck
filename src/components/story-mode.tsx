@@ -319,15 +319,17 @@ export function StoryMode() {
                       <p>{interlude.text}</p>
                     </div>
                   )}
+                  <div className="story-prompt">
+                    <h2 aria-live="polite">{scene.title}</h2>
+                    <p>{scene.text}</p>
+                  </div>
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} aria-hidden="true">
                     <span className="story-scene-art-channel">{scene.channel}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
-                  <h2 aria-live="polite">{scene.title}</h2>
-                  <p>{scene.text}</p>
-                  <div className="story-swipe-hint"><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>
+                  <div className="story-swipe-hint" data-intro={run.step === 0 && !dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>
                 </section>
                 <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
