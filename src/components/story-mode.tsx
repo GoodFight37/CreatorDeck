@@ -25,11 +25,11 @@ function storyActNumber(step: number): string {
   }
   return "I";
 }
-const STAT_LABELS: Record<StoryStat, { name: string }> = {
-  public: { name: "Public" },
-  energie: { name: "Énergie" },
-  argent: { name: "Argent" },
-  confiance: { name: "Confiance" },
+const STAT_LABELS: Record<StoryStat, { name: string; symbol: string }> = {
+  public: { name: "Public", symbol: "◉" },
+  energie: { name: "Énergie", symbol: "ϟ" },
+  argent: { name: "Argent", symbol: "€" },
+  confiance: { name: "Confiance", symbol: "♥" },
 };
 
 const STORY_SCENES_BY_ID = new Map(SCRIPT.scenes.map((scene) => [scene.id, scene] as const));
@@ -132,6 +132,10 @@ export function StoryMode() {
     : "toi";
   const lastEffects = run ? lastStoryAppliedEffects(SCRIPT, run) : null;
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
+  const previewDirection: StoryDirection | null = drag < -18 ? "left" : drag > 18 ? "right" : null;
+  const previewStats = run && scene && previewDirection
+    ? storyChoiceSignals(run.stats, scene.choices[previewDirection].effects).map(({ stat }) => stat)
+    : [];
 
   // Le lancer est une vraie phase visuelle : on verrouille l'entrée jusqu'à la carte suivante.
   function decide(direction: StoryDirection, focusScene = false) {
@@ -238,9 +242,10 @@ export function StoryMode() {
           <>
             <section className="story-stats" aria-label="Tes quatre jauges">
               {STORY_STATS.map((key) => (
-                <div key={key} className="story-stat" data-low={run.stats[key] <= 20}>
+                <div key={key} className="story-stat" data-low={run.stats[key] <= 20} data-preview={previewStats.includes(key)}>
                   <div className="story-stat-top">
-                    <span>{STAT_LABELS[key].name}</span>
+                    <span className="story-stat-icon" aria-hidden="true">{STAT_LABELS[key].symbol}</span>
+                    <span className="story-stat-name">{STAT_LABELS[key].name}</span>
                     <strong>{run.stats[key]} <span>/ 100</span></strong>
                   </div>
                   <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]} aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
