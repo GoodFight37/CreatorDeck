@@ -8,6 +8,7 @@
  * les portent, et un chiffre recopié finit toujours par mentir à l'écran.
  */
 import "./objectives.css";
+import Link from "next/link";
 import type { PointsOutcome } from "@/hooks/use-points";
 import { useEffect, useRef, useState } from "react";
 
@@ -282,6 +283,15 @@ export function MissionsView({
         </div>
       </section>
 
+      {process.env.NEXT_PUBLIC_STORY_ANDROID_PREVIEW === "1" ? (
+        <Link href="/histoire" className="story-preview-entry" aria-label="Ouvrir le mode Histoire Zéro spectateur">
+          <span className="story-preview-eyebrow">NOUVEAU MODE · APERÇU ANDROID</span>
+          <strong>Histoire : Zéro spectateur</strong>
+          <span>Construis ta chaîne. Glisse les cartes, examine les dossiers et assume tes choix.</span>
+          <span className="story-preview-action">COMMENCER L’HISTOIRE ›</span>
+        </Link>
+      ) : null}
+
       {/* Le jour : missions issues de la configuration, et la série qui
           avance tant qu'on ouvre un booster chaque jour. C'est la partie de
           l'écran qui se remet à zéro à 6 h UTC — pas à minuit, pour ne pas
@@ -381,7 +391,7 @@ export function MissionsView({
 
         <details>
           <summary>Autres activités</summary>
-          {onShowTribunal ? <button type="button" className="text-link" onClick={onShowTribunal}>Tribunal des Bannis</button> : null}
+          {onShowTribunal && process.env.NEXT_PUBLIC_STORY_ANDROID_PREVIEW !== "1" ? <button type="button" className="text-link" onClick={onShowTribunal}>Tribunal des Bannis</button> : null}
           {onOpenScene ? <>
             <span className="scene-state">{sceneOpened ? "Ouvert aujourd’hui" : cloud.sceneStatusLoading ? "Vérification…" : sceneReady ? "Disponible" : "À vérifier"}</span>
             <button type="button" className={`text-link scene-action${sceneOpened ? " is-opened" : ""}`}

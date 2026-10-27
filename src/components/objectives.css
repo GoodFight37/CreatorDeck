@@ -79,3 +79,10 @@
 .missions-view .mission-content > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
 .missions-view .mission-content > div:first-child > strong { flex-basis: 100%; }
 .missions-view .mission-content > div:first-child > span { font-size: 12px; }
+
+/* Accès réservé à l'APK expérimentale Histoire. */
+.story-preview-entry{display:grid;gap:7px;padding:17px 18px;margin:8px 0 18px;border:1px solid #ba985d;border-radius:13px;background:linear-gradient(135deg,#263138,#18232a 60%,#342c28);box-shadow:0 8px 18px rgb(0 0 0 / .23);text-decoration:none;color:#f7e9d5;font-size:13px;line-height:1.45}
+.story-preview-entry strong{font:900 clamp(25px,7vw,34px)/1 "Barlow Condensed",sans-serif;letter-spacing:.01em;color:#fff4df}
+.story-preview-eyebrow{color:#d8c08e;font-size:10px;letter-spacing:.12em;font-weight:900}
+.story-preview-action{margin-top:5px;font-size:12px;letter-spacing:.07em;font-weight:900;color:#d5f69c}
+.story-preview-entry:focus-visible{outline:3px solid #d5f69c;outline-offset:3px}

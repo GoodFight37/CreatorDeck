@@ -791,7 +791,7 @@ export function CreatorDeckApp() {
         onShowSettings={ouvrirFeuille(setSettingsOpen)}
         settingsAlert={cloud.syncNeedsChoice || cloud.isError}
       />
-      <AppUpdateBanner />
+      {process.env.NEXT_PUBLIC_STORY_ANDROID_PREVIEW !== "1" ? <AppUpdateBanner /> : null}
       <div className="app-content">
         {tab === "home" ? (
           <HomeView

@@ -15,6 +15,7 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.creatordeck.app"
+        manifestPlaceholders["cdAppLabel"] = "CreatorDeck"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // D-144 : un numéro qui augmente à chaque compilation, sur toutes les
@@ -45,6 +46,10 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            if (project.findProperty("cdStoryPreview")?.toString() == "true") {
+                applicationIdSuffix ".histoire"
+                manifestPlaceholders["cdAppLabel"] = "CreatorDeck Histoire"
+            }
         }
         release {
             minifyEnabled false
