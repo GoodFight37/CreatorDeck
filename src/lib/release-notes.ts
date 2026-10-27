@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-27-manga-drop", date: "2026-10-27", title: "Le nouveau sachet Manga Drop",
+    summary: "Le booster Anime adopte le visuel Manga Drop, noir et or, avec son personnage aux cheveux argentés.",
+    sections: [{ title: "Booster Anime", items: [
+      "Le nouveau sachet apparaît dans le carrousel et pendant l’ouverture.",
+      "La déchirure suit sa soudure argentée ; les cinq cartes se révèlent comme avant.",
+    ] }],
+  },
+  {
     id: "2026-10-27-anime-integration", date: "2026-10-27", title: "Une première collection Anime",
     summary: "Le Drop accueille un booster Anime et un classeur de vingt cartes conservées sur cet appareil.",
     sections: [{ title: "Anime", items: [

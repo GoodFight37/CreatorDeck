@@ -450,7 +450,7 @@ html:has(.booster-presentation) { overflow: hidden; }
 /* Plus de reflet en boucle sur le sachet de l'accueil (fluidité) : seul son balancement reste. */
 
 .booster-cinematic.booster-presentation .foil-top-piece {
-  transform-style: preserve-3d; transform-origin: var(--peel-origin-x, 50%) 15.45%; backface-visibility: hidden;
+  transform-style: preserve-3d; transform-origin: var(--peel-origin-x, 50%) var(--pack-seam-y, 15.45%); backface-visibility: hidden;
   transition: transform 160ms ease-out;
 }
 .booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
@@ -461,17 +461,17 @@ html:has(.booster-presentation) { overflow: hidden; }
     rotateZ(var(--peel-angle, 0deg));
 }
 .booster-cinematic.booster-presentation .foil-top-piece {
-  clip-path: var(--cut-top, inset(0 0 84.55%));
+  clip-path: var(--cut-top, inset(0 0 calc(100% - var(--pack-seam-y, 15.45%))));
   transition: clip-path 180ms ease-out, transform 160ms ease-out;
 }
 .booster-cinematic.booster-presentation .booster-foil-glow {
   display: none;
 }
 .booster-cinematic.booster-presentation .foil-body-piece {
-  clip-path: var(--cut-body, inset(15.45% 0 0));
+  clip-path: var(--cut-body, inset(var(--pack-seam-y, 15.45%) 0 0));
 }
 .booster-cinematic.booster-presentation .foil-body-piece {
-  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden;
+  transform-style: preserve-3d; transform-origin: 50% var(--pack-seam-y, 15.45%); backface-visibility: hidden;
   transition: clip-path 180ms ease-out;
 }
 .booster-cinematic.booster-presentation .is-pulling .foil-body-piece {
@@ -808,7 +808,7 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   position: absolute;
   left: calc(var(--cut-start, 7%) - 4%);
   width: calc(var(--cut-end, 7%) - var(--cut-start, 7%) + 8%);
-  bottom: calc(84.55% - 3%);
+  bottom: calc(100% - var(--pack-seam-y, 15.45%) - 3%);
   height: calc(6% + var(--peel-progress, 0) * 26%);
   background: radial-gradient(ellipse 62% 100% at 50% 100%,
     rgb(255 249 226 / .98), rgb(255 200 166 / .58) 42%, rgb(240 111 151 / .16) 66%, transparent 82%);
@@ -817,7 +817,7 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   position: absolute;
   left: calc(var(--cut-start, 7%) + 3%);
   width: calc(var(--cut-end, 7%) - var(--cut-start, 7%) - 6%);
-  top: calc(15.45% - 12px);
+  top: calc(var(--pack-seam-y, 15.45%) - 12px);
   height: 12px;
   border-radius: 3px 3px 0 0;
   background: repeating-linear-gradient(180deg, #f6e6d6 0 1.5px, #4a2447 1.5px 3px);
@@ -833,7 +833,7 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 
 .foil-burst {
   position: absolute; z-index: 6; pointer-events: none;
-  left: 50%; top: 15.45%; width: 260%; aspect-ratio: 1; margin: -130% 0 0 -130%;
+  left: 50%; top: var(--pack-seam-y, 15.45%); width: 260%; aspect-ratio: 1; margin: -130% 0 0 -130%;
   border-radius: 50%; opacity: 0; transform: translateZ(40px) scale(.12);
   background: radial-gradient(circle, rgb(255 249 228 / .96) 0, rgb(255 196 160 / .58) 13%,
     rgb(240 111 151 / .22) 32%, transparent 56%);
@@ -858,11 +858,11 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 }
 
 /* Les cartes sortent du sachet : tant qu'elles sont dedans, on ne les voit qu'au-dessus
-   de la soudure (15,45 % de la hauteur), puis le masque s'ouvre en grand. */
+   de la soudure du sachet, puis le masque s'ouvre en grand. */
 .foil-chamber-mask { position: absolute; inset: 0; pointer-events: none; }
 .booster-foil-open .foil-chamber-mask { animation: foil-chamber-unmask var(--pack-extraction-ms, 1200ms) linear both; }
 @keyframes foil-chamber-unmask {
-  0%, 30% { clip-path: inset(-400% -100% 84.55% -100%); }
+  0%, 30% { clip-path: inset(-400% -100% calc(100% - var(--pack-seam-y, 15.45%)) -100%); }
   52%, 100% { clip-path: inset(-400% -100% -400% -100%); }
 }
 [data-card-fx="off"] .booster-foil-open .foil-chamber-mask { animation: none; }

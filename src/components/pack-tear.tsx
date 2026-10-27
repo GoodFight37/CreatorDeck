@@ -207,16 +207,18 @@ export function PackTear({
     setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
   };
 
+  // La palette de la scène et des dos suit le sachet ouvert (booster-continuity.css).
+  const universe = customArtwork?.includes("anime") ? "anime" : customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes" : customArtwork?.includes("imgflip") ? "imgflip"
+    : kind === "live" ? "live" : undefined;
+  // La soudure du visuel Manga Drop est plus fine ; le geste reste partagé.
+  const seamY = customArtwork === "/packs/anime-opening.webp" ? 6.24 : 15.45;
   // Keep the drawn path in touch order: X reversals and deliberate Y bends are
   // part of the cut, not noise to collapse into a horizontal rail.
   const edge = smoothPeelEdge(trace);
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
-    : "0% 15.45%, 100% 15.45%";
+    : `0% ${seamY}%, 100% ${seamY}%`;
   const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
-  // La palette de la scène et des dos de carte suit le sachet ouvert (booster-continuity.css).
-  const universe = customArtwork?.includes("anime") ? "anime" : customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes" : customArtwork?.includes("imgflip") ? "imgflip"
-    : kind === "live" ? "live" : undefined;
 
   return createPortal(
     <div
@@ -225,7 +227,7 @@ export function PackTear({
       className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`}
       data-universe={universe}
       role="dialog"
-      style={{ "--pack-extraction-ms": `${PACK_TEAR_MS}ms` } as CSSProperties}
+      style={{ "--pack-extraction-ms": `${PACK_TEAR_MS}ms`, "--pack-seam-y": `${seamY}%` } as CSSProperties}
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
       aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"}
       aria-modal="true"
@@ -255,8 +257,8 @@ export function PackTear({
             "--peel-progress": cut.progress / 100,
             "--peel-direction": cut.direction,
             "--peel-origin-x": `${cut.origin}%`,
-            "--cut-top": `polygon(0% 0%, 100% 0%, 100% 15.45%, ${[...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || "0% 15.45%"}, 0% 15.45%)`,
-            "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)`,
+            "--cut-top": `polygon(0% 0%, 100% 0%, 100% ${seamY}%, ${[...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || `0% ${seamY}%`}, 0% ${seamY}%)`,
+            "--cut-body": `polygon(0% ${seamY}%, ${boundary}, 100% ${seamY}%, 100% 100%, 0% 100%)`,
           } as CSSProperties}
         >
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />

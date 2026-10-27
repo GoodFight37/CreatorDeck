@@ -66,6 +66,14 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   await page.getByRole("button", { name: "ANIME", exact: true }).click();
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "anime");
+  await carousel.evaluate(async (node) => {
+    await Promise.all(node.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+      .map((animation) => animation.finished));
+  });
+
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.screenshot({ path: `reports/manga-drop/${test.info().project.name}-drop.png` });
 
   await page.getByRole("button", { name: "Ouvrir le booster Anime", exact: true }).click();
   const scene = page.locator('.opening-continuum[data-universe="anime"]');
@@ -76,7 +84,16 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   })).toEqual(["#fcf4ff", "#b49bff"]);
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /anime-opening/);
   await expect.poll(() => scene.locator(".foil-printed-art").first().evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([1050, 1540]);
-  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const tear = scene.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });
+  await expect.poll(() => tear.evaluate((node: HTMLElement) => Number.parseFloat(getComputedStyle(node).top) / (node.offsetParent as HTMLElement).clientHeight)).toBeCloseTo(.0624, 2);
+  await page.screenshot({ path: `reports/manga-drop/${test.info().project.name}-sealed.png` });
+  const weld = (await tear.boundingBox())!;
+  const y = weld.y + weld.height / 2;
+  await page.mouse.move(weld.x + weld.width * .05, y);
+  await page.mouse.down();
+  await page.mouse.move(weld.x + weld.width * .95, y - 35, { steps: 18 });
+  await page.screenshot({ path: `reports/manga-drop/${test.info().project.name}-tearing.png` });
+  await page.mouse.up();
   await expect(page.getByRole("region", { name: "Résultat du booster Anime" })).toBeVisible({ timeout: 10_000 });
 
   for (let index = 0; index < 5; index++) {
@@ -308,7 +325,7 @@ test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   for (const width of [320, 390, 1024]) {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    for (const universe of ["Live Drop", "MEMES"]) {
+    for (const universe of ["Live Drop", "MEMES", "ANIME"]) {
       await page.getByRole("button", { name: universe, exact: true }).click();
       await page.locator(".booster-carousel").evaluate(async (node) => {
         await Promise.all(node.getAnimations({ subtree: true })

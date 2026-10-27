@@ -1,5 +1,23 @@
 # Passation CreatorDeck — Kyara
 
+## Manga Drop — 27 octobre 2026
+
+Intégration directe demandée par Malik du visuel approuvé : source raster
+`assets/packs/anime-opening.png`, rendu `public/packs/anime-opening.webp`.
+Le script `build-pack-webp.mjs` utilise ce PNG pour Anime et les SVG existants
+pour les autres univers ; `generate-anime-pack.mjs` régénère Anime seul depuis
+la même source. Le PNG remplace le SVG comme source active d’Anime.
+Carrousel et ouverture utilisent le même WebP. La déchirure partagée suit la
+soudure de l’image à 6,24 % ; aucun autre geste ni règle de tirage ne change.
+Le parcours navigateur bureau/téléphone vérifie une vraie déchirure, les cinq
+révélations, le retour du focus et le classeur. Aucune APK locale construite.
+Vérifié : 12/12 E2E ciblés, dont les gestes/annulations des autres sachets et
+les tailles 320/390/1024 ; 265/265 écrans ; 11/11 tests géométrie/notes ;
+typecheck, lint ciblé et compilation statique réussis. Captures relues dans
+`reports/manga-drop/`. Trois anciennes attentes de la CI sur les trois univers
+ont été actualisées pour tenir compte d’Anime, quatrième univers déjà intégré.
+Les checkpoints ci-dessous décrivent les versions précédentes du visuel.
+
 ## Checkpoint local — 27 octobre 2026 : Anime intégré au jeu
 
 ### Transmission demandée sur main

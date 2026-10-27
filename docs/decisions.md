@@ -1,3 +1,14 @@
+## D-173 — 27 octobre 2026 : le visuel Manga Drop remplace le sachet Anime
+
+Malik valide l’illustration Manga Drop et demande son intégration directe au
+jeu avec la déchirure existante. Source raster détourée dans
+`assets/packs/anime-opening.png`, WebP 1 050 × 1 540 généré par
+`scripts/build-pack-webp.mjs`, mêmes références carrousel et ouverture.
+La soudure de cette image se situe à 6,24 % : seule sa position est adaptée ;
+seuils du geste, extraction, révélation et autres univers conservent leur
+fonctionnement (soudure par défaut à 15,45 %). La sélection garde le nom Anime.
+La consigne de ne pas construire d’APK locale reste applicable.
+
 ## D-172 — 27 octobre 2026 : packaging Anime au gabarit des sachets CreatorDeck
 
 Le packaging Anime abstrait de 690 × 1 000 est refusé par Malik. Le nouveau

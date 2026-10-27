@@ -49,7 +49,7 @@ describe("troisième sachet Imgflip : carrousel", () => {
   it("place Imgflip après MEMES et garde un seul sachet accessible", async () => {
     await banc.monter(<CarouselHarness />);
     expect([...document.querySelectorAll("[data-booster]")].map(node => node.getAttribute("data-booster")))
-      .toEqual(["live", "memes", "imgflip"]);
+      .toEqual(["live", "memes", "imgflip", "anime"]);
     banc.appuyer("IMGFLIP");
     expect(document.querySelector('[data-booster="imgflip"] img')?.getAttribute("src")).toContain("imgflip-opening.webp");
     expect(document.querySelectorAll('.booster-pack-slot button:not([inert])')).toHaveLength(1);
@@ -58,7 +58,7 @@ describe("troisième sachet Imgflip : carrousel", () => {
     expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("memes");
   });
 
-  it("glisse de MEMES à IMGFLIP et résiste au bout du carrousel sans ouvrir", async () => {
+  it("glisse de MEMES à IMGFLIP puis Anime et résiste au bout du carrousel sans ouvrir", async () => {
     await banc.monter(<CarouselHarness />);
     banc.appuyer("MEMES");
     const stage = document.querySelector(".booster-carousel")!;
@@ -74,6 +74,10 @@ describe("troisième sachet Imgflip : carrousel", () => {
     swipe(250, 100);
     expect(stage.getAttribute("data-universe")).toBe("imgflip");
     swipe(250, 100);
+    expect(stage.getAttribute("data-universe")).toBe("anime");
+    swipe(250, 100);
+    expect(stage.getAttribute("data-universe")).toBe("anime");
+    swipe(100, 250);
     expect(stage.getAttribute("data-universe")).toBe("imgflip");
     swipe(100, 250);
     expect(stage.getAttribute("data-universe")).toBe("memes");
