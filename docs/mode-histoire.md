@@ -158,3 +158,7 @@ Le journal affiche les portraits vectoriels de Flo, Nox, Mona et Lina à partir 
 ## Galerie de contrôle de la livraison (27 octobre 2026)
 
 L'ancien test Playwright attendait une icône LIVE dans chaque fin, alors que la carte finale utilise désormais sa gravure propre. L'assertion a été actualisée sur la nouvelle icône. Une galerie E2E parcourt les neuf chemins connus et restaure neuf sauvegardes valides, contrôle la différence du SVG pour chaque dénouement et capture chaque fin à 390 px ; le journal illustré est capturé ouvert à 320 px. Ces contrôles renforcent la revue visuelle sans modifier la partie réelle.
+
+## Cadrage des portraits du carnet (27 octobre 2026)
+
+La capture réelle 320 px du commit c296270 montrait Flo et Nox très petits et au bas de leur vignette. La miniature est recadrée au niveau du visage et le dessin dépasse volontairement les bords, masqués par le cadre. Assertion Playwright sur le rapport d'échelle du portrait (au moins deux fois la largeur visible) et nouvelle capture du journal à 320 px. Le portrait de la scène principale n'est pas modifié.

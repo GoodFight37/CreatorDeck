@@ -1,3 +1,9 @@
+# Checkpoint Histoire — gros plan miniature carnet (27 octobre 2026)
+
+- Base : commit c29627068031375463edf0b94e8e4dc9416c0d87, PR #24 brouillon. Playwright 2/3 réussi, dont les neuf fins et les captures. Unitaires/TypeScript/build/SQL/RPC réussis ; Playwright 1/3 et 3/3 à confirmer.
+- Inspection réelle des fichiers de captures de c296270 : neuf cartes finales distinctes, lisibles à 390 px. Journal à 320 px : les personnages étaient beaucoup trop petits dans les vignettes de 60 px, avec un grand vide au-dessus. Correctif CSS ciblé : recadrer le visage, masquer le surplus dans le cadre, sans redessiner les autres portraits. Test de dimension + capture 320 px.
+- Ne pas annoncer le rendu rectifié validé avant capture du commit suivant. Aucun changement de moteur, économie, sauvegarde V4, Supabase, autres modes ou main. Ne pas fusionner, pas de test APK Android natif dans ce contexte.
+
 # Checkpoint Histoire — vérification des neuf gravures (27 octobre 2026)
 
 - Sur la PR #24, base 89aa26cb0476588d50a5d82723b909a50fe88cea. Build et tests unitaires verts sur cette base ; le shard Playwright 2/3 a trouvé une ancienne assertion qui attendait encore .story-channel-glyph sur la fin. Le produit affiche désormais .story-ending-artwork, conformément à la nouvelle direction artistique.

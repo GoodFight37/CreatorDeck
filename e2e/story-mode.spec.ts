@@ -962,6 +962,11 @@ test("Histoire : les relations montrent les vrais portraits et ne prédisent pas
   await expect(page.locator(".story-recap-live")).not.toHaveAttribute("open", "");
   await page.locator(".story-recap-live summary").click();
   await expect(page.locator(".story-bond[data-person='nox'] .story-portrait-illustration")).toBeVisible();
+  const framing = await page.locator(".story-bond-portrait").evaluateAll(frames => frames.map(frame => ({
+    portraitWidth: frame.querySelector(".story-portrait-illustration")!.getBoundingClientRect().width,
+    frameWidth: frame.getBoundingClientRect().width,
+  })));
+  for (const { portraitWidth, frameWidth } of framing) expect(portraitWidth / frameWidth).toBeGreaterThan(2);
   await mkdir("test-results/mobile-observation-histoire", { recursive: true });
   await page.screenshot({ path: "test-results/mobile-observation-histoire/journal-portraits-320.png", fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);

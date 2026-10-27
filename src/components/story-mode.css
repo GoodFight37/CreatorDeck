@@ -1203,3 +1203,25 @@
 .story-bond[data-person] .story-bond-portrait {
   background: radial-gradient(circle at 50% 43%, var(--portrait-halo), var(--bg-deep) 80%);
 }
+
+/* Revue capture journal 320 px : rapprocher réellement la caméra sur les visages.
+   Une miniature de 60 px ne doit pas montrer un personnage perdu en bas du cadre. */
+.story-bond-portrait .story-portrait-illustration {
+  position: absolute;
+  left: 50%;
+  bottom: -36px;
+  width: 160px !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 140px !important;
+  max-height: none !important;
+  transform: translateX(-50%);
+  filter: none;
+}
+@media (max-width: 370px) {
+  .story-bond-portrait .story-portrait-illustration {
+    width: 148px !important;
+    height: 130px !important;
+    bottom: -34px;
+  }
+}
