@@ -2,6 +2,30 @@ import { expect, test } from "@playwright/test";
 import { STORY_PROLOGUE } from "../src/data/story-prologue";
 import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
+test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paquet", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-gauge-glyph")).toHaveCount(4);
+  await expect(page.locator(".story-gauge-glyph").first().locator("path")).not.toHaveCount(0);
+  await expect(page.locator(".story-stat-name")).toHaveText(["Public", "Énergie", "Argent", "Confiance"]);
+  await expect(page.locator(".story-channel-glyph")).toBeVisible();
+  await expect(page.locator(".story-deck-back")).toHaveCount(2);
+  const card = page.locator(".story-play-card");
+  const deck = page.locator(".story-deck");
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 82, y, { steps: 4 });
+  await expect(deck).toHaveAttribute("data-pulling", "true");
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  await expect(page.locator(".story-page")).toHaveAttribute("data-channel", "CHAT");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
+
 test("Histoire : carte mobile dominante, portrait et options révélées au doigt", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");

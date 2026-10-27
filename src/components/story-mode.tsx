@@ -65,6 +65,7 @@ export function StoryMode() {
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
   const decisionPending = useRef(false);
+  const swipeThresholdReached = useRef(false);
   const transitionTimer = useRef<number | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
@@ -146,6 +147,7 @@ export function StoryMode() {
     if (now - lastDecisionAt.current < 450) return;
     lastDecisionAt.current = now;
     decisionPending.current = true;
+    if (typeof window.navigator.vibrate === "function") window.navigator.vibrate(12);
     focusNextScene.current = focusScene;
     setRestartPending(false);
     gesture.current = null;
@@ -182,6 +184,7 @@ export function StoryMode() {
   function pointerDown(event: PointerEvent<HTMLElement>) {
     if (!scene || gesture.current || decisionPending.current) return;
     gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+    swipeThresholdReached.current = false;
     setDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -190,13 +193,18 @@ export function StoryMode() {
     if (!gesture.current || gesture.current.pointerId !== event.pointerId || decisionPending.current) return;
     const dx = event.clientX - gesture.current.x;
     const dy = event.clientY - gesture.current.y;
-    setDrag(Math.abs(dx) >= Math.abs(dy) * 1.2 ? Math.max(-135, Math.min(135, dx)) : 0);
+    const horizontal = Math.abs(dx) >= Math.abs(dy) * 1.2;
+    const armed = horizontal && Math.abs(dx) >= 64;
+    if (armed && !swipeThresholdReached.current && typeof window.navigator.vibrate === "function") window.navigator.vibrate(8);
+    swipeThresholdReached.current = armed;
+    setDrag(horizontal ? Math.max(-135, Math.min(135, dx)) : 0);
   }
 
   function pointerEnd(event: PointerEvent<HTMLElement>, cancelled = false) {
     const start = gesture.current;
     if (!start || start.pointerId !== event.pointerId) return;
     gesture.current = null;
+    swipeThresholdReached.current = false;
     setDragging(false);
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
@@ -216,6 +224,7 @@ export function StoryMode() {
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
     transitionTimer.current = null;
     decisionPending.current = false;
+    swipeThresholdReached.current = false;
     setExiting(null);
     setDragging(false);
     setRestartPending(false);
@@ -227,7 +236,7 @@ export function StoryMode() {
   }
 
   return (
-    <main className="story-page">
+    <main className="story-page" data-channel={scene?.channel ?? "FIN"} data-character={character}>
       <header className="story-header">
         <Link href="/" className="story-back" aria-label="Retour à CreatorDeck">‹ CreatorDeck</Link>
         <div className="story-brand">MODE HISTOIRE <span>· PILOTE</span></div>
@@ -293,7 +302,10 @@ export function StoryMode() {
                   <span>{run.step + 1} / {SCRIPT.totalSteps}</span>
                 </div>
                 <div className="story-progress-track" aria-hidden="true"><span style={{ width: `${((run.step + 1) / SCRIPT.totalSteps) * 100}%` }} /></div>
-                <section
+                <div className="story-deck" data-pulling={Math.abs(drag) >= 18} data-exiting={exiting !== null}>
+                  <div className="story-deck-back story-deck-back-far" aria-hidden="true" />
+                  <div className="story-deck-back story-deck-back-near" aria-hidden="true" />
+                  <section
                   key={scene.id} ref={sceneRef} className="story-card story-play-card" tabIndex={0}
                   data-character={character}
                   data-dragging={dragging}
@@ -331,7 +343,8 @@ export function StoryMode() {
                   </div>
                   <div className="story-speaker">{scene.speaker === "TOI" ? "TON POINT DE VUE" : scene.speaker}</div>
                   <div className="story-swipe-hint" data-intro={run.step === 0 && !dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>
-                </section>
+                  </section>
+                </div>
                 <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>
                     <span className="story-choice-direction">GAUCHE</span>
