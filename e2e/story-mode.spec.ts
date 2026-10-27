@@ -2,6 +2,45 @@ import { expect, test } from "@playwright/test";
 import { STORY_PROLOGUE } from "../src/data/story-prologue";
 import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
+test("Histoire : carte mobile dominante, portrait et options révélées au doigt", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const art = card.locator(".story-portrait-illustration");
+  await expect(art).toBeVisible();
+  await expect(card).toHaveAttribute("data-character", "toi");
+  const statsColumns = await page.locator(".story-stats").evaluate(
+    (element) => getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean).length,
+  );
+  expect(statsColumns).toBe(4);
+  const bounds = await card.boundingBox();
+  expect(bounds).not.toBeNull();
+  if (!bounds) return;
+  expect(bounds.height).toBeGreaterThanOrEqual(310);
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+
+  // Déplacer et revenir au centre n'est pas une décision.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 42, y, { steps: 4 });
+  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "true");
+  await expect(card.locator(".story-direction-left")).toContainText("Rester avec le téléphone");
+  await page.mouse.move(x, y, { steps: 4 });
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+
+  // Le vrai glissement quitte la scène, change de personnage et garde le portrait.
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 96, y, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  await expect(page.locator(".story-play-card")).toHaveAttribute("data-character", "flo");
+  await expect(page.locator(".story-portrait-illustration")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
+
 test("Histoire : les choix persistent après un rechargement", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
