@@ -1,3 +1,11 @@
+# Checkpoint Histoire — inspection de dossiers (27 octobre 2026)
+
+- Demande : continuer à développer pendant le quota Vercel bloqué ; tendre vers le poids narratif des décisions de Reigns et les enquêtes documentaires de Papers, Please.
+- Branche pilote PR #24 uniquement, ancien HEAD de départ `440111a1cbcefbc15802af19330ae04142a3194d`, CI précédent entièrement vert. Aucun merge ni intervention sur production, économie, règles de choix ou sauvegarde V4.
+- Ajout original : dossiers facultatifs à 3 pièces pour 8 scènes de sponsors, enquêtes, contrats et collecte. Un résultat positif apparaît si les deux preuves importantes ont été sélectionnées, sinon un indice neutre ; les joueurs peuvent ignorer les dossiers et choisir à tout moment. Carte et boutons gardent leur place. Nouvelle UI montée avec clé `scene.id`, réinitialisée sur changement de scène, accessible au clavier et au mobile.
+- À vérifier sur le nouveau SHA : typecheck, unitaires, Chromium 320×568, WebKit, captures mobile, aucun débordement ni blocage des décisions. Aucune simulation ne constitue une preuve de vrai appareil Android. Vercel renvoie `402 api-deployments-free-per-day`; ancienne alias d'Histoire servait encore `8dda6091` au moment de la vérification, ne pas dire que le nouveau code est jouable en prévisualisation.
+- Références de design consultées : Nerial/Devolver sur la boucle binaire et Lucas Pope sur l'inspection mobile ; seuls les principes sont repris, pas leurs données ni assets.
+
 # Checkpoint Histoire — audit natif et physique du swipe (27 octobre 2026)
 
 La demande porte explicitement sur l'analyse de l'APK Reigns **au niveau natif**, avant d'adapter CreatorDeck. Les adresses du `types.cs` ont permis de désassembler la bibliothèque ARM64 `libil2cpp.so` : `CardAct.LerpToPos`, `SlerpToPos`, `InputAct.CheckSlide/CheckUp/CheckBounds`. Seuil dynamique observé `2*stopamo`, durée de 50 ms sur un chemin de libération, interpolation bornée [0,1]. Les chemins Unity n'ont **pas été clonés** ; le code C# complet reste compilé et les détails de toutes les interpolations ne sont pas revendiqués.

@@ -6,6 +6,7 @@ import { StoryPortrait } from "./story-portrait";
 import { StoryEndingArtwork } from "./story-ending-artwork";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { StorySetPieces } from "./story-setpieces";
+import { StoryInspectionDesk } from "./story-inspection-desk";
 import { storyCareerStage } from "../lib/story-presentation";
 import { storyThrowMotion, storyVisualAngle, storyVisualDrag } from "../lib/story-motion";
 import { storyActEchoes } from "../lib/story-echoes";
@@ -538,6 +539,7 @@ export function StoryMode() {
                     <strong>{scene.choices.right.label}</strong>
                   </button>
                 </div>
+                <StoryInspectionDesk key={scene.id} scene={scene} />
                 {run.history.length > 0 && <StoryJournal key={`journal-${run.step}`} run={run} />}
                 {run.step > 0 && (
                   <div className="story-restart">

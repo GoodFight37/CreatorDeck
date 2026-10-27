@@ -34,6 +34,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Le décor du direct évolue selon ton avancée et tes moyens : premier équipement, équipe ou véritable régie.",
       "Sur téléphone, les réponses restent lisibles au centre pendant le glissement, le paquet ne s\u0027échappe plus avant validation et un simple appui ne révèle plus son dos.",
       "Le geste sur les cartes a davantage de souplesse : résistance progressive, retour doux et lancer plus rapide après un mouvement vif.",
+      "De nouveaux dossiers d'enquête facultatifs te permettent de comparer les pièces de certains contrats et scandales avant de trancher.",
       "Dans le journal de bord, retrouve l’évolution de tes liens avec Flo, Nox, Mona et Lina après leurs rencontres.",
       "Le carnet présente les portraits de tes interlocuteurs dès leur première rencontre, sans dévoiler les futurs personnages.",
       "Chaque fin possède sa propre gravure originale : le dernier écran reflète le sort de ta chaîne.",

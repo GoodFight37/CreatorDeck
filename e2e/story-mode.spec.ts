@@ -1218,3 +1218,33 @@ test("Histoire : lancer rapide conserve le seuil et accélère la sortie", async
   await expect(card).toHaveAttribute("data-exiting", "none");
   await expect(page.locator(".story-recap-live li")).toHaveCount(1);
 });
+
+test("Histoire : comparer les pièces du premier sponsor sans valider un choix", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const firstChoice = page.locator(".story-actions .story-choice").first();
+  for (let step = 0; step < 3; step++) {
+    await firstChoice.click();
+    await expect(page.locator(".story-progress")).toContainText(`${step + 2} / 40`);
+  }
+
+  const desk = page.locator(".story-inspection");
+  await expect(desk).toHaveAttribute("data-scene", "premier_sponsor");
+  await desk.locator("summary").click();
+  await desk.locator('[data-evidence-id="offre"]').click();
+  await desk.locator('[data-evidence-id="loyer"]').click();
+  await expect(desk.locator(".story-inspection-finding")).toHaveAttribute("data-found", "false");
+  await expect(desk.locator(".story-inspection-finding")).toContainText("Pas de contradiction prouvée");
+
+  await desk.getByRole("button", { name: "Recommencer la comparaison" }).click();
+  await desk.locator('[data-evidence-id="brief"]').click();
+  await desk.locator('[data-evidence-id="offre"]').click();
+  await expect(desk.locator(".story-inspection-finding")).toHaveAttribute("data-found", "true");
+  await expect(desk.locator(".story-inspection-finding")).toContainText("Le loyer n'efface pas cette contradiction");
+  await expect(page.locator(".story-progress")).toContainText("4 / 40");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-progress")).toContainText("5 / 40");
+  await expect(page.locator(".story-inspection")).toHaveCount(0);
+});
