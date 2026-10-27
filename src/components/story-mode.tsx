@@ -6,6 +6,7 @@ import { StoryPortrait } from "./story-portrait";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { StorySetPieces } from "./story-setpieces";
 import { storyActEchoes } from "../lib/story-echoes";
+import { storyBonds } from "../lib/story-bonds";
 import { affectedStoryStats, currentStoryGoal, finishedStoryGoal } from "../lib/story-goals";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
@@ -40,9 +41,27 @@ const STORY_SCENES_BY_ID = new Map(SCRIPT.scenes.map((scene) => [scene.id, scene
 
 /** Journal consultable pendant la partie ou après la fin, sans scènes futures ni spoilers. */
 const StoryJournal = memo(function StoryJournal({ run, completed = false }: { run: StoryRun; completed?: boolean }) {
+  const bonds = storyBonds(run);
   return (
     <details className={completed ? "story-recap" : "story-recap story-recap-live"} aria-live="off">
       <summary>{completed ? `Revoir mes ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}` : `Journal de bord · ${run.history.length} ${run.history.length === 1 ? "décision" : "décisions"}`}</summary>
+      {bonds.length > 0 && (
+        <section className="story-bonds" aria-label="Tes relations">
+          <h3>TON ENTOURAGE</h3>
+          <div className="story-bonds-grid">
+            {bonds.map((bond) => (
+              <div className="story-bond" key={bond.id} data-person={bond.id}>
+                <span className="story-bond-portrait" aria-hidden="true">{bond.initials}</span>
+                <div className="story-bond-copy">
+                  <strong>{bond.name}</strong>
+                  <span>{bond.status}</span>
+                  <p>{bond.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <ol>
         {run.history.map((entry, index) => {
           const chapter = STORY_SCENES_BY_ID.get(entry.sceneId);

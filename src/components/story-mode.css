@@ -1072,3 +1072,47 @@
     box-shadow: 0 0 0 2px var(--action);
   }
 }
+
+
+/* Carnet relationnel facultatif : aucun badge chiffré ni nouvelle monnaie. */
+.story-bonds { margin: 4px 0 12px; }
+.story-bonds h3 {
+  margin: 4px 0 9px;
+  color: var(--muted);
+  font: 800 12px / 1.2 "Barlow Condensed", sans-serif;
+  letter-spacing: .12em;
+}
+.story-bonds-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+.story-bond {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px;
+  border-radius: 7px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.story-bond-portrait {
+  flex: none;
+  width: 31px;
+  height: 35px;
+  clip-path: polygon(0 0,80% 0,100% 20%,100% 100%,20% 100%,0 80%);
+  background: var(--accent-deep);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  font: 900 16px / 1 "Barlow Condensed", sans-serif;
+}
+.story-bond[data-person="flo"] .story-bond-portrait { background: #28725d; }
+.story-bond[data-person="nox"] .story-bond-portrait { background: #6746a5; }
+.story-bond[data-person="mona"] .story-bond-portrait { background: #874e70; }
+.story-bond[data-person="lina"] .story-bond-portrait { background: #8a6329; }
+.story-bond-copy { min-width: 0; }
+.story-bond-copy strong, .story-bond-copy span { display: block; }
+.story-bond-copy strong { font: 800 17px / 1 "Barlow Condensed", sans-serif; color: var(--paper); }
+.story-bond-copy span { margin-top: 3px; font-size: 12px; line-height: 1.25; color: var(--accent-tint); }
+.story-bond-copy p { margin: 5px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+@media (max-width: 360px) {
+  .story-bonds-grid { grid-template-columns: 1fr; }
+}

@@ -62,3 +62,16 @@ describe("échos narratifs non persistés", () => {
       .toEqual(["source_protegee", "vote_trahi"]);
   });
 });
+
+describe("liens du journal narratif", () => {
+  it("n'invente aucune relation avant un choix et suit les bifurcations attestées", async () => {
+    const { storyBonds } = await import("./story-bonds");
+    const base = startStory(STORY_PROLOGUE);
+    expect(storyBonds(base)).toEqual([]);
+    const run = { ...base, flags: ["flo_protegee", "respect_nox", "refus_sponsor", "source_protegee"] };
+    expect(storyBonds(run).map(bond => bond.name)).toEqual(["Flo", "Nox", "Mona", "Lina"]);
+    expect(storyBonds({ ...run, flags: [...run.flags, "rupture_flo"] })[0].status).toBe("Lien rompu");
+    expect(storyBonds({ ...run, flags: [...run.flags, "rupture_flo", "reconciliation_flo"] })[0].status).toBe("Dialogue retrouvé");
+    expect(Object.keys(run)).not.toContain("bonds");
+  });
+});

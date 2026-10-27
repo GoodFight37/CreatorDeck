@@ -1,3 +1,10 @@
+# Checkpoint Histoire — entourage dans le journal, 27 octobre 2026
+
+- Ce lot complète le commit de scénographie `09abfbb32c1908105725c009bc176d021bfc1b05`, sans changer de branche (PR brouillon #24).
+- `storyBonds` calcule les relations réellement rencontrées (Flo/Nox/Mona/Lina), à partir des seuls flags du moteur V4. Le journal facultatif les affiche avec monogrammes, statut et conséquence non chiffrée. Aucune nouvelle jauge, économie, sauvegarde ou scène.
+- Tests unitaires d'absence de personnages non rencontrés, priorité des réconciliations et non-persistance, ainsi qu'E2E Chrome à 320 px en rejouant douze décisions et vérifiant la restauration exacte.
+- Tous les nouveaux contrôles restent à vérifier sur le SHA poussé. Ne pas prétendre avoir testé l'APK Android ou un iPhone physique. `main`, production, Supabase et l'économie restent intacts ; ne pas fusionner.
+
 # Checkpoint Histoire — scénographie et échos d'actes, 27 octobre 2026
 
 - Base de reprise vérifiée : `95aa70eae945eac7e9e9c73f1e45e6dd5f69e7c6` sur `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon ; CI générale et WebKit vertes sur cette base.

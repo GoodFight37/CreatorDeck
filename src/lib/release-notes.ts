@@ -29,6 +29,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Lors de la double crise, Nox et Mona apparaissent ensemble à l’écran dans une composition en deux portraits, recadrés pour remplir la scène même sur les téléphones hauts.",
       "Chaque canal de diffusion possède son décor illustré de régie, et les protagonistes gagnent des accessoires distinctifs.",
       "Entre les actes, certains anciens choix refont surface en deux souvenirs concrets, sans modifier les jauges ni les sauvegardes.",
+      "Dans le journal de bord, retrouve l’évolution de tes liens avec Flo, Nox, Mona et Lina après leurs rencontres.",
     ] }],
   },
   {

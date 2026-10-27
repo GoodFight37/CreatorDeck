@@ -1,3 +1,9 @@
+## D-179 — 27 octobre 2026 : carte relationnelle dans le journal de bord
+
+La continuité du mode Histoire ne doit pas seulement apparaître aux fins et changements d'acte : le joueur peut relire les conséquences au fil des chapitres. `storyBonds` établit un état de relation descriptif depuis des drapeaux déjà écrits par les scènes (Flo, Nox, Mona, Lina) ; aucun personnage non rencontré n'est affiché et aucun nouveau score n'est inventé. Les situations contradictoires privilégient les événements récents de réparation quand ils sont documentés (notamment réconciliation après rupture).
+
+L'interface se limite au journal facultatif (et au journal final) pour ne pas alourdir le HUD permanent ni forcer des chiffres secrets. Monogrammes graphiques de la famille CreatorDeck, résumés courts, cibles et textes accessibles, test unitaire et scénario Playwright sur sauvegarde réelle rejouée. Les enjeux économiques, le moteur, les sauvegardes V4, les scènes et le récit d'origine restent intacts. Validation native encore requise.
+
 ## D-178 — 27 octobre 2026 : scénographie des cartes et conséquences rappelées
 
 Sur la PR #24 seulement, chaque canal de diffusion reçoit des accessoires de plateau en SVG local : projecteurs de LIVE, bulles de CHAT/DM, feuilles et annotations de MAIL/CONTRAT, bandes d'ARCHIVE et cadre de CLIP. Les portraits SVG existants sont enrichis d'accessoires lisibles (Flo, Nox, Mona, Lina et la communauté). Le seuil de validation d'une carte donne un contour positif. La réserve GPU `will-change` devient limitée au geste et à la sortie plutôt que permanente.

@@ -900,3 +900,25 @@ test("Histoire : les médias ont un décor propre et les choix laissent une trac
   await page.screenshot({ path: "test-results/mobile-observation-histoire/echoes-acte-II-390.png", fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
+
+test("Histoire : l'entourage du journal suit la partie réellement restaurée", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  let played = startStory(STORY_PROLOGUE);
+  for (let i = 0; i < 12; i++) played = chooseStory(STORY_PROLOGUE, played, "left");
+  expect(played.ending).toBeNull();
+  const { storyBonds } = await import("../src/lib/story-bonds");
+  const bonds = storyBonds(played);
+  expect(bonds.length).toBeGreaterThan(0);
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: STORY_SAVE_KEY, value: JSON.stringify(played),
+  });
+  await page.reload();
+  await page.locator(".story-recap-live summary").click();
+  await expect(page.locator(".story-bond")).toHaveCount(bonds.length);
+  for (const bond of bonds) {
+    await expect(page.locator(`.story-bond[data-person="${bond.id}"]`)).toContainText(bond.status);
+  }
+  await expect(page.locator(".story-recap-live li")).toHaveCount(12);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});

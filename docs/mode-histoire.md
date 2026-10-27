@@ -144,3 +144,7 @@ Les captures du commit `cafe79a` révélaient une grande zone vide au-dessus des
 Chaque carte possède désormais un décor SVG associé à son canal (LIVE, CHAT, DM, MAIL, CONTRAT, ARCHIVE, CLIP). Les personnages existants ont davantage de signes distinctifs sans chargement d'images réseau. Le seuil tactile du geste reçoit un retour visuel et les couches de composition sont allouées pendant le mouvement seulement.
 
 Aux quatre transitions d'acte, un maximum de deux rappels narratifs issus des flags de décisions passées peut apparaître. Ils ne modifient ni règles, ni scène jouée, ni sauvegarde V4. Les résultats de tests et les captures restent à vérifier sur le SHA publié et sur téléphone réel avant conclusion.
+
+## Entourage consultable dans le journal (27 octobre 2026)
+
+Le journal affiche désormais, après la première rencontre concernée, un état synthétique des liens avec Flo, Nox, Mona et Lina. Il est calculé à partir des décisions déjà enregistrées et affiche par exemple les limites respectées, les promesses fragilisées ou les accords signés. Il ne représente pas une cinquième jauge, ne crée aucun effet, ne révèle pas de personnage non rencontré et n'altère pas la sauvegarde.
