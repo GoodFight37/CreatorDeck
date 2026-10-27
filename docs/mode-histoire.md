@@ -123,3 +123,10 @@ Le bilan est un élément HTML natif `details/summary` (fermé par défaut, cont
 Les chiffres affichés dans « TON DERNIER CHOIX » reprenaient auparavant les effets **théoriques** du scénario. Lorsque la jauge atteignait 0 ou 100, l'écran pouvait annoncer « +20 » alors que le joueur n'avait gagné que 5 points. `lastStoryAppliedEffects` reconstitue désormais l'état avant le dernier choix à partir de l'historique déjà validé, puis calcule la différence réellement appliquée. Les choix, les conditions, la sauvegarde V2 et les fins restent inchangés ; aucun nouveau format de sauvegarde ni service externe.
 
 Deux tests unitaires couvrent un dépassement simultané de 100 et de 0, la restauration de la partie et les conséquences d'un parcours normal. Les contrôles de code ne remplacent pas la CI du SHA publié, ni une vérification de rendu sur téléphone réel.
+
+## Passe HUD et mouvements (27 octobre 2026)
+
+- Sur la PR #24 uniquement, rafales de `pointermove` cadencées par `requestAnimationFrame`. Les seuils, la garde anti-double tap et les sauvegardes V4 sont inchangés ; les gestes annulés nettoient la frame en attente.
+- La carte gagne un décollement de 4 px au maximum sous le doigt ; le dos possède un filet intérieur. Le décor ne réserve plus en permanence de couche de composition via `will-change`.
+- Les cibles des quatre jauges mesurent au moins 44 px, y compris à 320 px. L'inspection d'une jauge et le détail de mission ne restent plus ouverts après la décision suivante.
+- Tests Chromium et WebKit ajoutés pour ouverture/fermeture des panneaux, gestes partiels, hauteur tactile et absence de débordement. Résultats à relever après publication du commit ; simulation WebKit et véritable Safari iOS restent deux preuves différentes.

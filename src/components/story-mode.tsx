@@ -68,6 +68,9 @@ export function StoryMode() {
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
   const decisionPending = useRef(false);
   const swipeThresholdReached = useRef(false);
+  // Cadencer les événements pointermove à la fréquence de rendu de l'écran.
+  const dragFrame = useRef<number | null>(null);
+  const pendingDrag = useRef(0);
   const transitionTimer = useRef<number | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
@@ -93,6 +96,7 @@ export function StoryMode() {
 
   useEffect(() => () => {
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+    if (dragFrame.current !== null) window.cancelAnimationFrame(dragFrame.current);
   }, []);
 
   // Après un choix, le nouveau dilemme doit être visible même sur un petit
@@ -162,9 +166,12 @@ export function StoryMode() {
     if (now - lastDecisionAt.current < 450) return;
     lastDecisionAt.current = now;
     decisionPending.current = true;
+    if (dragFrame.current !== null) window.cancelAnimationFrame(dragFrame.current);
+    dragFrame.current = null;
     if (typeof window.navigator.vibrate === "function") window.navigator.vibrate(12);
     focusNextScene.current = focusScene;
     setRestartPending(false);
+    setInspectedStat(null);
     gesture.current = null;
     setDragging(false);
     setExiting(direction);
@@ -212,12 +219,20 @@ export function StoryMode() {
     const armed = horizontal && Math.abs(dx) >= 64;
     if (armed && !swipeThresholdReached.current && typeof window.navigator.vibrate === "function") window.navigator.vibrate(8);
     swipeThresholdReached.current = armed;
-    setDrag(horizontal ? Math.max(-135, Math.min(135, dx)) : 0);
+    pendingDrag.current = horizontal ? Math.max(-135, Math.min(135, dx)) : 0;
+    if (dragFrame.current === null) {
+      dragFrame.current = window.requestAnimationFrame(() => {
+        dragFrame.current = null;
+        setDrag(pendingDrag.current);
+      });
+    }
   }
 
   function pointerEnd(event: PointerEvent<HTMLElement>, cancelled = false) {
     const start = gesture.current;
     if (!start || start.pointerId !== event.pointerId) return;
+    if (dragFrame.current !== null) window.cancelAnimationFrame(dragFrame.current);
+    dragFrame.current = null;
     gesture.current = null;
     swipeThresholdReached.current = false;
     setDragging(false);
@@ -237,6 +252,8 @@ export function StoryMode() {
   }
 
   function replay(focusScene = false) {
+    if (dragFrame.current !== null) window.cancelAnimationFrame(dragFrame.current);
+    dragFrame.current = null;
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
     transitionTimer.current = null;
     decisionPending.current = false;
@@ -244,6 +261,7 @@ export function StoryMode() {
     setExiting(null);
     setDragging(false);
     setRestartPending(false);
+    setInspectedStat(null);
     focusNextScene.current = focusScene;
     lastDecisionAt.current = Number.NEGATIVE_INFINITY;
     gesture.current = null;
@@ -294,7 +312,7 @@ export function StoryMode() {
                 ))}
               </section>
               {mission && (
-                <details className="story-mission" data-status={mission.status}>
+                <details key={`${mission.id}:${run.step}`} className="story-mission" data-status={mission.status}>
                   <summary aria-label={`Objectif : ${mission.title}. Voir la progression.`}>
                     <span className="story-mission-check" aria-hidden="true">{mission.status === "success" ? "✓" : "□"}</span>
                     <span className="story-mission-heading"><small>OBJECTIF</small><strong>{mission.title}</strong></span>
@@ -401,7 +419,7 @@ export function StoryMode() {
                   onPointerCancel={(event) => pointerEnd(event, true)}
                   style={{ transform: exiting
                     ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
-                    : `translate3d(${drag * 0.82}px, 0, 0) rotate(${drag * 0.065}deg)` }}
+                    : `translate3d(${drag * 0.82}px, ${-Math.min(4, Math.abs(drag) * 0.04)}px, 0) rotate(${drag * 0.065}deg)` }}
                 >
                   <div className="story-touch-sheen" aria-hidden="true" />
                   <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}

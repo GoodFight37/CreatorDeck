@@ -24,6 +24,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "En haut, l'épisode et un objectif de saison accompagnent quatre jauges sans étiquettes permanentes.",
       "Incliner la carte révèle seulement les jauges touchées par des points lumineux, sans annoncer si elles montent ou descendent.",
       "Le dos de la prochaine carte reste caché jusqu'à son arrivée, sous une estampille de collection CreatorDeck.",
+      "Le glissement suit la cadence de l'écran : les mouvements rapides sollicitent moins le téléphone, et la carte se soulève légèrement sous le doigt.",
+      "Sur les petits téléphones, les emblèmes restent faciles à toucher. Les informations ouvertes se referment à la décision suivante.",
     ] }],
   },
   {

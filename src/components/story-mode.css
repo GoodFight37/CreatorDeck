@@ -428,7 +428,7 @@
 /* EXPRESSIVE STREAM PORTRAITS: léger souffle, visages selon la situation. */
 .story-play-card[data-mood="tense"] { box-shadow: 0 20px 35px rgb(var(--ink-rgb) / .35), 0 0 0 2px rgb(225 29 63 / .42); }
 .story-portrait[data-mood="tense"] .story-portrait-stamp { filter: drop-shadow(0 0 5px rgb(225 29 63 / .55)); }
-.story-scene-art { will-change: translate; }
+.story-play-card[data-dragging="true"] .story-scene-art { will-change: translate; }
 @media (prefers-reduced-motion: no-preference) {
   .story-portrait { animation: story-character-breathe 4s ease-in-out infinite; }
   .story-portrait[data-mood="on-air"] { animation-duration: 2.8s; }
@@ -929,12 +929,22 @@
 .story-back-card-edition { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font: 800 11px / 1 "Barlow Condensed", sans-serif; color: #ebbc79; letter-spacing: .15em; }
 @media (max-width: 370px) {
   .story-game-hud { grid-template-columns: minmax(53px, .75fr) minmax(139px, 2fr) minmax(73px, .96fr); gap: 3px; }
-  .story-run-clock-label, .story-mission-heading small { font-size: 8px; }
-  .story-mission-heading strong { font-size: 11px; }
-  .story-game-hud .story-stat-top { min-height: 39px; }
+  .story-run-clock-label, .story-mission-heading small { font-size: 11px; }
+  .story-mission-heading strong { font-size: 12px; }
+  .story-game-hud .story-stat-top { min-height: 44px; }
   .story-game-hud .story-stat-icon, .story-game-hud .story-gauge-glyph { width: 26px; height: 26px; }
   .story-mission-check { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .story-game-hud .story-stat-orb { transition: none !important; }
+}
+
+/* Filet intérieur du dos de carte, révélé par le mouvement de la pile. */
+.story-deck .story-deck-back-near::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border: 1px solid rgb(235 188 121 / .26);
+  border-radius: 10px;
+  pointer-events: none;
 }

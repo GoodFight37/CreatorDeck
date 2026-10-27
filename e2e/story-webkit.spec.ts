@@ -55,3 +55,26 @@ test("Histoire Safari : choix accessible au doigt, animations réduites", async 
   await page.locator(".story-recap-live summary").tap();
   await expect(page.locator(".story-recap-live li")).toHaveCount(1);
 });
+
+test("Histoire Safari : HUD lisible en 320 px et swipe annulé", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  for (const icon of await page.locator(".story-game-hud .story-stat-top").all()) {
+    expect(await icon.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  }
+  const card = page.locator(".story-play-card");
+  await card.scrollIntoViewIfNeeded();
+  const rect = await card.boundingBox();
+  expect(rect).not.toBeNull();
+  if (!rect) return;
+  const x = rect.x + rect.width / 2;
+  const y = rect.y + rect.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 35, y, { steps: 5 });
+  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "true");
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "false");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});

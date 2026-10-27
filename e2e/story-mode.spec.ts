@@ -3,6 +3,26 @@ import { mkdir } from "node:fs/promises";
 import { STORY_PROLOGUE } from "../src/data/story-prologue";
 import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
+test("Histoire : HUD au pouce et inspection refermée au chapitre suivant", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const icons = page.locator(".story-game-hud .story-stat-top");
+  await expect(icons).toHaveCount(4);
+  for (const icon of await icons.all()) {
+    expect(await icon.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  }
+  const publicGauge = page.getByRole("button", { name: /Public : 35 sur 100/ });
+  await publicGauge.click();
+  await expect(page.locator(".story-stat").first()).toHaveAttribute("data-inspected", "true");
+  await page.locator(".story-mission summary").click();
+  await expect(page.locator(".story-mission-panel")).toBeVisible();
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-stat").first()).toHaveAttribute("data-inspected", "false");
+  await expect(page.locator(".story-mission-panel")).not.toBeVisible();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
+
 test("Histoire : le portrait change d'expression avec le canal", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");

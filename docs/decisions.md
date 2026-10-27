@@ -1,3 +1,11 @@
+## D-175 — 27 octobre 2026 : geste cadencé et lisibilité du HUD Histoire
+
+Constat sur la PR #24 et sa capture Playwright WebKit 390 px (commit `f58a80b`) : le `pointermove` réactualisait React à chaque événement, potentiellement plusieurs fois entre deux images ; le HUD descendait à 39 px de hauteur de cible à 320 px ; le nom d'une jauge et une mission dépliée pouvaient rester ouverts pendant la scène suivante.
+
+Décision : regrouper les coordonnées du doigt avec au plus un `requestAnimationFrame` en attente, annuler la frame à la fin du geste et au démontage, conserver les seuils et le verrou de choix existants, et ajouter une élévation légère (4 px maximum) pendant l'inclinaison. Réserver `will-change` du décor au geste actif. Cibles des quatre emblèmes à 44 px minimum et mission recréée à chaque chapitre pour éviter un panneau abandonné sur le récit suivant. L'inspection des jauges se referme après décision ; un filet intérieur discret précise le dos de carte.
+
+Aucun changement du moteur, des scènes, effets, objectifs, fins, sauvegardes V4, audio, économie ni autre mode. Scénarios Playwright Chromium/WebKit à 320 px ajoutés ; la CI au SHA exact et la revue Android/iOS réelle restent des contrôles distincts. Ponytail absent des skills accessibles ; guide React Best Practices de Vercel consulté.
+
 ## D-174 — 27 octobre 2026 : tableau de jeu compact, objectifs et prévisualisation neutre
 
 Référence utilisateur : capture Reigns avec les quatre emblèmes au centre, un compteur de temps à gauche, un objectif de partie à droite et des points indiquant **quelles jauges seront affectées**, sans dévoiler si elles gagnent ou perdent. Choix retenu : quatre pictogrammes au centre du HUD sans texte visible permanent, épisode à gauche, mission facultative à droite. Un appui sur une jauge affiche son nom et sa valeur ; ses libellés restent annoncés aux lecteurs d'écran.
