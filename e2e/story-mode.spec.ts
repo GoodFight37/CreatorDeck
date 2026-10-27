@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
 import { STORY_PROLOGUE } from "../src/data/story-prologue";
 import { STORY_SAVE_KEY, chooseStory, startStory } from "../src/lib/story-mode";
 
@@ -45,12 +46,16 @@ test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paq
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
-test("Histoire : carte mobile dominante, portrait et options révélées au doigt", async ({ page }) => {
+test("Histoire : carte mobile dominante, portrait et options révélées au doigt", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
   const card = page.locator(".story-play-card");
   const art = card.locator(".story-portrait-illustration");
   await expect(art).toBeVisible();
+  const screenshotsDir = "test-results/mobile-observation-histoire";
+  await mkdir(screenshotsDir, { recursive: true });
+  const suffix = testInfo.project.name === "téléphone" ? "telephone" : "bureau";
+  await page.screenshot({ path: `${screenshotsDir}/scene-01-${suffix}.png`, fullPage: true, animations: "disabled" });
   await expect(card).toHaveAttribute("data-character", "toi");
   const statsColumns = await page.locator(".story-stats").evaluate(
     (element) => getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean).length,
@@ -81,6 +86,7 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   await expect(page.locator(".story-progress")).toContainText("2 / 40");
   await expect(page.locator(".story-play-card")).toHaveAttribute("data-character", "flo");
   await expect(page.locator(".story-portrait-illustration")).toBeVisible();
+  await page.screenshot({ path: `${screenshotsDir}/scene-02-${suffix}.png`, fullPage: true, animations: "disabled" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
 });
 
