@@ -259,6 +259,33 @@ test("Histoire : galerie des scènes signature et des épilogues mobiles", async
   await show(scandal, "epilogue-scandale");
 });
 
+test("Histoire : saison complète de 40 décisions, navigation et reprise mobile", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "téléphone", "Stress test mobile seulement.");
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const path = "LRRLLLRLLRRRLRRLRRLLLRRRRLRRLRRRLLLRRRRL";
+  expect(path.length).toBe(STORY_PROLOGUE.totalSteps);
+  let expected = startStory(STORY_PROLOGUE);
+  for (const [index, letter] of [...path].entries()) {
+    const direction = letter === "L" ? "left" : "right";
+    expected = chooseStory(STORY_PROLOGUE, expected, direction);
+    await page.locator(".story-actions .story-choice").nth(direction === "left" ? 0 : 1).click();
+    if (index < path.length - 1) {
+      await expect(page.locator(".story-progress")).toContainText(`${index + 2} / 40`);
+      await expect(page.locator(".story-play-card")).toBeVisible();
+    } else {
+      await expect(page.locator(".story-ending")).toHaveAttribute("data-ending", expected.ending ?? "");
+      await expect(page.locator(".story-recap li")).toHaveCount(40);
+    }
+    // L'interface bloque volontairement une double décision pendant 450 ms.
+    if (index !== path.length - 1) await page.waitForTimeout(460);
+  }
+  await page.reload();
+  await expect(page.locator(".story-ending")).toHaveAttribute("data-ending", expected.ending ?? "");
+  await expect(page.locator(".story-recap summary")).toContainText("40 décisions");
+});
+
 test("Histoire : les choix persistent après un rechargement", async ({ page }) => {
   await page.goto("/histoire");
   await expect(page.getByRole("heading", { name: "Le grand départ" })).toBeVisible();
