@@ -351,3 +351,21 @@
 @media (prefers-reduced-motion: reduce) {
   .story-stat-icon { transition: none !important; }
 }
+
+/* MOBILE CARD NARRATIVE : la question vient avant le portrait. */
+.story-prompt { width: 100%; max-width: 345px; flex: 0 0 auto; margin: 6px auto 2px; }
+.story-prompt h2 { margin: 0 0 8px; }
+.story-prompt p { margin: 0 auto; }
+.story-play-card .story-scene-art { flex: 0 0 auto; }
+.story-swipe-hint[data-intro="true"] span:first-child { animation: story-nudge-left .8s ease-in-out 2; }
+.story-swipe-hint[data-intro="true"] span:last-child { animation: story-nudge-right .8s ease-in-out 2; }
+@keyframes story-nudge-left { 50% { transform: translateX(-6px); } }
+@keyframes story-nudge-right { 50% { transform: translateX(6px); } }
+.story-swipe-hint span { display: inline-block; }
+@media (max-height: 630px) {
+  .story-prompt { margin-top: 3px; }
+  .story-prompt h2 { margin-bottom: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-swipe-hint span { animation: none !important; }
+}
