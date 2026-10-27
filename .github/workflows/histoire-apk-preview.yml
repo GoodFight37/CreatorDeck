@@ -1,0 +1,75 @@
+name: APK Histoire (essai séparé)
+
+on:
+  push:
+    branches:
+      - feature/histoire-reigns-pilot-20261026
+    paths:
+      - ".github/workflows/histoire-apk-preview.yml"
+      - "src/app/histoire/**"
+      - "src/components/story-*"
+      - "src/lib/story-*"
+      - "src/data/story-*"
+      - "src/components/missions-view.tsx"
+      - "src/components/creator-deck-app.tsx"
+      - "src/components/objectives.css"
+      - "android/app/build.gradle"
+      - "android/app/src/main/AndroidManifest.xml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: histoire-apk-preview
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Compiler l'APK Histoire autonome
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - run: npm ci
+      - name: Synchroniser les sources Histoire vers Android
+        run: npm run android:sync
+        env:
+          NEXT_PUBLIC_STORY_ANDROID_PREVIEW: "1"
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Vérifier la présence de la route Histoire
+        run: |
+          test -f out/index.html
+          test -f out/histoire.html || test -f out/histoire/index.html
+      - name: Compiler l'APK séparée
+        run: |
+          SHA="$(git rev-parse --short=7 HEAD)"
+          node scripts/android-gradle.mjs assembleDebug --max-workers=2 "-PcdStoryPreview=true" "-PcdVersionName=histoire-${SHA}"
+      - name: Préparer l'APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/CreatorDeck-Histoire-preview.apk
+          sha256sum dist/CreatorDeck-Histoire-preview.apk > dist/sha256.txt
+      - uses: actions/upload-artifact@v4
+        name: APK test Histoire téléchargeable
+        with:
+          name: CreatorDeck-Histoire-Android-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
