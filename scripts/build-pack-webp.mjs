@@ -3,7 +3,7 @@
 // À relancer après `scripts/build-pack-art.py` : node scripts/build-pack-webp.mjs
 import sharp from "sharp";
 
-for (const pack of ["live", "memes", "imgflip"]) {
+for (const pack of ["live", "memes", "imgflip", "anime"]) {
   const out = `public/packs/${pack}-opening.webp`;
   // 1050 px : 250 px CSS × 1,5 (face dessinée à 150 %) × DPR 2,75, sans flou.
   await sharp(`public/packs/${pack}-opening.svg`, { density: 300 })

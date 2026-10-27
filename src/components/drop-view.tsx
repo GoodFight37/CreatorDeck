@@ -3,16 +3,19 @@
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
 import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ChevronRight, Clock3, Coins, Hourglass, Users } from "lucide-react";
+import Link from "next/link";
 
 import "./drop-craft.css";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
 export { PackArtwork } from "@/components/booster-carousel";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
 import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
+import { useAnimeBooster } from "@/hooks/use-anime-booster";
 import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-parts";
 
 // Chargé seulement à l'ouverture d'un booster MEMES : l'accueil ne paie pas PackTear ni MemeReveal.
 const MemeBoosterOpening = lazy(() => import("@/components/meme-booster-opening").then((m) => ({ default: m.MemeBoosterOpening })));
+const AnimeBoosterOpening = lazy(() => import("@/components/anime-booster-opening").then((m) => ({ default: m.AnimeBoosterOpening })));
 
 import { useCloud } from "@/hooks/use-cloud";
 import { useLive } from "@/hooks/use-live";
@@ -73,18 +76,19 @@ export function HomeView({
   const cloud = useCloud();
   const memes = useMemeBooster();
   const imgflip = useImgflipBooster();
+  const anime = useAnimeBooster();
   const [universe, setUniverse] = useState<BoosterUniverse>("live");
   const pack = PACKS.live;
   const stock = game.player.packs;
   const promoPacks = cloud.configured && cloud.userId ? cloud.promoPacks : 0;
   const nextAt = game.player.nextPackAt;
   const needsLogin = needsAccount && !tutorialAvailable;
-  const cannotOpen = opening || memes.busy || imgflip.busy || (!needsAccount && stock <= 0 && promoPacks <= 0);
+  const cannotOpen = opening || memes.busy || imgflip.busy || anime.presenting || (!needsAccount && stock <= 0 && promoPacks <= 0);
   const memeCannotOpen = opening || memes.busy || (memes.account && (!memes.status || memes.status.stock < 1));
   const imgflipCannotOpen = opening || imgflip.busy || (imgflip.account && (!imgflip.status || imgflip.status.stock < 1));
 
   function prepareBooster(kind: BoosterUniverse) {
-    if (opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting) return;
+    if (opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting || anime.presenting) return;
     buzz([8]);
     if (kind === "live" && !cannotOpen) onOpen();
     if (kind === "imgflip" && !imgflipCannotOpen) {
@@ -95,6 +99,7 @@ export function HomeView({
       if (!memes.account) onShowAccount?.();
       else memes.prepare();
     }
+    if (kind === "anime") anime.prepare();
   }
 
   const circle = useCircle();
@@ -139,6 +144,7 @@ export function HomeView({
   const imgflipLabel = !imgflip.account ? "Connecte-toi pour ouvrir IMGFLIP" : imgflip.busy ? "Ouverture…"
     : !imgflip.status ? imgflip.problem && !imgflip.loading ? "Réserve IMGFLIP indisponible" : "Lecture de ta réserve…" : imgflip.status.stock < 1
       ? imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt" : "Ouvrir le booster IMGFLIP";
+  const animeLabel = anime.presenting ? "Ouverture…" : "Ouvrir le booster Anime";
   // Un seul geste ouvre : le sachet. Dessous, une ligne dit ce qu'on a et quand revient le prochain.
   const packs = stock + promoPacks;
   const reserveLine = needsLogin ? "Connecte-toi pour ouvrir"
@@ -210,9 +216,9 @@ export function HomeView({
       )}
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
-        disabled={opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting}
-        canPrepare={universe === "live" ? !cannotOpen : universe === "memes" ? !memeCannotOpen : !imgflipCannotOpen}
-        labels={{ live: liveLabel, memes: memeLabel, imgflip: imgflipLabel }} />
+        disabled={opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting || anime.presenting}
+        canPrepare={universe === "live" ? !cannotOpen : universe === "memes" ? !memeCannotOpen : universe === "imgflip" ? !imgflipCannotOpen : true}
+        labels={{ live: liveLabel, memes: memeLabel, imgflip: imgflipLabel, anime: animeLabel }} />
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {!needsAccount || needsLogin ? (
           // La seule ligne de l'accueil : la pile au-dessus montre déjà ce qu'on a.
@@ -269,6 +275,12 @@ export function HomeView({
           <button type="button" disabled={imgflip.loading} onClick={() => void imgflip.refresh()}>Réessayer la lecture</button></div> : null}
       </section>
       {imgflip.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={imgflip} artwork="/packs/imgflip-opening.svg" /></Suspense> : null}
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "anime"} aria-label="Collection Anime">
+        <p className="stock-row" aria-live="polite">Booster local · 5 cartes · {anime.copies.size} / 20 découvertes</p>
+        <p className="meme-credit">Illustrations Kyara conservées pour intégration locale · droits d’exploitation à confirmer.</p>
+        <Link className="meme-collection-link" href="/anime">Voir le classeur Anime <ChevronRight size={16} aria-hidden="true" /></Link>
+      </section>
+      {anime.presenting ? <Suspense fallback={null}><AnimeBoosterOpening booster={anime} /></Suspense> : null}
       {!lean && onEditCircle ? (
         <section className="circle-invite" aria-labelledby="circle-invite-title">
           <div>

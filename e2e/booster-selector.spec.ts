@@ -59,6 +59,39 @@ test("le choix d'univers change de booster sans préparer ni consommer", async (
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
+test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur local", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await gotoDeck(page, true, { withoutCircle: true });
+  await page.getByRole("button", { name: "ANIME", exact: true }).click();
+  const carousel = page.locator(".booster-carousel");
+  await expect(carousel).toHaveAttribute("data-universe", "anime");
+
+  await page.getByRole("button", { name: "Ouvrir le booster Anime", exact: true }).click();
+  const scene = page.locator('.opening-continuum[data-universe="anime"]');
+  await expect(scene).toBeVisible();
+  await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /anime-opening/);
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(page.getByRole("region", { name: "Résultat du booster Anime" })).toBeVisible({ timeout: 10_000 });
+
+  for (let index = 0; index < 5; index++) {
+    const label = index === 4 ? "VOIR LES 5 CARTES" : "CARTE SUIVANTE";
+    const next = scene.getByRole("button", { name: label });
+    await expect(next).toBeEnabled({ timeout: 4_000 });
+    await next.click();
+  }
+  await expect(scene.getByRole("heading", { name: "Collection Anime" })).toBeVisible();
+  const close = scene.getByRole("button", { name: "Revenir au Drop" });
+  await expect(close).toBeEnabled({ timeout: 4_000 });
+  await close.click();
+  await expect(scene).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ouvrir le booster Anime", exact: true })).toBeFocused();
+
+  await page.getByRole("link", { name: /Voir le classeur Anime/ }).click();
+  await expect(page.locator(".anime-deck-intro strong")).toHaveText("5 / 20");
+  expect(errors).toEqual([]);
+});
+
 test("la pill choisie reste distinguable en couleurs forcées", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
@@ -279,8 +312,8 @@ test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 
       });
       const active = page.locator('.booster-pack-slot[data-active="true"]');
       const neighbors = page.locator('.booster-pack-slot[data-active="false"] .booster-neighbor');
-      // Trois univers : les deux paquets en retrait encadrent celui de devant.
-      await expect(neighbors).toHaveCount(2);
+      // Quatre univers : les trois sachets non choisis restent en retrait.
+      await expect(neighbors).toHaveCount(3);
       const a = (await active.boundingBox())!;
       expect(a.width).toBeGreaterThan(100);
       for (const neighbor of await neighbors.all()) {
@@ -365,7 +398,7 @@ test("la bascule de booster ne laisse jamais le sachet sortant devant ni translu
   // Depuis, tous les paquets restent opaques et le z-index ne bascule qu'à mi-course.
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   const slots = page.locator(".booster-pack-slot");
-  await expect(slots).toHaveCount(3);
+  await expect(slots).toHaveCount(4);
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
 
   // Juste après le clic, transition encore en cours : on lit l'état composité.

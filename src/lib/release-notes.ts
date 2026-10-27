@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-27-anime-integration", date: "2026-10-27", title: "Une première collection Anime",
+    summary: "Le Drop accueille un booster Anime et un classeur de vingt cartes conservées sur cet appareil.",
+    sections: [{ title: "Anime", items: [
+      "Un sachet Anime est accessible dans le carrousel du Drop et utilise l’ouverture à déchirer.",
+      "Les illustrations se découvrent en grand format, puis dans un récapitulatif défilable et un classeur dédié.",
+      "Cette première version conserve les cartes sur cet appareil ; la collection Anime n’est pas encore synchronisée avec le compte.",
+    ] }],
+  },
+  {
     id: "2026-10-26-boosters-session", date: "2026-10-26", title: "Tes boosters prêts à s’ouvrir",
     summary: "Les réserves MEMES et IMGFLIP suivent mieux ta connexion, et le sachet à déchirer est recentré.",
     sections: [{ title: "Corrections", items: [

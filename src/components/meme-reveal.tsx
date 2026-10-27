@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { MemeCard } from "@/components/meme-card";
 import { buzz } from "@/lib/haptics";
@@ -11,11 +11,28 @@ import { cardEffectsAllowed } from "@/lib/tilt";
 
 const SUMMARY_HOLD_MS = 1_500;
 
-function MemeRevealCard({ card, number, copies, onAdvance }: {
+export type CardRenderer = (card: MemeCardData, compact: boolean, copies: number) => ReactNode;
+
+export type RevealLabels = {
+  ariaLabel: string;
+  summaryKicker: string;
+  summaryTitle: string;
+  close: string;
+};
+
+const DEFAULT_LABELS: RevealLabels = {
+  ariaLabel: "Résultat du booster MEMES",
+  summaryKicker: "BOOSTER OUVERT",
+  summaryTitle: "Tes 5 cartes",
+  close: "VOIR MA COLLECTION",
+};
+
+function MemeRevealCard({ card, number, copies, onAdvance, renderCard }: {
   card: MemeCardData;
   number: number;
   copies: number;
   onAdvance: () => void;
+  renderCard?: CardRenderer;
 }) {
   const [ready, setReady] = useState(false);
   // Un seul élément qui tourne : le dos, puis le recto au milieu du tour.
@@ -69,7 +86,7 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
         {showBack
           // Le dos des cartes sorties du sachet, emblème compris : la carte qu'on retourne est la même.
           ? <div className="meme-reveal-back" aria-hidden="true"><span className="foil-back-emblem"><CardBackEmblem /></span></div>
-          : <div className="meme-reveal-front"><MemeCard card={card} copies={copies} /></div>}
+          : <div className="meme-reveal-front">{renderCard?.(card, false, copies) ?? <MemeCard card={card} copies={copies} />}</div>}
       </div>
     </div>
     <p className="meme-reveal-rarity">{ready ? MEME_RARITY[card.rarity].label : ""}</p>
@@ -80,10 +97,12 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
   </>;
 }
 
-export function MemeReveal({ cards, copies, onClose }: {
+export function MemeReveal({ cards, copies, onClose, labels = DEFAULT_LABELS, renderCard }: {
   cards: MemeCardData[];
   copies: Map<string, number>;
   onClose: () => void;
+  labels?: RevealLabels;
+  renderCard?: CardRenderer;
 }) {
   const [index, setIndex] = useState(0);
   const [summaryReady, setSummaryReady] = useState(false);
@@ -95,13 +114,13 @@ export function MemeReveal({ cards, copies, onClose }: {
     return () => window.clearTimeout(timer);
   }, [summary]);
 
-  return <section className={`meme-reveal-flow${summary ? " is-summary" : ""}`} aria-label="Résultat du booster MEMES">
+  return <section className={`meme-reveal-flow${summary ? " is-summary" : ""}`} aria-label={labels.ariaLabel}>
     {summary ? <>
-      <div className="meme-reveal-summary-title"><span>BOOSTER OUVERT</span><h2>Tes 5 cartes</h2></div>
+      <div className="meme-reveal-summary-title"><span>{labels.summaryKicker}</span><h2>{labels.summaryTitle}</h2></div>
       <div className="meme-reveal-summary-grid">{cards.map((card, i) =>
-        <div key={card.id} style={{ "--i": i } as CSSProperties}><MemeCard card={card} compact copies={copies.get(card.id) ?? 1} /><span>{card.name}</span></div>)}</div>
-      <button className="meme-reveal-next" type="button" disabled={!summaryReady} onClick={onClose}>VOIR MA COLLECTION</button>
+        <div key={card.id} style={{ "--i": i } as CSSProperties}>{renderCard?.(card, true, copies.get(card.id) ?? 1) ?? <MemeCard card={card} compact copies={copies.get(card.id) ?? 1} />}<span>{card.name}</span></div>)}</div>
+      <button className="meme-reveal-next" type="button" disabled={!summaryReady} onClick={onClose}>{labels.close}</button>
     </> : <MemeRevealCard key={cards[index].id} card={cards[index]} number={index}
-      copies={copies.get(cards[index].id) ?? 1} onAdvance={() => setIndex((value) => value + 1)} />}
+      copies={copies.get(cards[index].id) ?? 1} onAdvance={() => setIndex((value) => value + 1)} renderCard={renderCard} />}
   </section>;
 }

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Booster Anime CreatorDeck</title>
+  <desc id="desc">Booster abstrait noir, indigo, argent et améthyste, traversé par un sceau orbital.</desc>
+  <defs>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#24243b"/>
+      <stop offset=".42" stop-color="#090a12"/>
+      <stop offset="1" stop-color="#17162c"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#696b79"/>
+      <stop offset=".28" stop-color="#f2f1f4"/>
+      <stop offset=".55" stop-color="#9698a7"/>
+      <stop offset=".78" stop-color="#e8e9ef"/>
+      <stop offset="1" stop-color="#626471"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#a591ff" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#6f55e4" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#eae8ff" stroke-opacity=".055"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <path fill="url(#shell)" d="M25 0h640l25 27v946l-25 27H25L0 973V27z"/>
+  <path fill="url(#grid)" d="M25 27h640v946H25z"/>
+  <path fill="url(#silver)" d="M0 0h690v27H0zM0 973h690v27H0z" opacity=".86"/>
+  <path fill="#0b0c16" d="M0 27h690v18H0zM0 955h690v18H0z"/>
+  <path d="M0 27 29 0h35L35 27 64 45H29zm626 0L655 0h35v45h-29zM0 973l29 27h35l-29-27 29-18H29zm626 0 29 27h35v-45h-29z" fill="#d9dbe5" opacity=".42"/>
+
+  <ellipse cx="356" cy="424" rx="281" ry="112" fill="none" stroke="#a28eff" stroke-width="2" opacity=".62" transform="rotate(-17 356 424)"/>
+  <ellipse cx="356" cy="424" rx="224" ry="74" fill="none" stroke="#e6e5ec" opacity=".25" transform="rotate(24 356 424)"/>
+  <circle cx="356" cy="424" r="190" fill="url(#glow)" opacity=".44" filter="url(#shadow)"/>
+  <path d="M355 234 493 330l-53 161-170 4-56-159z" fill="#10111d" stroke="#dad8e6" stroke-opacity=".48" stroke-width="2"/>
+  <path d="m355 270 101 70-39 118-125 3-41-116z" fill="none" stroke="#9e89ff" stroke-width="3" opacity=".86"/>
+  <path d="m355 310 60 42-23 70-74 1-25-68z" fill="#9480ff" fill-opacity=".08" stroke="#eeedf3" stroke-opacity=".66"/>
+  <circle cx="355" cy="367" r="11" fill="#dcd9ec"/>
+  <circle cx="355" cy="367" r="27" fill="none" stroke="#9e89ff" stroke-width="2"/>
+
+  <path d="M76 652h538" stroke="#d8d8e1" stroke-opacity=".42"/>
+  <path d="M76 660h172" stroke="#9c87ff" stroke-width="3"/>
+  <text x="75" y="738" fill="#f0eff3" font-family="Georgia, 'Times New Roman', serif" font-size="112" letter-spacing="-4">ANIME</text>
+  <text x="80" y="782" fill="#aaa8b7" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="7">CINEMATIC COLLECTOR</text>
+  <text x="80" y="853" fill="#777586" font-family="Arial, sans-serif" font-size="13" letter-spacing="3">CREATORDECK · LOCAL RESEARCH EDITION</text>
+  <text x="572" y="862" fill="#d8d7df" font-family="Georgia, serif" font-size="68">05</text>
+  <path d="M78 894h534" stroke="#d8d8e1" stroke-opacity=".18"/>
+  <path d="M80 919h188M80 931h130" stroke="#9f8aff" stroke-width="2" opacity=".55"/>
+  <circle cx="599" cy="916" r="17" fill="none" stroke="#d9d8e2" stroke-opacity=".55"/>
+  <circle cx="599" cy="916" r="5" fill="#a18cff"/>
+</svg>

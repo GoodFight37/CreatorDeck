@@ -36,3 +36,30 @@ it.each(["pointercancel", "lostpointercapture"])("annule le geste sur %s", async
   pointer("pointerup", 1, 200);
   expect(document.querySelector(".meme-reveal-counter")?.textContent).toContain("1 / 5");
 });
+
+it("réutilise le parcours pour un univers isolé sans imposer la carte MEMES", async () => {
+  const close = vi.fn();
+  await banc.monter(<MemeReveal
+    cards={MEME_CARDS.slice(0, 5)}
+    copies={new Map()}
+    onClose={close}
+    labels={{
+      ariaLabel: "Résultat de l’aperçu Kyara",
+      summaryKicker: "MEILLEURE CARTE · TEST",
+      summaryTitle: "5 cartes locales",
+      close: "REVENIR À L’APERÇU",
+    }}
+    renderCard={(card, compact) => <article data-kyara-card={card.id} data-compact={compact}>{card.name}</article>}
+  />);
+
+  expect(document.querySelector("[aria-label=\"Résultat de l’aperçu Kyara\"]")).toBeTruthy();
+  for (let index = 0; index < 5; index += 1) {
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000); });
+    act(() => document.querySelector<HTMLButtonElement>(".meme-reveal-next")!.click());
+  }
+  expect(document.querySelectorAll("[data-kyara-card]")).toHaveLength(5);
+  expect(document.querySelector(".meme-reveal-summary-title")?.textContent).toContain("MEILLEURE CARTE · TEST");
+  await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
+  act(() => document.querySelector<HTMLButtonElement>(".meme-reveal-next")!.click());
+  expect(close).toHaveBeenCalledOnce();
+});
