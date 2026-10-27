@@ -22,6 +22,25 @@ test("Histoire : retours sous forme de jetons sans consigne répétée", async (
   await expect(page.locator(".story-footnote")).toHaveCount(0);
 });
 
+test("Histoire : jauges projetées en couleur avant le lancer et remises à zéro après", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  const card = page.locator(".story-play-card");
+  const bounds = await card.boundingBox();
+  expect(bounds).not.toBeNull();
+  if (!bounds) return;
+  const x = bounds.x + bounds.width / 2, y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y, { steps: 4 });
+  await expect(page.locator(".story-meter-preview")).toHaveCount(2);
+  await expect(page.locator(".story-meter-preview[data-trend='up']")).toHaveCount(1);
+  await expect(page.locator(".story-meter-preview[data-trend='down']")).toHaveCount(1);
+  await page.mouse.up();
+  await expect(page.locator(".story-meter-preview")).toHaveCount(0);
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+});
+
 test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paquet", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");

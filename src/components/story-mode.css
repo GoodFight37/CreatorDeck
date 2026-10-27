@@ -537,3 +537,24 @@
   .story-play-card .story-scene-art-label { font-size: 10px; }
   .story-prompt { padding-inline: 8px; }
 }
+
+/* GHOST METER PREVIEW: pendant le swipe, la jauge indique sa direction
+   sans dévoiler les chiffres ni anticiper les conséquences à long terme. */
+.story-meter { position: relative; isolation: isolate; }
+.story-meter-preview {
+  position: absolute;
+  z-index: 2;
+  top: -1px;
+  bottom: -1px;
+  min-width: 2px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.story-meter-preview[data-trend="up"] {
+  background: repeating-linear-gradient(115deg, var(--green) 0 4px, rgb(80 217 160 / .55) 4px 7px);
+  box-shadow: 0 0 8px rgb(80 217 160 / .45);
+}
+.story-meter-preview[data-trend="down"] {
+  background: repeating-linear-gradient(115deg, var(--danger) 0 4px, rgb(255 109 130 / .42) 4px 7px);
+  box-shadow: 0 0 8px rgb(255 109 130 / .45);
+}

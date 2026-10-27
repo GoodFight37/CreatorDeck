@@ -61,7 +61,7 @@ export function StoryMode() {
   const [dragging, setDragging] = useState(false);
   const [exiting, setExiting] = useState<StoryDirection | null>(null);
   const [restartPending, setRestartPending] = useState(false);
-  const gesture = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const gesture = useRef<{ x: number; y: number; pointerId: number; startTime: number } | null>(null);
   // Empêche qu’un double-tap valide deux scènes successives au même endroit.
   const lastDecisionAt = useRef(Number.NEGATIVE_INFINITY);
   const decisionPending = useRef(false);
@@ -187,7 +187,7 @@ export function StoryMode() {
 
   function pointerDown(event: PointerEvent<HTMLElement>) {
     if (!scene || gesture.current || decisionPending.current) return;
-    gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+    gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId, startTime: performance.now() };
     swipeThresholdReached.current = false;
     setDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -212,7 +212,8 @@ export function StoryMode() {
     setDragging(false);
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    if (!cancelled && Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 1.2) decide(dx < 0 ? "left" : "right");
+    const quickFlick = Math.abs(dx) >= 56 && Math.abs(dx) / Math.max(1, performance.now() - start.startTime) >= 0.9;
+    if (!cancelled && (Math.abs(dx) >= 64 || quickFlick) && Math.abs(dx) > Math.abs(dy) * 1.2) decide(dx < 0 ? "left" : "right");
     else setDrag(0);
   }
 
@@ -264,6 +265,13 @@ export function StoryMode() {
                   </div>
                   <div className="story-meter" role="progressbar" aria-label={STAT_LABELS[key].name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={run.stats[key]} aria-valuetext={`${run.stats[key]} sur 100${run.stats[key] <= 20 ? ", niveau critique" : ""}`}>
                     <div className={`story-meter-fill story-meter-${key}`} style={{ width: `${run.stats[key]}%` }} />
+                    {scene && previewDirection && previewStats.includes(key) && (() => {
+                      const predicted = Math.max(0, Math.min(100, run.stats[key] + (scene.choices[previewDirection].effects[key] ?? 0)));
+                      const low = Math.min(run.stats[key], predicted);
+                      return <span className="story-meter-preview" aria-hidden="true"
+                        data-trend={predicted >= run.stats[key] ? "up" : "down"}
+                        style={{ left: `${low}%`, width: `${Math.abs(predicted - run.stats[key])}%` }} />;
+                    })()}
                   </div>
                   {run.stats[key] <= 20 && <span className="story-stat-alert" aria-hidden="true">⚠ NIVEAU CRITIQUE</span>}
                 </div>
