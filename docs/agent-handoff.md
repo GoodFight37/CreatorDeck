@@ -1,3 +1,25 @@
+# Checkpoint Codex — audio prêt, arrêt demandé pour éteindre le PC, 27 octobre 2026
+
+Demande de Malik : chantier audio complet, remplaçant le report précédent.
+Suivi `CreatorDeck-Codex-4m4`, base `b3922daf`, `main`. Plafond 14 000 crédits,
+réserve minimale 24 764, aucun achat ni APK locale. **42 fichiers obtenus,
+2 720 crédits consommés, solde 36 044**. Facturation différée rapprochée par GET.
+Journal persistant avant chaque POST ; ne jamais répéter un appel incertain.
+Effets acoustiques par rareté et gestes, Atelier après résultat, pas de second
+motif légendaire/Perfect, arrêt des effets en arrière-plan. Piste actuelle
+conservée ; choix musical réservé à Malik. `/audio-lab` reste local ; page
+statique `/audio-ecoute.html` pour Vercel. Tests scripts 5/5, logique audio 37/37,
+écrans 50/50, E2E complet **231 réussis / 49 ignorés / zéro échec**, 13,2 min.
+Typecheck, lint avec exclusions des fichiers générés et build réussis.
+Jargon : zéro sur 167 fichiers suivis ; le test général bute sur le prototype
+Kyara local non suivi, préservé. Détails : [livraison audio](audio-livraison-2026-10-27.md).
+Publication et état distant consignés au prochain relevé ; accès Vercel natif
+HTTP 403, CLI absente. Ne pas annoncer déployé avant vérification du SHA.
+Prochaine action : contrôler `git status`, HEAD/distant et le commit audio,
+puis GitHub CI et Vercel/site public ; enfin demander le choix A1 à C2.
+Les modifications locales préexistantes (Android, snapshots, prototypes et
+ancien complément de passation) sont conservées et exclues du lot audio.
+
 # Checkpoint Codex — catalogue Manga Drop complet, 27 octobre 2026
 
 Demande de Malik : vérifier les cartes Anime et ajouter toutes les manquantes.

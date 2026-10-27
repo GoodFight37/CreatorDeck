@@ -24,7 +24,7 @@ import { useLive } from "@/hooks/use-live";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
-import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import { CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
 import { regionLabel } from "@/lib/regions";
 import {
@@ -36,8 +36,7 @@ import {
   revealTiming,
   silenceBefore,
 } from "@/lib/reveal";
-import { playBang, playLegendaryStinger, playPerfectStinger, playReveal } from "@/lib/sfx";
-import { bestCardOf } from "@/lib/social/inbox";
+import { playBang, playPerfectStinger, playReveal } from "@/lib/sfx";
 import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
 import { cardEffectsAllowed } from "@/lib/tilt";
@@ -158,7 +157,6 @@ export function RevealOverlay({
     const timer = window.setTimeout(() => {
       if (silenceBefore(card.rarity) > 0 || (!overlay && card.rarity === "rare")) playBang(card.rarity, card.variant);
       else playReveal(card.rarity, card.variant);
-      if (card.rarity === "legendary") playLegendaryStinger();
       buzz(revealHaptic(card.rarity, card.variant));
     }, silence);
     return () => window.clearTimeout(timer);
@@ -166,8 +164,6 @@ export function RevealOverlay({
 
   useEffect(() => {
     if (!perfect) return;
-    const best = bestCardOf(cards);
-    playBang((best?.rarity as Rarity) ?? "epic", (best?.variant ?? "standard") as CardVariant);
     playPerfectStinger();
     buzz(PERFECT_HAPTIC);
     const timer = window.setTimeout(() => setLocked(false), PERFECT_LOCK_MS);

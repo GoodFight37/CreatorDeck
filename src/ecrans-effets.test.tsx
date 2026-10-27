@@ -457,7 +457,7 @@ describe("les effets de révélation", () => {
       expect(bang).not.toHaveBeenCalled();
       await act(async () => { await vi.advanceTimersByTimeAsync(1); });
       expect(bang).toHaveBeenCalledExactlyOnceWith(rarity, "standard");
-      expect(stinger).toHaveBeenCalledTimes(rarity === "legendary" ? 1 : 0);
+      expect(stinger).not.toHaveBeenCalled();
       expect(next.disabled).toBe(true);
       // jsdom ne joue pas les animations CSS : vérifier le filet de sécurité.
       await act(async () => {

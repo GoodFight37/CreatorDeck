@@ -1,8 +1,9 @@
 {
-  "$commentaire": "Briefs de génération audio (ElevenLabs), source unique du laboratoire /audio-lab et de scripts/elevenlabs-generate.mjs. Aucun fichier n'a encore été généré : les candidats iront dans public/music/candidates/ et public/sfx/candidates/, sans jamais écraser les originaux.",
+  "$commentaire": "Première passe audio autorisée le 27 octobre 2026. Provisions prudentes, consommation réelle dans docs/audio-generation-ledger.json. Navigation et filtres silencieux.",
   "credits": {
-    "musiqueParMinute": 900,
+    "musiqueParMinute": 1200,
     "effetParGeneration": 200,
+    "effetParSeconde": 40,
     "planStarterMensuel": 30000
   },
   "musique": {
@@ -11,52 +12,188 @@
     "directions": [
       {
         "id": "douce-melodique",
-        "label": "Douce et mélodique",
-        "description": "Piano feutré et cordes douces, une mélodie simple qui se répète sans lasser — la lecture « carte postale » d'un jeu de collection.",
-        "prompt": "Gentle melodic ambient loop for a cozy card-collecting game: felt piano playing a simple, memorable four-bar melody, soft warm strings underneath, a hint of music box, slow and calm around 70 BPM, no drums, no percussion peaks, no vocals, seamless loop, low and even dynamics, pleasant over hours of play.",
-        "negativeStyles": ["electronic", "synthesizer arpeggios", "drums", "percussion", "vocals", "dramatic crescendos", "sudden changes"],
-        "longueurMs": 60000,
-        "variantes": 2,
-        "seeds": [101, 202]
+        "label": "Clairière d’aventure",
+        "description": "Piano feutré, harpe et cordes ; une mélodie d’aventure calme.",
+        "prompt": "Original instrumental music for a premium mobile card collecting game: felt piano, plucked harp and warm chamber strings, a clear memorable lyrical melody, gentle pastoral JRPG village adventure, 75 BPM. A short complete 32 second looping phrase in 4/4, steady soft dynamics, no intro, no outro, tail and harmony resolve smoothly to the opening. Warm natural acoustic instruments, no imitation of any existing theme or artist, no voices, no piercing treble.",
+        "negativeStyles": [
+          "raw synthesizer",
+          "aggressive highs",
+          "loud drums",
+          "vocals",
+          "dramatic crescendos"
+        ],
+        "longueurMs": 32000,
+        "variantes": 2
       },
       {
         "id": "chaude-accueillante",
-        "label": "Chaleureuse et accueillante",
-        "description": "Guitare acoustique et clavier chaud, l'ambiance d'un café tranquille où l'on ouvre ses boosters — conviviale sans être présente.",
-        "prompt": "Warm welcoming background loop for a friendly trading-card game: fingerpicked acoustic guitar, mellow Rhodes piano chords, soft upright bass, very light brushed percussion kept far in the background, relaxed groove around 85 BPM, no vocals, no solos, seamless loop, even gentle dynamics that never fight the sound effects.",
-        "negativeStyles": ["electronic", "synthesizers", "loud drums", "vocals", "jazz improvisation solos", "dramatic changes"],
-        "longueurMs": 60000,
-        "variantes": 2,
-        "seeds": [303, 404]
+        "label": "Comptoir des voyageurs",
+        "description": "Guitare, bois et pizzicatos ; un accueil chaleureux.",
+        "prompt": "Original instrumental music for a premium mobile card collecting game: fingerpicked acoustic guitar, soft clarinet melody and pizzicato strings, a welcoming adventurous JRPG trading village, warm memorable tune, light hand percussion, 90 BPM. A short complete 32 second looping phrase in 4/4, steady soft dynamics, no intro, no outro, tail and harmony resolve smoothly to the opening. Warm natural acoustic instruments, no imitation of any existing theme or artist, no voices, no piercing treble.",
+        "negativeStyles": [
+          "raw synthesizer",
+          "aggressive highs",
+          "loud drums",
+          "vocals",
+          "dramatic crescendos"
+        ],
+        "longueurMs": 32000,
+        "variantes": 2
       },
       {
-        "id": "minimale-discrète",
-        "label": "Minimaliste, très discrète",
-        "description": "Nappes espacées et notes rares : à peine un souffle sonore, pour les longues sessions et les joueurs qui veulent presque du silence.",
-        "prompt": "Extremely discreet minimal ambient loop for long play sessions: very sparse soft synth pads, a single gentle plucked note every few seconds, lots of space and near-silence between sounds, around 60 BPM, no melody hooks, no drums, no vocals, seamless loop, extremely low and flat dynamics, designed to be almost unnoticed.",
-        "negativeStyles": ["melody hooks", "drums", "percussion", "vocals", "bright tones", "dynamic changes", "tension"],
-        "longueurMs": 60000,
-        "variantes": 2,
-        "seeds": [505, 606]
+        "id": "minimale-discrete",
+        "label": "Cartes sous les étoiles",
+        "description": "Célesta et cordes ; une exploration nocturne mélodique.",
+        "prompt": "Original instrumental music for a premium mobile card collecting game: soft celesta melody, warm sustained strings and gentle acoustic guitar, lyrical nighttime JRPG exploration, spacious but memorable melodic phrase, 70 BPM. A short complete 32 second looping phrase in 4/4, steady soft dynamics, no intro, no outro, tail and harmony resolve smoothly to the opening. Warm natural acoustic instruments, no imitation of any existing theme or artist, no voices, no piercing treble.",
+        "negativeStyles": [
+          "raw synthesizer",
+          "aggressive highs",
+          "loud drums",
+          "vocals",
+          "dramatic crescendos"
+        ],
+        "longueurMs": 32000,
+        "variantes": 2
       }
     ]
   },
   "effets": {
     "modele": "eleven_text_to_sound_v2",
-    "format": "wav_44100",
+    "format": "mp3_44100_128",
     "sons": [
-      { "nom": "card-draw", "label": "Carte tirée / papier", "prompt": "A single playing card sliding out of a paper booster pack, soft paper swish, close and dry, no music", "dureeSecondes": 0.6, "variantes": 3 },
-      { "nom": "card-turn", "label": "Carte retournée / page", "prompt": "A thick trading card flipping over on a table, soft paper snap, warm and short, no music", "dureeSecondes": 0.6, "variantes": 3 },
-      { "nom": "pack-tear", "label": "Déchirure du sachet (nouveau)", "prompt": "Tearing open a foil trading-card booster pack, crinkly foil and paper rip, satisfying but gentle, no music", "dureeSecondes": 1.2, "variantes": 3 },
-      { "nom": "chip-place", "label": "Tampon / carte posée", "prompt": "A rubber stamp pressing softly onto paper, one warm wooden thud with a tiny resonance, no music", "dureeSecondes": 0.5, "variantes": 3 },
-      { "nom": "click", "label": "Tap d'interface", "prompt": "Very soft short user-interface tap, rounded and woody, quiet, like touching a polished wooden button, no music", "dureeSecondes": 0.3, "variantes": 3 },
-      { "nom": "select", "label": "Confirmation douce", "prompt": "Gentle confirmation blip, one warm sine tone with a soft harmonic, pleasant and very short, no music", "dureeSecondes": 0.4, "variantes": 3 },
-      { "nom": "pop", "label": "Pop d'ouverture", "prompt": "Soft bubble pop, round and friendly, like a soap bubble bursting close to the microphone, no music", "dureeSecondes": 0.4, "variantes": 3 },
-      { "nom": "close", "label": "Fermeture / refus doux", "prompt": "Soft dismissive tap, muted paper closing, low and gentle, not negative, no music", "dureeSecondes": 0.4, "variantes": 3 },
-      { "nom": "coins", "label": "Pièces / récompense encaissée", "prompt": "A few small coins dropping gently into a wooden bowl, warm and sparse, not a casino sound, no music", "dureeSecondes": 0.8, "variantes": 3 },
-      { "nom": "menu-open", "label": "Ouverture de feuille", "prompt": "Soft paper sheet sliding open, quiet airy whoosh, subtle and short, no music", "dureeSecondes": 0.5, "variantes": 3 },
-      { "nom": "chime", "label": "Carillon de récompense", "prompt": "Warm reward chime, two soft bell tones with natural decay, gentle and premium, no music box harshness, no music", "dureeSecondes": 1.0, "variantes": 3 },
-      { "nom": "reveal-shimmer", "label": "Scintillement de révélation (nouveau)", "prompt": "Delicate magical shimmer for a rare card reveal, soft sparkling harmonics rising gently, luxurious but quiet, no music", "dureeSecondes": 1.2, "variantes": 3 }
+      {
+        "nom": "card-draw",
+        "label": "Extraction de carte",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One coated trading card gently sliding from a foil sleeve, tactile paper swish.",
+        "dureeSecondes": 0.6,
+        "variantes": 2
+      },
+      {
+        "nom": "card-turn",
+        "label": "Carte retournée",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One thick trading card flips over felt, a delicate papery snap.",
+        "dureeSecondes": 0.6,
+        "variantes": 2
+      },
+      {
+        "nom": "pack-tear",
+        "label": "Sachet métallisé déchiré",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One metallized foil booster pouch crinkles then tears across its heat seal, soft crisp foil rip.",
+        "dureeSecondes": 1.2,
+        "variantes": 2
+      },
+      {
+        "nom": "chip-place",
+        "label": "Carte posée",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One thick collectible card lands on a felt-covered wooden table, muted warm tap.",
+        "dureeSecondes": 0.5,
+        "variantes": 2
+      },
+      {
+        "nom": "pop",
+        "label": "Sachet ouvert",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. A foil card pouch gently parts and exhales, soft airy release and short crinkle.",
+        "dureeSecondes": 0.5,
+        "variantes": 2
+      },
+      {
+        "nom": "close",
+        "label": "Refus doux",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. Two softly descending muted wooden notes, a kind gentle refusal, no buzzer.",
+        "dureeSecondes": 0.5,
+        "variantes": 2
+      },
+      {
+        "nom": "coins",
+        "label": "Récompense encaissée",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. Three small coins gently settling in a wooden bowl, rounded soft clinks, no casino.",
+        "dureeSecondes": 0.8,
+        "variantes": 2
+      },
+      {
+        "nom": "chime",
+        "label": "Récompense",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. A warm acoustic reward motif, two rounded celesta and marimba notes with a little soft string resonance.",
+        "dureeSecondes": 1,
+        "variantes": 2
+      },
+      {
+        "nom": "reveal-common",
+        "label": "Révélation commune",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One modest warm wooden marimba note and tiny paper snap, understated everyday card reveal.",
+        "dureeSecondes": 0.5,
+        "variantes": 2
+      },
+      {
+        "nom": "reveal-uncommon",
+        "label": "Révélation peu commune",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. Two rising soft marimba notes, warm small acoustic chime, pleasant uncommon card reveal.",
+        "dureeSecondes": 0.7,
+        "variantes": 2
+      },
+      {
+        "nom": "reveal-rare",
+        "label": "Révélation rare",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. Three ascending rounded celesta notes with light harp resonance, a memorable bright but gentle rare reveal.",
+        "dureeSecondes": 1,
+        "variantes": 2
+      },
+      {
+        "nom": "reveal-epic",
+        "label": "Révélation épique",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. A four-note ascending harp and warm celesta motif with soft bowed strings, luxurious restrained epic reveal.",
+        "dureeSecondes": 1.3,
+        "variantes": 2
+      },
+      {
+        "nom": "reveal-legendary",
+        "label": "Révélation légendaire",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. A distinctive five-note rising acoustic harp motif and warm chamber strings resolving gently, wondrous legendary discovery.",
+        "dureeSecondes": 1.8,
+        "variantes": 2
+      },
+      {
+        "nom": "impact-epic",
+        "label": "Impact épique",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One soft rounded low wooden drum strike with a small felted metallic resonance, satisfying restrained discovery accent.",
+        "dureeSecondes": 0.6,
+        "variantes": 2
+      },
+      {
+        "nom": "impact-legendary",
+        "label": "Impact légendaire",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One deep rounded orchestral hand drum and warm bronze resonance, luxurious soft impact with no boom.",
+        "dureeSecondes": 0.8,
+        "variantes": 2
+      },
+      {
+        "nom": "craft",
+        "label": "Fabrication Atelier",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. Three tiny tactile wooden mechanism clicks resolve into a warm acoustic plucked chord, a card is crafted.",
+        "dureeSecondes": 1.1,
+        "variantes": 2
+      },
+      {
+        "nom": "grace",
+        "label": "Grâce du Tribunal",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One rubber stamp softly presses onto paper on wood with a little rounded acoustic bell confirmation.",
+        "dureeSecondes": 0.7,
+        "variantes": 1
+      },
+      {
+        "nom": "gavel",
+        "label": "Marteau du Tribunal",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. One wooden gavel lands firmly but gently on a felted wood block, close dry rounded low knock.",
+        "dureeSecondes": 0.7,
+        "variantes": 1
+      },
+      {
+        "nom": "perfect",
+        "label": "Booster parfait",
+        "prompt": "Premium warm mobile collectible card game, close dry recording, a single event at the very start with a short natural tail. No voices, no background music, no harsh treble, no loud cinematic impact. A joyful short warm harp arpeggio answered by soft orchestral strings and celesta, a special perfect card pack reward.",
+        "dureeSecondes": 1.8,
+        "variantes": 2
+      }
     ]
   }
 }

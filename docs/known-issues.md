@@ -1,3 +1,15 @@
+## Audio : double motif légendaire et Atelier silencieux — 27 octobre 2026
+
+P2, base `b3922daf`, suivi `CreatorDeck-Codex-4m4`. La révélation légendaire
+appelait `playBang` (incluant le motif) puis un stinger supplémentaire. Le
+Perfect superposait également bang et signature. Les confirmations de
+`AtelierTransaction` ne déclenchaient aucun son après leur résultat.
+Correction : motif unique par révélation, signature unique Perfect, fabrication,
+recyclage et refus raccordés aux résultats. Prises acoustiques, niveaux mesurés
+et validation navigateur suivis dans [la livraison audio](audio-livraison-2026-10-27.md).
+Statut : corrigé localement, publication et contrôle audif final à distinguer.
+La musique actuelle reste en place jusqu'au choix explicite de Malik.
+
 ## Catalogue Manga Drop incomplet — 27 octobre 2026
 
 P2, base `42587749`, suivi `CreatorDeck-Codex-lij`. Le jeu raccordait seulement

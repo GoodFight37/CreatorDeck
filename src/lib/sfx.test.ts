@@ -28,6 +28,7 @@ import {
   setMuted,
   setMusicMuted,
   setSfxVolume,
+  setAudioBackground,
   type SampleName,
 } from "@/lib/sfx";
 
@@ -186,6 +187,11 @@ describe("mix de la musique", () => {
       expect(targetHistory.at(-1)).toBe(0);
       audio.setMusicScene("hub");
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      audio.setAudioBackground(true);
+      expect(targetHistory.at(-1)).toBe(0);
+      audio.setAudioBackground(false);
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      expect(sources).toHaveLength(1);
       audio.setMuted(true);
       expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
       audio.setMuted(false);
@@ -433,6 +439,7 @@ describe("les bruitages embarqués", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     setMuted(false);
+    setAudioBackground(false);
   });
 });
 

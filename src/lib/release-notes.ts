@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-27-audio-tactile", date: "2026-10-27", title: "Des sons pour tes cartes",
+    summary: "Le papier, les sachets et les récompenses adoptent une famille de sons plus chaleureuse.",
+    sections: [{ title: "À chaque action", items: [
+      "La déchirure du sachet et l’extraction des cartes ont chacune leur bruitage.",
+      "Les révélations se distinguent par rareté ; les boosters Live, MEMES, Imgflip et Anime partagent cette identité.",
+      "L’Atelier accompagne la création et le recyclage, avec des prises alternées pour varier les gestes.",
+      "Navigation et filtres restent silencieux. Son et Musique gardent leurs réglages indépendants.",
+    ] }],
+  },
+  {
     id: "2026-10-27-manga-drop-catalogue-complet", date: "2026-10-27", title: "Les 1 020 cartes de Manga Drop",
     summary: "Les 1 000 cartes manquantes rejoignent les 20 déjà présentes dans le booster Anime.",
     sections: [{ title: "Ta collection Anime", items: [

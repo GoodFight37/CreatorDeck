@@ -7,6 +7,7 @@ import type { usePoints } from "@/hooks/use-points";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { CreatorCard } from "./creator-card";
+import { playCoins, playCraft, playRefuse } from "@/lib/sfx";
 
 export type AtelierAction =
   | { kind: "craft"; creator: Creator; name: string; wallet: "points" | "tokens"; cost: number }
@@ -36,6 +37,8 @@ export function AtelierTransaction({ action, points, balance, onClose, onNotice,
       const outcome = action.kind === "craft" ? await points.craft(action.creator.slug, action.wallet === "tokens")
         : action.kind === "recycle" ? await points.recycle(action.cardId) : await points.recycleAll(action.ids);
       if (outcome.status === "refused") throw new Error(outcome.message ?? "Action refusée.");
+      if (action.kind === "craft") playCraft();
+      else if (outcome.delta !== 0) playCoins();
       const text = action.kind === "craft"
         ? `${action.name} rejoint ton classeur · ${outcome.delta !== undefined ? Math.abs(outcome.delta) : action.cost} ${currency}.`
         : action.kind === "bulk" && "count" in outcome
@@ -44,6 +47,7 @@ export function AtelierTransaction({ action, points, balance, onClose, onNotice,
           : `Doublon recyclé · +${outcome.delta ?? action.cost} points.`;
       setResult(text); setPhase("done"); onNotice(text);
     } catch (caught) {
+      playRefuse();
       const message = caught instanceof Error ? caught.message : "Action impossible. Réessaie.";
       setError(message); setPhase("preview"); onError(message);
     } finally { busy.current = false; }

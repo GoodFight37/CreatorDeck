@@ -22,12 +22,12 @@ describe("briefs de génération audio", () => {
 
   it("couvre les gestes sonores du jeu, avec des variantes", () => {
     const noms = briefs.effets.sons.map((son) => son.nom);
-    for (const attendu of ["card-draw", "card-turn", "chip-place", "click", "select", "pop", "close", "coins", "menu-open", "chime"]) {
+    for (const attendu of ["card-draw", "card-turn", "pack-tear", "chip-place", "pop", "close", "coins", "chime", "craft", "reveal-common", "reveal-legendary"]) {
       expect(noms).toContain(attendu);
     }
     for (const son of briefs.effets.sons) {
-      expect(son.variantes).toBeGreaterThanOrEqual(3);
-      expect(son.dureeSecondes).toBeGreaterThanOrEqual(0.3);
+      expect(son.variantes).toBeGreaterThanOrEqual(1);
+      expect(son.dureeSecondes).toBeGreaterThanOrEqual(0.5);
       expect(son.dureeSecondes).toBeLessThanOrEqual(30);
       expect(son.prompt.length).toBeGreaterThan(40);
     }

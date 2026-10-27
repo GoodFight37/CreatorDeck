@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>CreatorDeck — Choisir une musique</title>
+<style>body{color:#f4ecdd;background:#141b22;font:17px/1.5 system-ui;margin:0}main{max-width:680px;margin:auto;padding:28px 20px 60px}h1{line-height:1.15;font-size:2rem}h2{font-size:1.25rem}article{background:#202a33;border:1px solid #635844;border-radius:16px;padding:16px;margin:18px 0}audio{display:block;width:100%;margin:8px 0 18px}p{color:#d8d2c8}label{display:block}a{color:#e5c784}small{color:#bbb}button{font:inherit;padding:10px;border-radius:8px;border:1px solid #b7a37d;background:#e5d5b7;color:#18212a}input{vertical-align:middle}</style></head>
+<body><main><p>CREATORDECK · ÉCOUTE COMPARATIVE</p><h1>Une couleur pour tes aventures</h1><p>Trois directions originales, deux propositions chacune. Lance un extrait : le précédent s’arrête. Les candidates tournent en boucle et ont été mises au même niveau. La musique du jeu attend ton choix.</p>
+<label>Volume d’écoute <input id="volume" aria-label="Volume d’écoute" type="range" min="0" max="1" step="0.05" value="0.5"></label><p><button id="stop" type="button">Tout arrêter</button></p>
+<article><h2>A · Clairière d’aventure</h2><p>Piano feutré, harpe et cordes. Une promenade mélodique et calme.</p><label for="a1">A1</label><audio id="a1" controls loop preload="none" src="music/candidates/douce-melodique-v1.mp3"></audio><label for="a2">A2</label><audio id="a2" controls loop preload="none" src="music/candidates/douce-melodique-v2.mp3"></audio></article>
+<article><h2>B · Comptoir des voyageurs</h2><p>Guitare, bois et pizzicatos. Un accueil chaleureux et un peu plus animé.</p><label for="b1">B1</label><audio id="b1" controls loop preload="none" src="music/candidates/chaude-accueillante-v1.mp3"></audio><label for="b2">B2</label><audio id="b2" controls loop preload="none" src="music/candidates/chaude-accueillante-v2.mp3"></audio></article>
+<article><h2>C · Cartes sous les étoiles</h2><p>Célesta, guitare et cordes. Une exploration nocturne douce et mélodique.</p><label for="c1">C1</label><audio id="c1" controls loop preload="none" src="music/candidates/minimale-discrete-v1.mp3"></audio><label for="c2">C2</label><audio id="c2" controls loop preload="none" src="music/candidates/minimale-discrete-v2.mp3"></audio></article>
+<p>Pour choisir, indique simplement A1, A2, B1, B2, C1 ou C2, et ce que tu aimerais garder ou changer. Tu peux aussi n’en retenir aucune.</p><small>Les mesures techniques et le raccord des fichiers ne remplacent pas ton écoute, notamment sur le haut-parleur du téléphone.</small><p><a href="/">Revenir au jeu</a></p></main>
+<script>
+const players = [...document.querySelectorAll('audio')];
+const volume = document.querySelector('#volume');
+for (const player of players) {
+  player.volume = Number(volume.value);
+  player.addEventListener('play', () => { for (const other of players) if (other !== player) other.pause(); });
+}
+volume.addEventListener('input', () => { for (const player of players) player.volume = Number(volume.value); });
+const stop = () => { for (const player of players) player.pause(); };
+document.querySelector('#stop').addEventListener('click', stop);
+document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+</script></body></html>

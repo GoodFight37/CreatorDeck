@@ -1,5 +1,8 @@
 # Couche musicale — mise à jour 14 octobre 2026
 
+Actualisation du 27 octobre : [livraison audio et comparaison musicale](audio-livraison-2026-10-27.md).
+Six extraits originaux sont proposés ; la piste actuelle attend le choix de Malik.
+
 `public/music/hub-late-night.mp3` conserve son chemin technique pour éviter de
 changer le moteur : son contenu est maintenant `springly_sprigs.mp3` du pack
 [Fantasy Song Pack Volume 1](https://opengameart.org/content/fantasy-song-pack-volume-1)

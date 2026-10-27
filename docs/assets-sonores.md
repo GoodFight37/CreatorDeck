@@ -1,5 +1,9 @@
 # Les assets sonores
 
+Actualisation du 27 octobre : les prises ElevenLabs, le traitement et les preuves
+sont décrits dans [la livraison audio](audio-livraison-2026-10-27.md).
+Les sections historiques ci-dessous décrivent les packs précédents.
+
 > **D'où viennent les bruitages du jeu, ce qu'il en utilise, et comment.** Les
 > sons voyagent dans l'APK : la sélection est donc **courte et justifiée**, et
 > `src/lib/sfx.test.ts` garde la main sur le budget.

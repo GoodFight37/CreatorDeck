@@ -1,3 +1,18 @@
+## D-176 — 27 octobre 2026 : effets acoustiques et sélection musicale
+
+Malik remplace explicitement le report audio et autorise une première passe
+ElevenLabs plafonnée à 14 000 crédits, avec 24 764 protégés, sans achat ni APK
+locale. Le moteur, les bus, les préférences séparées et le silence de navigation
+sont conservés. Les gestes actifs passent à des prises acoustiques alternées ;
+la révélation légendaire et le Perfect évitent un second motif superposé.
+L'Atelier sonne après le résultat réel, une fois par transaction. Le passage en
+arrière-plan coupe les effets sans créer une seconde boucle au retour.
+Six extraits instrumentaux courts reprennent une couleur aventure/JRPG sans
+copier de thème. La piste du jeu attend le choix de Malik. `/audio-lab` demeure
+local ; une page statique d'écoute exportée rend les propositions accessibles
+sur l'environnement de test. Aucun autre service payant ni nouveau moteur.
+Coûts, API, fichiers, mesures et preuves : [livraison audio](audio-livraison-2026-10-27.md).
+
 ## D-175 — 27 octobre 2026 : catalogue Manga Drop complet
 
 Malik demande de vérifier les cartes Anime présentes et d'ajouter toutes les

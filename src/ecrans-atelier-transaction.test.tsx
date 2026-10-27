@@ -5,6 +5,8 @@ import { AtelierView } from "@/components/atelier-view";
 import { CREATORS } from "@/lib/catalog";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 const craft = vi.fn(), recycle = vi.fn(), recycleAll = vi.fn();
+const craftSound = vi.fn(), coinsSound = vi.fn(), refuseSound = vi.fn();
+vi.mock("@/lib/sfx", () => ({ playCraft: () => craftSound(), playCoins: () => coinsSound(), playRefuse: () => refuseSound() }));
 vi.mock("@/hooks/use-points", () => ({ usePoints: () => ({ craft, recycle, recycleAll }) }));
 const NOW = Date.UTC(2026, 9, 14);
 describe("rituel Atelier", () => {
@@ -22,11 +24,14 @@ describe("rituel Atelier", () => {
     await mount(); let finish!: (value: {status: "done"; delta: number}) => void;
     craft.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
     open(); expect(craft).not.toHaveBeenCalled();
+    expect(craftSound).not.toHaveBeenCalled();
     const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find((entry) => entry.textContent?.startsWith("Créer ·"))!;
     act(() => { button.click(); button.click(); });
     expect(craft).toHaveBeenCalledTimes(1); expect(button.disabled).toBe(true);
     expect(document.querySelector('[role="dialog"]')?.getAttribute("aria-busy")).toBe("true");
     await act(async () => finish({status: "done", delta: -45}));
+    expect(craftSound).toHaveBeenCalledOnce();
+    expect(coinsSound).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("Elle est à toi");
     expect(document.querySelector('[role="status"]')?.textContent).toContain("45 points");
     expect(document.body.textContent).toContain("Voir le classeur");
@@ -35,6 +40,8 @@ describe("rituel Atelier", () => {
     await mount(); craft.mockResolvedValue({status: "refused", message: "Connecte-toi pour créer."}); open();
     await act(async () => banc.appuyer(/^Créer ·/));
     expect(document.querySelector('[role="alert"]')?.textContent).toContain("Connecte-toi");
+    expect(refuseSound).toHaveBeenCalledOnce();
+    expect(craftSound).not.toHaveBeenCalled();
     expect(document.body.textContent).not.toContain("Elle est à toi");
     expect(document.querySelector<HTMLButtonElement>(".atelier-transaction .primary-action")!.disabled).toBe(false);
   });

@@ -1,5 +1,13 @@
 # Roadmap CreatorDeck
 
+**Audio premium — 27 octobre 2026 (D-176) :** lot autorisé, en validation locale.
+36 prises acoustiques intégrées aux boosters, raretés, Atelier et récompenses ;
+6 extraits courts dans l'écoute comparative. Critères : budget cumulé protégé,
+pas de double déclenchement, réglages indépendants conservés, navigation muette,
+mesures et tests réels, écoute accessible et publication vérifiée. Le choix
+musical final dépend de Malik ; aucune substitution de la piste actuelle.
+État et limites : [livraison audio](audio-livraison-2026-10-27.md).
+
 **Couleurs du sachet et appui après glissé — 27 octobre 2026 (D-174) :** correction
 ciblée de la recoloration de Manga Drop et du premier tap tactile perdu après
 un swipe. Critères : couleurs approuvées, une seule préparation par tap sur les

@@ -55,6 +55,13 @@ const CIBLES = {
   coins: -28,
   chime: -28,
 };
+// Les prises générées ont été mesurées après traitement, avec une cible par geste.
+const mesures = JSON.parse(readFileSync(path.join(ROOT, "docs/audio-measurements.json"), "utf8"));
+for (const mesure of mesures) {
+  if (mesure.fichier.startsWith("public/sfx/") && mesure.fichier.endsWith(".wav")) {
+    CIBLES[path.basename(mesure.fichier, ".wav")] = mesure.cibleDb;
+  }
+}
 
 /**
  * La crête ne doit jamais dépasser ça, même après amplification.

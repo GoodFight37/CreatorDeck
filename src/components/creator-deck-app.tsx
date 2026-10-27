@@ -54,12 +54,14 @@ import { buzz } from "@/lib/haptics";
 import {
   SFX_USUELS,
   playCoins,
+  playCraft,
   playPackOpening,
   playReward,
   preloadGameMusic,
   preloadSamples,
   startGameAudio,
   setMusicScene,
+  setAudioBackground,
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
@@ -177,9 +179,15 @@ export function CreatorDeckApp() {
   // charge à l'ouverture de son onglet.)
   useEffect(() => {
     preloadSamples(SFX_USUELS);
+    const visibility = () => setAudioBackground(document.hidden);
+    document.addEventListener("visibilitychange", visibility);
+    visibility();
     // La musique (854 Ko à télécharger et décoder) attend que l'écran d'accueil soit posé.
     const later = window.setTimeout(preloadGameMusic, 2_000);
-    return () => window.clearTimeout(later);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      window.clearTimeout(later);
+    };
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);
@@ -654,7 +662,7 @@ export function CreatorDeckApp() {
         showError(paid.message);
         return false;
       }
-      playReward();
+      playCraft();
       showNotice(paid.message ?? "Créateur rejoint.");
       return true;
     } catch (caught) {

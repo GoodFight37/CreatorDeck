@@ -61,7 +61,7 @@ function candidatMusique(directionId: string, variante: number): string {
 }
 
 function candidatEffet(nom: string, variante: number): string {
-  return `/sfx/candidates/${nom}-v${variante}.wav`;
+  return `/sfx/${nom}${variante > 1 ? "-alt" : ""}.wav`;
 }
 
 const RARETES: { id: Rarity; label: string }[] = [

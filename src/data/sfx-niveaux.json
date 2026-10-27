@@ -4,24 +4,44 @@
   "creteMaxDb": -6,
   "gainMax": 2,
   "niveaux": {
-    "card-draw": {
-      "rmsDb": -15.65,
-      "creteDb": 0,
+    "card-draw-alt": {
+      "rmsDb": -25.01,
+      "creteDb": -11.93,
       "cibleDb": -25
     },
-    "card-turn": {
-      "rmsDb": -22.64,
-      "creteDb": 0,
+    "card-draw": {
+      "rmsDb": -25.03,
+      "creteDb": -10.26,
+      "cibleDb": -25
+    },
+    "card-turn-alt": {
+      "rmsDb": -28.61,
+      "creteDb": -12.76,
       "cibleDb": -28.6
     },
-    "chime": {
-      "rmsDb": -23.54,
-      "creteDb": -17.07,
+    "card-turn": {
+      "rmsDb": -28.62,
+      "creteDb": -13.6,
+      "cibleDb": -28.6
+    },
+    "chime-alt": {
+      "rmsDb": -28.01,
+      "creteDb": -12.01,
       "cibleDb": -28
     },
+    "chime": {
+      "rmsDb": -31.18,
+      "creteDb": -9,
+      "cibleDb": -28
+    },
+    "chip-place-alt": {
+      "rmsDb": -30.01,
+      "creteDb": -14.83,
+      "cibleDb": -30
+    },
     "chip-place": {
-      "rmsDb": -21.63,
-      "creteDb": 0,
+      "rmsDb": -30.03,
+      "creteDb": -14.07,
       "cibleDb": -30
     },
     "click": {
@@ -29,25 +49,150 @@
       "creteDb": 0,
       "cibleDb": -32
     },
-    "close": {
-      "rmsDb": -16.33,
-      "creteDb": 0,
+    "close-alt": {
+      "rmsDb": -30.03,
+      "creteDb": -15.1,
       "cibleDb": -30
     },
-    "coins": {
-      "rmsDb": -24.27,
-      "creteDb": 0,
+    "close": {
+      "rmsDb": -30.03,
+      "creteDb": -12.96,
+      "cibleDb": -30
+    },
+    "coins-alt": {
+      "rmsDb": -28,
+      "creteDb": -12.51,
       "cibleDb": -28
+    },
+    "coins": {
+      "rmsDb": -28.01,
+      "creteDb": -13.69,
+      "cibleDb": -28
+    },
+    "craft-alt": {
+      "rmsDb": -31.26,
+      "creteDb": -9,
+      "cibleDb": -28
+    },
+    "craft": {
+      "rmsDb": -28,
+      "creteDb": -9.88,
+      "cibleDb": -28
+    },
+    "gavel": {
+      "rmsDb": -28.03,
+      "creteDb": -10.7,
+      "cibleDb": -28
+    },
+    "grace": {
+      "rmsDb": -28.01,
+      "creteDb": -12.71,
+      "cibleDb": -28
+    },
+    "impact-epic-alt": {
+      "rmsDb": -27.09,
+      "creteDb": -10.18,
+      "cibleDb": -27
+    },
+    "impact-epic": {
+      "rmsDb": -27.04,
+      "creteDb": -12.15,
+      "cibleDb": -27
+    },
+    "impact-legendary-alt": {
+      "rmsDb": -27.02,
+      "creteDb": -12.56,
+      "cibleDb": -27
+    },
+    "impact-legendary": {
+      "rmsDb": -27.01,
+      "creteDb": -11.89,
+      "cibleDb": -27
     },
     "menu-open": {
       "rmsDb": -20.37,
       "creteDb": 0,
       "cibleDb": -30
     },
+    "pack-tear-alt": {
+      "rmsDb": -28.01,
+      "creteDb": -13.13,
+      "cibleDb": -28
+    },
+    "pack-tear": {
+      "rmsDb": -28,
+      "creteDb": -15.3,
+      "cibleDb": -28
+    },
+    "perfect-alt": {
+      "rmsDb": -28.01,
+      "creteDb": -17.59,
+      "cibleDb": -28
+    },
+    "perfect": {
+      "rmsDb": -28.01,
+      "creteDb": -16.69,
+      "cibleDb": -28
+    },
+    "pop-alt": {
+      "rmsDb": -28.03,
+      "creteDb": -13.02,
+      "cibleDb": -28
+    },
     "pop": {
-      "rmsDb": -15.83,
-      "creteDb": 0,
-      "cibleDb": -29
+      "rmsDb": -28.01,
+      "creteDb": -15.34,
+      "cibleDb": -28
+    },
+    "reveal-common-alt": {
+      "rmsDb": -28.65,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-common": {
+      "rmsDb": -25.02,
+      "creteDb": -9.08,
+      "cibleDb": -25
+    },
+    "reveal-epic-alt": {
+      "rmsDb": -26.73,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-epic": {
+      "rmsDb": -27.58,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-legendary-alt": {
+      "rmsDb": -25,
+      "creteDb": -14.95,
+      "cibleDb": -25
+    },
+    "reveal-legendary": {
+      "rmsDb": -25.02,
+      "creteDb": -13.32,
+      "cibleDb": -25
+    },
+    "reveal-rare-alt": {
+      "rmsDb": -26.45,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-rare": {
+      "rmsDb": -27.14,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-uncommon-alt": {
+      "rmsDb": -25.71,
+      "creteDb": -9,
+      "cibleDb": -25
+    },
+    "reveal-uncommon": {
+      "rmsDb": -25.02,
+      "creteDb": -10.32,
+      "cibleDb": -25
     },
     "select": {
       "rmsDb": -29.53,

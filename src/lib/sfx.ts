@@ -1,6 +1,7 @@
 /**
- * Sons de l'application : **des bruitages embarqués, doublés d'un fond
- * synthétisé**.
+ * Sons de l'application : prises acoustiques embarquées depuis le 27 octobre.
+ * Les plans de synthèse ci-dessous sont en réserve ; les gestes actifs jouent
+ * les fichiers mesurés. Historique et mesures : docs/audio-livraison-2026-10-27.md.
  *
  * **1. Un son par geste, et le son dit le geste — et se déplacer ne sonne pas.**
  * On n'entend donc **rien** en changeant d'onglet, en ouvrant une feuille, en
@@ -247,17 +248,7 @@ export function tribunalEndStingerPlan(): Note[] {
 // vraiment dans `public/sfx/`.
 // ---------------------------------------------------------------------------
 
-export type SampleName =
-  | "card-draw"
-  | "card-turn"
-  | "chip-place"
-  | "click"
-  | "select"
-  | "pop"
-  | "close"
-  | "coins"
-  | "menu-open"
-  | "chime";
+export type SampleName = keyof typeof NIVEAUX_SFX.niveaux;
 
 /**
  * Le gain d'un bruitage : le chemin entre **ce qu'il mesure** et **ce qu'il doit
@@ -291,18 +282,9 @@ export function sampleGain(name: SampleName): number {
  * change le gain sans qu'on touche à cette table — et le test le vérifie en
  * relisant le disque.
  */
-export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
-  "card-draw": { file: "card-draw.wav", gain: sampleGain("card-draw") },
-  "card-turn": { file: "card-turn.wav", gain: sampleGain("card-turn") },
-  "chip-place": { file: "chip-place.wav", gain: sampleGain("chip-place") },
-  click: { file: "click.wav", gain: sampleGain("click") },
-  select: { file: "select.wav", gain: sampleGain("select") },
-  pop: { file: "pop.wav", gain: sampleGain("pop") },
-  close: { file: "close.wav", gain: sampleGain("close") },
-  coins: { file: "coins.wav", gain: sampleGain("coins") },
-  "menu-open": { file: "menu-open.wav", gain: sampleGain("menu-open") },
-  chime: { file: "chime.wav", gain: sampleGain("chime") },
-};
+export const SAMPLES = Object.fromEntries(
+  (Object.keys(NIVEAUX_SFX.niveaux) as SampleName[]).map(name => [name, { file: `${name}.wav`, gain: sampleGain(name) }]),
+) as Record<SampleName, { file: string; gain: number }>;
 
 /**
  * Les bruitages qu'on entend **tout le temps**, chargés à l'ouverture de
@@ -315,15 +297,7 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
  * (8 octobre 2026). Ils restent dans le catalogue, réglés comme les autres, au
  * cas où un écran les redemande.
  */
-export const SFX_USUELS: SampleName[] = [
-  "card-draw",
-  "card-turn",
-  "pop",
-  "close",
-  "chip-place",
-  "coins",
-  "chime",
-];
+export const SFX_USUELS = (Object.keys(SAMPLES) as SampleName[]).filter(name => !["click", "menu-open", "select"].includes(name));
 
 /** L'adresse d'un bruitage : servie par le build, comme les portraits. */
 export function sampleUrl(name: SampleName): string {
@@ -353,6 +327,8 @@ let context: AudioContextLike | null = null;
 let muted = false;
 let musicMuted = false;
 let loaded = false;
+let background = false;
+const activeEffects = new Set<AudioBufferSourceNode>();
 export type MusicScene = "hub" | "pack" | "tribunal";
 /** Gains relatifs de BGM, gardés très bas à la demande du joueur. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
@@ -424,7 +400,7 @@ export function isMusicMuted(): boolean {
 export function setMuted(value: boolean): void {
   loadPreference();
   muted = Boolean(value);
-  if (bus) bus.gain.value = muted ? 0 : sfxVolume;
+  if (bus) bus.gain.value = muted || background ? 0 : sfxVolume;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, muted ? "1" : "0");
@@ -437,6 +413,11 @@ export function setMuted(value: boolean): void {
 export function setMusicMuted(value: boolean): void {
   loadPreference();
   musicMuted = Boolean(value);
+  if (previewMusicGain && context) {
+    previewMusicGain.gain.cancelScheduledValues(context.currentTime);
+    previewMusicGain.gain.setValueAtTime(previewMusicGain.gain.value, context.currentTime);
+    previewMusicGain.gain.linearRampToValueAtTime(previewMusicTarget(), context.currentTime + 0.15);
+  }
   if (musicGain && context) {
     rampMusicGain(context, musicGainTarget(), musicMuted ? MUSIC_MUTE_FADE_SECONDS : MUSIC_FADE_IN_SECONDS);
   }
@@ -457,7 +438,7 @@ export function setMusicMuted(value: boolean): void {
 
 /** Niveau cible de la BGM : scène × préférence de volume (0 si muette). */
 function musicGainTarget(): number {
-  return musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene] * musicVolume;
+  return musicMuted || background ? 0 : MUSIC_SCENE_GAIN[musicScene] * musicVolume;
 }
 
 function persistPreference(key: string, value: string): void {
@@ -499,7 +480,7 @@ export function setSfxVolume(value: number): void {
   loadPreference();
   sfxVolume = clampVolume(value);
   persistPreference(SFX_VOLUME_KEY, String(sfxVolume));
-  if (bus) bus.gain.value = muted ? 0 : sfxVolume;
+  if (bus) bus.gain.value = muted || background ? 0 : sfxVolume;
 }
 
 /** Piste musicale actuellement sélectionnée. */
@@ -549,7 +530,7 @@ const MUSIC_LOOP_CROSSFADE_SECONDS = 1.2;
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
   bus = ctx.createGain();
-  bus.gain.value = muted ? 0 : sfxVolume;
+  bus.gain.value = muted || background ? 0 : sfxVolume;
   bus.connect(ctx.destination);
   return bus;
 }
@@ -682,6 +663,21 @@ export function setMusicScene(scene: MusicScene): void {
   if (context && musicSource) applyMusicScene(context);
 }
 
+/** Retour au jeu : la même boucle reprend, aucun ancien effet n'est rejoué. */
+export function setAudioBackground(value: boolean): void {
+  background = value;
+  if (bus) bus.gain.value = muted || background ? 0 : sfxVolume;
+  if (background) {
+    stopPreviewMusic();
+    for (const source of activeEffects) {
+      try { source.stop(); } catch { /* Déjà terminé. */ }
+    }
+    activeEffects.clear();
+  }
+  if (context && musicGain) applyMusicScene(context);
+  if (!background && musicRequested && context?.state === "suspended") void context.resume().catch(() => {});
+}
+
 function audioContext(): AudioContextLike | null {
   if (typeof window === "undefined") return null;
   if (context) return context;
@@ -699,7 +695,7 @@ function audioContext(): AudioContextLike | null {
 
 /** Joue un plan de notes. Silencieux si le son est coupé ou l'API absente. */
 export function play(plan: Note[]): void {
-  if (isMuted() || !plan.length) return;
+  if (isMuted() || background || !plan.length) return;
   const ctx = audioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") void ctx.resume();
@@ -777,7 +773,7 @@ export function preloadSamples(names: SampleName[]): void {
  * dernier cas on lance le chargement pour la prochaine fois.
  */
 export function playSample(name: SampleName, gainFactor = 1): void {
-  if (isMuted()) return;
+  if (isMuted() || background) return;
   const ctx = audioContext();
   if (!ctx) return;
   const buffer = buffers.get(name);
@@ -792,6 +788,8 @@ export function playSample(name: SampleName, gainFactor = 1): void {
     const gain = ctx.createGain();
     gain.gain.value = SAMPLES[name].gain * gainFactor;
     source.connect(gain).connect(masterBus(ctx));
+    activeEffects.add(source);
+    source.onended = () => { activeEffects.delete(source); source.disconnect(); gain.disconnect(); };
     source.start(ctx.currentTime + 0.005);
   } catch {
     // Un tampon refusé par le navigateur (format exotique) ne casse pas le jeu.
@@ -799,15 +797,11 @@ export function playSample(name: SampleName, gainFactor = 1): void {
 }
 
 export function playTear(): void {
-  play(tearPlan());
-  // Le paquet qu'on déchire, c'est du papier : le bruitage le dit mieux qu'une
-  // note. Chargé dès ce geste, il est prêt pour la première carte révélée.
-  playSample("card-draw");
+  playFamily("pack-tear");
 }
 
 export function playPackOpening(): void {
-  play(packOpeningPlan());
-  playSample("pop");
+  playTear();
 }
 
 /**
@@ -818,31 +812,30 @@ export function playPackOpening(): void {
  * avant de la lire.
  */
 export function playReveal(rarity: Rarity, variant: CardVariant = "standard"): void {
-  play(revealPlan(rarity, variant));
-  playSample("card-draw", 0.85);
+  playFamily(`reveal-${rarity}`, variant === "standard" ? 1 : 1.06);
 }
 
 export function playReward(): void {
-  play(rewardPlan());
-  playSample("chime", 0.8);
+  playFamily("chime");
 }
 
 export function playLegendaryStinger(): void {
-  play(legendaryStingerPlan());
+  playFamily("reveal-legendary");
 }
 
 export function playPerfectStinger(): void {
-  play(perfectStingerPlan());
+  playFamily("perfect");
 }
 
 export function playTribunalEndStinger(): void {
-  play(tribunalEndStingerPlan());
+  playFamily("chime", 0.8);
 }
 
 /** Le bang d'une carte Épique ou mieux (à jouer après le silence). */
 export function playBang(rarity: Rarity, variant: CardVariant = "standard"): void {
-  play(bangPlan(rarity, variant));
-  playSample("chip-place", 0.7);
+  // L'impact et le motif forment un seul événement, sur deux couches discrètes.
+  if (rarity === "epic" || rarity === "legendary") playFamily(`impact-${rarity}`, 0.65);
+  playReveal(rarity, variant);
 }
 
 /**
@@ -852,19 +845,17 @@ export function playBang(rarity: Rarity, variant: CardVariant = "standard"): voi
  * synthèse — et les deux passent par `isMuted()`.
  */
 export function playGrace(): void {
-  play(gracePlan());
-  playSample("chip-place", 0.7);
+  playFamily("grace");
 }
 
 /** Le ban est maintenu : le marteau tombe. Synthèse seule, le coup suffit. */
 export function playGavel(): void {
-  play(gavelPlan());
+  playFamily("gavel");
 }
 
 /** Le son d'une carte qui refuse de se retourner. */
 export function playRefuse(): void {
-  play(refusePlan());
-  playSample("close", 0.6);
+  playFamily("close");
 }
 
 // ---------------------------------------------------------------------------
@@ -890,7 +881,7 @@ export function playRefuse(): void {
 
 /** Des pièces tombent : une récompense est encaissée (points, sabliers, jetons). */
 export function playCoins(): void {
-  playSample("coins");
+  playFamily("coins");
 }
 
 // ---------------------------------------------------------------------------
@@ -940,12 +931,25 @@ export function playMenuClose(): void {
 
 /** Une carte se pose quelque part (un doublon sacrifié, une carte cédée). */
 export function playCardPlace(): void {
-  playSample("chip-place");
+  playFamily("chip-place");
 }
 
 /** Une publication est encaissée. */
 export function playChime(): void {
-  playSample("chime");
+  playFamily("chime");
+}
+
+const familyTurn = new Map<SampleName, number>();
+/** Alterne deux prises réelles, sans superposer le même son au même geste. */
+function playFamily(name: SampleName, gain = 1): void {
+  const alt = `${name}-alt` as SampleName;
+  const turn = familyTurn.get(name) ?? 0;
+  familyTurn.set(name, turn + 1);
+  playSample(alt in SAMPLES && turn % 2 ? alt : name, gain);
+}
+
+export function playCraft(): void {
+  playFamily("craft");
 }
 
 // ---------------------------------------------------------------------------
@@ -963,7 +967,7 @@ let previewToken = 0;
 const previewBuffers = new Map<string, Promise<AudioBuffer | null>>();
 
 function previewMusicTarget(): number {
-  return musicMuted ? 0 : MUSIC_SCENE_GAIN.hub * musicVolume;
+  return musicMuted || background ? 0 : MUSIC_SCENE_GAIN.hub * musicVolume;
 }
 
 function loadPreviewBuffer(ctx: AudioContextLike, src: string): Promise<AudioBuffer | null> {
@@ -983,13 +987,14 @@ function loadPreviewBuffer(ctx: AudioContextLike, src: string): Promise<AudioBuf
 /** Joue un fichier musical en boucle, au niveau d'écoute du hub. */
 export async function previewMusic(src: string): Promise<boolean> {
   loadPreference();
+  if (background || musicMuted) return false;
   stopPreviewMusic();
   const token = ++previewToken;
   const ctx = audioContext();
   if (!ctx) return false;
   if (ctx.state === "suspended") void ctx.resume();
   const buffer = await loadPreviewBuffer(ctx, src);
-  if (!buffer || token !== previewToken) return false;
+  if (!buffer || token !== previewToken || background || musicMuted) return false;
   try {
     previewMusicGain = ctx.createGain();
     previewMusicGain.gain.setValueAtTime(0, ctx.currentTime);
@@ -1030,15 +1035,18 @@ export function stopPreviewMusic(): void {
 /** Joue un fichier d'effet par le bus des bruitages (volume et mute du jeu). */
 export async function previewSfx(src: string): Promise<boolean> {
   loadPreference();
+  if (background || isMuted()) return false;
   const ctx = audioContext();
   if (!ctx) return false;
   if (ctx.state === "suspended") void ctx.resume();
   const buffer = await loadPreviewBuffer(ctx, src);
-  if (!buffer) return false;
+  if (!buffer || background || isMuted()) return false;
   try {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(masterBus(ctx));
+    activeEffects.add(source);
+    source.onended = () => { activeEffects.delete(source); source.disconnect(); };
     source.start();
     return true;
   } catch {

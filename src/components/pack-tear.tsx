@@ -10,6 +10,7 @@ import { cardEffectsAllowed } from "@/lib/tilt";
 import { isPeelOpenable, PEEL_MIN_APERTURE, PEEL_MIN_COVERAGE, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 import { buzz } from "@/lib/haptics";
 import { PACK_TEAR_MS, TEAR_HAPTIC } from "@/lib/reveal";
+import { playSample } from "@/lib/sfx";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
 type PeelFrame = {
@@ -127,6 +128,7 @@ export function PackTear({
   const completeExtraction = useCallback(() => {
     if (extractionCompleted.current) return;
     extractionCompleted.current = true;
+    playSample("card-draw");
     if (timer.current !== null) {
       window.clearTimeout(timer.current);
       timer.current = null;
