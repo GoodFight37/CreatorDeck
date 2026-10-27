@@ -483,7 +483,7 @@ export function StoryMode() {
                     <p>{scene.text}</p>
                   </div>
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} style={{ translate: `${drag * 0.075}px 0` }} aria-hidden="true">
-                    <StorySetPieces channel={scene.channel} />
+                    <StorySetPieces channel={scene.channel} sceneId={scene.id} />
                     <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
                      <span className="story-scene-edition" aria-hidden="true">{STORY_MEDIA[scene.channel].subtitle}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} mood={portraitMood} />

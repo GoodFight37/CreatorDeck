@@ -39,6 +39,10 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
             <ellipse cx="120" cy="93" rx="51" ry="60" fill="var(--portrait-skin)" />
             <ellipse cx="68" cy="98" rx="8" ry="14" fill="var(--portrait-skin)" />
             <ellipse cx="172" cy="98" rx="8" ry="14" fill="var(--portrait-skin)" />
+            {/* Papier découpé : léger modelé des joues, sans dégradé photoréaliste. */}
+            <path d="M76 94Q78 130 104 145Q88 141 81 128Q76 113 76 94Z" fill="var(--portrait-hair)" opacity=".09" />
+            <path d="M158 77Q168 98 158 121Q166 107 168 92Z" fill="var(--portrait-line)" opacity=".14" />
+            <path d="M118 103l-3 10 6 1" fill="none" stroke="var(--portrait-eye)" strokeWidth="1.8" strokeLinecap="round" opacity=".22" />
             {isFlo ? (
               <path d="M68 84 Q61 36 111 32 Q168 31 174 77 L158 69 Q126 74 108 57 Q93 83 68 84 Z" fill="var(--portrait-hair)" />
             ) : isNox ? (
@@ -52,6 +56,11 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
             ) : (
               <path d="M64 88 Q64 35 120 35 Q177 34 176 88 Q150 80 140 65 Q99 86 64 88 Z" fill="var(--portrait-hair)" />
             )}
+            {/* Silhouettes reconnaissables même lorsque la carte est petite. */}
+            {isFlo && <path d="M85 59Q100 41 126 45L116 52Q101 52 91 65Z" fill="var(--portrait-line)" opacity=".36" />}
+            {isNox && <path d="M89 51l9-12 11 15 16-14 12 17" fill="none" stroke="var(--portrait-line)" strokeWidth="2.5" opacity=".56" strokeLinecap="round" />}
+            {isMona && <path d="M73 70Q82 49 114 43M146 40Q162 46 166 59" fill="none" stroke="var(--portrait-line)" strokeWidth="2.8" opacity=".33" strokeLinecap="round" />}
+            {isLina && <path d="M88 53Q123 35 149 53M157 60Q167 74 165 87" fill="none" stroke="var(--portrait-line)" strokeWidth="2.4" opacity=".36" strokeLinecap="round" />}
             {mood === "tense" && (
               <path d="M90 87L108 92M132 92L150 87" stroke="var(--portrait-eye)" strokeWidth="3.5" strokeLinecap="round" />
             )}
@@ -153,6 +162,18 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
             <circle cx="47" cy="178" r="5"/><circle cx="193" cy="178" r="5"/>
           </g>
         )}
+        {/* Matières de veste et badges de métier, propres aux personnages. */}
+        <g stroke="var(--portrait-line)" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M25 201Q50 182 70 174M215 201Q188 182 170 174" strokeWidth="1.7" opacity=".45"/>
+          {character === "toi" && (
+            <><rect x="156" y="174" width="22" height="18" rx="3" strokeWidth="2" opacity=".8"/>
+              <path d="M167 177v10m-5-6a5 5 0 0 0 10 0m-5 6v3m-5 0h10" strokeWidth="1.4" opacity=".86"/></>
+          )}
+          {isFlo && <path d="M38 176h24m-20 7h16" strokeWidth="2.5" opacity=".65"/>}
+          {isNox && <path d="M34 186l18-15 18 14m102 0 18-14 18 15" strokeWidth="2" opacity=".8"/>}
+          {isMona && <path d="M38 188h22m-18 6h12" strokeWidth="2.2" opacity=".74"/>}
+          {isLina && <path d="M49 174h21m-17 7h12" strokeWidth="2" opacity=".7"/>}
+        </g>
         <path d="M15 208 H225" stroke="var(--portrait-line)" strokeWidth="2" opacity=".45" />
       </svg>
       <span className="story-portrait-stamp">{emoji}</span>

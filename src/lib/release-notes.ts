@@ -36,6 +36,8 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Les souvenirs privilégient les choix récents et le journal reconnaît quand une rivalité a été apaisée.",
       "Les boutons de décision ont des textes plus lisibles et de plus grandes surfaces tactiles sur Android et iPhone.",
       "Des panoramas originaux distinguent désormais les directs, vidéos gaming, messages, sponsors et archives.",
+      "Les décors de média gagnent des détails illustrés : studio de diffusion, lecteur gaming, conversations, contrats et cassettes.",
+      "Les personnages ont des silhouettes, accessoires et expressions davantage reconnaissables ; les dialogues sont mieux alignés sur mobile.",
       "Les dilemmes précèdent les portraits, sur des cartes de collection à la matière claire et au fond propre à chaque média.",
     ] }],
   },

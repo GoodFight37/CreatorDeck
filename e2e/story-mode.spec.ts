@@ -1073,3 +1073,26 @@ test("Histoire : panorama et hiérarchie sur téléphone 320px", async ({ page }
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.screenshot({ path: "test-results/mobile-observation-histoire/media-live-320.png", fullPage: true, animations: "disabled" });
 });
+
+ 
+test("Histoire : les décors de métier et les portraits restent accessibles sur téléphone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const active = page.locator(".story-play-card .story-scene-art");
+  await expect(active.locator(".story-world-details")).toBeVisible();
+  await expect(active.locator(".story-event-illustration")).toHaveCount(1);
+  await expect(page.locator(".story-set-pieces")).toHaveAttribute("data-scene", "studio");
+  const text = await page.locator(".story-prompt p").evaluate(el => getComputedStyle(el));
+  expect(text.textAlign).toBe("left");
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-set-pieces")).toHaveAttribute("data-scene", "premier_chat");
+  await expect(active.locator(".story-event-illustration")).toHaveCount(0);
+  await page.waitForTimeout(470);
+  await page.locator(".story-actions .story-choice").first().click();
+  await expect(page.locator(".story-set-pieces")).toHaveAttribute("data-scene", "clip_risque");
+  await expect(active.locator(".story-event-illustration")).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/decor-gaming-320.png", fullPage: true, animations: "disabled" });
+});

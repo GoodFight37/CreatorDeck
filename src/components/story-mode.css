@@ -1323,3 +1323,41 @@
 }
 @media (max-width:280px) { .story-page .story-actions { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion:reduce) { .story-page .story-play-card .story-scene-art { animation:none !important; } }
+
+
+/* PASS FINITION : une scène de média doit raconter un lieu, pas être un
+   rectangle à dégradé. SVG original, contours de papier découpé. */
+.story-page .story-prompt { text-align: left; }
+.story-page .story-prompt h2 { text-wrap: balance; }
+.story-page .story-prompt p {
+  text-align: left;
+  max-width: none;
+  font-size: clamp(13px, 3.65vw, 15px);
+  line-height: 1.46;
+  text-wrap: pretty;
+}
+.story-page .story-scene-art .story-set-pieces {
+  opacity: .71;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / .19));
+}
+.story-page .story-scene-art .story-world-details {
+  opacity: .9;
+}
+.story-page .story-scene-art .story-portrait-illustration {
+  filter: drop-shadow(0 8px 0 rgb(11 16 24 / .18));
+}
+.story-page .story-play-card .story-scene-art {
+  background-blend-mode: normal;
+  outline: 1px solid rgb(255 244 220 / .17);
+  outline-offset: -6px;
+}
+.story-page .story-play-card .story-swipe-hint {
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+@media (max-height: 700px) {
+  .story-page .story-prompt p { font-size: 13px; line-height: 1.37; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-page .story-scene-art .story-portrait-illustration { animation: none !important; }
+}
