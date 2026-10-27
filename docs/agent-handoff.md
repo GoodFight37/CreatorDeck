@@ -1,3 +1,10 @@
+# Checkpoint Histoire — échos de choix différés après avis Gemini, 27 octobre 2026
+
+- Point de départ : PR #24 brouillon, commit `7b09d23e1fb985d860f2604549bf6e8437630a31` ; CI « Vérification » de ce SHA réussie (run 40487439854). Ne pas extrapoler ce résultat au commit présent.
+- Ajout limité à six règles d'échos utilisant **uniquement des flags de scénario existants** : `collecte_verifiee`, `archives_exposees`, `charte_collectif`, `studio_loue`, `source_menacee`, `filtre_agence`. Chaque souvenir ne s'affiche qu'à un interlude d'acte suivant la décision source ; deux maximum par passage. Tests unitaires ciblés de classement, anti-spoiler et non-mutation.
+- Le rapport Gemini contenait des propositions incompatibles ou redondantes : noms de jauges différents, prévisualisation déjà existante, changements de règles incompatibles avec la restauration V4, récompenses hors périmètre. Son composant de chat n'a **pas été copié**.
+- Vérifier CI complète et WebKit sur le nouveau HEAD. L'éditeur GitHub connecté ne dispose pas ici d'émulateur Android ou de navigateur interactif local ; aucune preuve native ou visuelle nouvelle revendiquée. Aucun merge, production, Supabase, économie ou modification de sauvegarde.
+
 # Checkpoint Histoire — finition des décors et des portraits, 27 octobre 2026
 
 - Base de reprise vérifiée : `77506c48b1609de5866e25a6b2964695821e186c`, 6/6 jobs CI généraux verts, WebKit vert.

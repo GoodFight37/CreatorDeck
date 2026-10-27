@@ -1,3 +1,5 @@
+**27 octobre 2026 · Mémoire du mode Histoire (PR #24 brouillon) :** six drapeaux existants reçoivent un rappel narratif dans les interludes appropriés, sans toucher au scénario, aux effets, aux sauvegardes V4 ni à la collection. Test unitaire ajouté ; vérifier CI du nouveau SHA et garder le mode isolé de `main`.
+
 **27 octobre 2026 · Monde des créateurs (PR #24 brouillon) :** cartes de jeu et panoramas SVG originaux inspirés de six Reigns, avec décors pour stream, YouTube/gaming, chat, messages, contrats et archives. Glyphes et portraits existants conservés ; 40 décisions, neuf fins, flags, effets, économie et sauvegarde V4 inchangés. Tests/captures 320 et 390 à contrôler au commit livré. Aucun merge, aucune modification de main ou Supabase.
 
 # Roadmap CreatorDeck

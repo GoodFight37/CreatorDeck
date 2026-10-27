@@ -1,3 +1,9 @@
+## D-183 — 27 octobre 2026 : mémoire narrative renforcée sans réécrire la saison
+
+Après analyse du rapport Gemini et du moteur réel de la PR #24, six conséquences déjà mémorisées sont rendues visibles aux changements d'acte : collecte vérifiée, archives publiées trop tôt, charte du collectif, studio loué, source de Lina menacée et contrôle éditorial de l'agence. Ce sont des échos narratifs, **pas** de nouvelles scènes, jauges ou contraintes de gameplay. Ils utilisent exclusivement les drapeaux existants, aux actes où leur choix peut déjà avoir eu lieu.
+
+Préserver le maximum de deux échos par interlude et la priorité à l'acte le plus récent ; aucun texte ne doit annoncer une conséquence avant le choix source. La sauvegarde V4, le moteur, les 84 scènes et les neuf fins restent inchangés. Test ciblé de présence, d'absence de spoiler, de limite à deux et d'absence de mutation ajouté. Cette passe n'implémente ni chat réactif au swipe (à évaluer visuellement) ni économie/récompenses (hors périmètre). GitHub CI et captures natives à vérifier sur le nouveau SHA, PR #24 toujours en brouillon, aucune fusion.
+
 ## D-182 — 27 octobre 2026 : neuf dénouements dessinés et personnages reconnus à la rencontre
 
 Les neuf fins du mode Histoire partageaient une icône LIVE générique. Chaque issue possède une gravure vectorielle originale : écran éteint, batterie, facture, chat censuré, surexposition, étoile, pousse, studio et continuité du direct. Le moteur, les conditions de fin, les effets et les sauvegardes V4 ne changent pas.

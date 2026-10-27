@@ -16,6 +16,12 @@ const RULES = [
   { since:36, flag:"source_protegee", family:"lina", title:"La source de Lina", text:"L'identité de la source reste protégée." },
   { since:36, flag:"vote_trahi", family:"flo", title:"Le vote ignoré", text:"Le procès-verbal du collectif garde la trace de ta décision." },
   { since:36, flag:"dette_nox_reglee", family:"nox", title:"Le reçu de Nox", text:"Le travail de Nox a été payé, pas simplement promis." },
+  { since:20, flag:"collecte_verifiee", family:"dons", title:"Des comptes à rendre", text:"L'association a tenu les comptes de la collecte. Les dons n'ont pas disparu dans le compteur des vues." },
+  { since:20, flag:"archives_exposees", family:"archives", title:"Les images publiées trop vite", text:"Des visages ont été diffusés avant que chacun ait donné son accord. Le montage continue de circuler." },
+  { since:20, flag:"charte_collectif", family:"collectif", title:"Les règles sur la table", text:"La charte écrite avec l'équipe reste une référence quand une décision divise le collectif." },
+  { since:28, flag:"studio_loue", family:"studio", title:"Une régie pour une soirée", text:"Le studio loué a tenu le temps d'un direct. La facture, elle, est restée dans les comptes." },
+  { since:36, flag:"source_menacee", family:"lina", title:"L'enquête a laissé une trace", text:"Le nom demandé en direct a mis la source de Lina en difficulté. Le public ne voit pas tout." },
+  { since:36, flag:"filtre_agence", family:"mona", title:"Qui tient le montage ?", text:"L'agence a obtenu le dernier mot sur une publication. Cette concession pèse encore sur ta liberté." },
 ] as const;
 // Les règles sont triées une fois, pas à chaque glissement de carte.
 const RECENT_FIRST = [...RULES].sort((a, b) => b.since - a.since);

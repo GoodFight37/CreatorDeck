@@ -63,6 +63,21 @@ describe("échos narratifs non persistés", () => {
     expect(storyActEchoes({ ...base, step: 36, flags: ["source_protegee", "vote_trahi"] }).map(e => e.id))
       .toEqual(["source_protegee", "vote_trahi"]);
   });
+  it("fait réapparaître les choix réellement pris sans altérer la partie ni anticiper une décision", async () => {
+    const { storyActEchoes } = await import("./story-echoes");
+    const initial = startStory(STORY_PROLOGUE);
+    const run = { ...initial, step: 20, flags: ["collecte_verifiee", "archives_exposees", "charte_collectif"] };
+    const before = JSON.stringify(run);
+    expect(storyActEchoes({ ...run, step: 12 })).toEqual([]);
+    const echoes = storyActEchoes(run);
+    expect(echoes.map(echo => echo.id)).toEqual(["collecte_verifiee", "archives_exposees"]);
+    expect(echoes).toHaveLength(2);
+    expect(JSON.stringify(run)).toBe(before);
+    expect(storyActEchoes({ ...initial, step: 28, flags: ["studio_loue"] }).map(echo => echo.id))
+      .toEqual(["studio_loue"]);
+    expect(storyActEchoes({ ...initial, step: 36, flags: ["source_menacee", "filtre_agence"] }).map(echo => echo.id))
+      .toEqual(["source_menacee", "filtre_agence"]);
+  });
 });
 
 describe("liens du journal narratif", () => {
