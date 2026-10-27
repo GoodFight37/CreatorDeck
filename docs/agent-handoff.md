@@ -1,3 +1,10 @@
+# Checkpoint Histoire — second lot Papers, Please, comparaison des deux archives (27 octobre 2026)
+
+- Deux archives de l'utilisateur réellement ouvertes en lecture seule : `PapersPlease.rar` et `PapersPlease.zip` ; 56 fichiers identiques selon chemins/tailles/CRC32 ; ZIP 49,48 Mo compressé, total de 90,72 Mo décompressé, version du jeu `1.4.11.124`. La première archive n'était pas reconnue via le système de pièces jointes mais **était accessible dans le conteneur**. Aucun fichier ajouté par le lancement.
+- Il s'agit d'une version Windows Unity IL2CPP : `GameAssembly.dll`, `PapersPlease_Data/il2cpp_data/Metadata/global-metadata.dat`, scènes/assets, localisations en ZIPs. Inspection statique de `StreamingAssets/loc/fr.zip` (134 PNG) : papiers, règles, autorisations, justificatifs, tampons et outils de comparaison. Aucun exécutable lancé et aucun contenu tiers redistribué, importé ou copié dans CreatorDeck.
+- Branche pilote PR #24, base `ccf89d4c91f88bc6263ccaa764e5d58fb10bb1ee` : élargissement original des dossiers de 8 à 13 scènes, mise en valeur visuelle des pièces sur fond de papier, compteur sélection 0/2 et indicateur visible pour la paire recoupée. Comparaison facultative, aucune modification moteur, flags, économie, sauvegardes V4 ni production. Tests Vitest des nouvelles scènes et Playwright vérifiant invariance de localStorage.
+- CI de `ccf89d4c91f88bc6263ccaa764e5d58fb10bb1ee` : contrôle Safari vert, jobs unitaires/build verts, E2E en cours au moment du suivi. À revérifier pour le nouveau SHA ; ne pas inférer que le nouveau lot est déployé sur Vercel. Vérifier la cohérence des dossiers au téléphone réel séparément.
+
 # Checkpoint Histoire — inspection de dossiers (27 octobre 2026)
 
 - Demande : continuer à développer pendant le quota Vercel bloqué ; tendre vers le poids narratif des décisions de Reigns et les enquêtes documentaires de Papers, Please.

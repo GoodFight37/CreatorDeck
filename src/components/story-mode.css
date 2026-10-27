@@ -1579,3 +1579,73 @@
 @media (prefers-reduced-motion: reduce) {
   .story-page .story-inspection-mark { rotate: none !important; }
 }
+
+/* Bureau d'enquête CreatorDeck : carton, papier, annotations typographiques.
+   Une référence aux objets manipulables, sans importer les textures du jeu tiers. */
+.story-page .story-inspection[open] {
+  border-color: #9c876d;
+  box-shadow: 0 5px 0 rgb(0 0 0 / .16);
+}
+.story-page .story-inspection-progress {
+  display: flex;
+  gap: 7px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+  padding: 7px 8px;
+  border: 1px solid rgb(156 135 109 / .40);
+  background: #1d252c;
+  color: #e5c897;
+  font: 800 10px/1.25 "IBM Plex Sans Variable", sans-serif;
+  letter-spacing: .07em;
+}
+.story-page .story-inspection-piece {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(150deg, #eee2c8 0%, #e3d2b2 77%, #d6bc94 100%);
+  border-color: #a78b66;
+  color: #332c26;
+  padding-bottom: 23px;
+  box-shadow: 1px 3px 0 rgb(0 0 0 / .17);
+}
+.story-page .story-inspection-piece::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: 0;
+  height: 0;
+  border-left: 13px solid #cfb58a;
+  border-top: 13px solid #51483d;
+  opacity: .7;
+  pointer-events: none;
+}
+.story-page .story-inspection-piece[aria-pressed="true"] {
+  border-color: #f1cc75;
+  box-shadow: 0 0 0 2px #f1cc75, 2px 5px 0 rgb(0 0 0 / .17);
+  background: linear-gradient(150deg, #fff4d8, #ebd5ab);
+}
+.story-page .story-inspection-piece-head { color: #725a3b; }
+.story-page .story-inspection-piece-value { color: #493a30; }
+.story-page .story-inspection-check { color: #86602c; }
+.story-page .story-inspection-piece-footer {
+  position: absolute;
+  inset: auto 8px 6px;
+  padding-top: 3px;
+  border-top: 1px solid rgb(74 55 34 / .25);
+  font-size: 8px;
+  font-weight: 900;
+  color: #806e55;
+  letter-spacing: .06em;
+}
+.story-page .story-inspection-finding[data-found="true"] {
+  background: #20322d;
+  border-left-color: #b6d2a6;
+}
+.story-page .story-inspection-finding[data-found="true"] strong {
+  color: #c7e4b5;
+}
+@media (max-width: 480px) {
+  .story-page .story-inspection-piece { padding-bottom: 23px; }
+  .story-page .story-inspection-progress { font-size: 9px; }
+}

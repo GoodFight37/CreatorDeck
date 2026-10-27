@@ -1231,8 +1231,13 @@ test("Histoire : comparer les pièces du premier sponsor sans valider un choix",
   const desk = page.locator(".story-inspection");
   await expect(desk).toHaveAttribute("data-scene", "premier_sponsor");
   await desk.locator("summary").click();
+  await expect(desk.locator(".story-inspection-progress")).toContainText("0 / 2");
+  const beforeInspect = await page.evaluate(() => localStorage.getItem("creatordeck.histoire.prologue.v4"));
   await desk.locator('[data-evidence-id="offre"]').click();
+  await expect(desk.locator(".story-inspection-progress")).toContainText("1 / 2");
   await desk.locator('[data-evidence-id="loyer"]').click();
+  await expect(desk.locator(".story-inspection-progress")).toContainText("2 / 2");
+  expect(await page.evaluate(() => localStorage.getItem("creatordeck.histoire.prologue.v4"))).toBe(beforeInspect);
   await expect(desk.locator(".story-inspection-finding")).toHaveAttribute("data-found", "false");
   await expect(desk.locator(".story-inspection-finding")).toContainText("Pas de contradiction prouvée");
 
@@ -1240,6 +1245,7 @@ test("Histoire : comparer les pièces du premier sponsor sans valider un choix",
   await desk.locator('[data-evidence-id="brief"]').click();
   await desk.locator('[data-evidence-id="offre"]').click();
   await expect(desk.locator(".story-inspection-finding")).toHaveAttribute("data-found", "true");
+  await expect(desk).toHaveAttribute("data-verified", "true");
   await expect(desk.locator(".story-inspection-finding")).toContainText("Le loyer n'efface pas cette contradiction");
   await expect(page.locator(".story-progress")).toContainText("4 / 40");
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);

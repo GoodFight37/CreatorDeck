@@ -5,6 +5,7 @@ import { allStoryInspections, compareStoryEvidence, storyInspectionFor } from ".
 describe("Dossiers d'inspection du mode Histoire", () => {
   it("chaque dossier correspond à une scène réelle et possède trois pièces distinctes", () => {
     const scenes = new Set(STORY_PROLOGUE.scenes.map(scene => scene.id));
+    expect(allStoryInspections().length).toBe(13);
     for (const entry of allStoryInspections()) {
       expect(scenes.has(entry.sceneId)).toBe(true);
       expect(entry.evidence).toHaveLength(3);
@@ -27,6 +28,12 @@ describe("Dossiers d'inspection du mode Histoire", () => {
     const incorrect = compareStoryEvidence(entry, ["offre", "loyer"]);
     expect(incorrect?.spotted).toBe(false);
     expect(incorrect?.detail).not.toContain("La marque paie");
+  });
+
+  it("les pièces restent cohérentes avec les situations de la saison", () => {
+    for (const id of ["demande_archive", "dons_bonne_foi", "flo_charte", "nox_dette", "mona_silence"]) {
+      expect(storyInspectionFor({ id })?.cluePair).toHaveLength(2);
+    }
   });
 
   it("le premier mail de sponsor comporte un dossier, pas un live sans pièce", () => {

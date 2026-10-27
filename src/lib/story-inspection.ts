@@ -101,6 +101,61 @@ const CASES: readonly StoryInspection[] = [
     clue: "Le total montré pendant le live ne correspond pas aux reçus. Avant d'accuser qui que ce soit, il faut rapprocher les montants.",
   },
   {
+    sceneId: "demande_archive", caseName: "Des images sans autorisation",
+    instruction: "Vérifie ce que la vidéo montre et ce que Flo accepte.",
+    evidence: [
+      { id: "reportage", kind: "PROJET", label: "Le sujet de Lina", value: "Un reportage illustré par ton tout premier live." },
+      { id: "capture", kind: "ARCHIVE", label: "Les images", value: "Flo apparaît avec son ancien pseudo." },
+      { id: "accord", kind: "MESSAGE", label: "La réserve de Flo", value: "Flo ne souhaite plus voir ce pseudo utilisé." },
+    ],
+    cluePair: ["capture", "accord"],
+    clue: "La vidéo rend visible un ancien pseudo que Flo ne veut plus utiliser. L'existence d'une archive ne vaut pas consentement à sa republication.",
+  },
+  {
+    sceneId: "dons_bonne_foi", caseName: "Une ligne sur le bilan",
+    instruction: "Relie le relevé comptable à la réaction du public.",
+    evidence: [
+      { id: "bilan", kind: "RELEVÉ", label: "Le bilan", value: "L'association transmet un document détaillé." },
+      { id: "frais", kind: "LIGNE 04", label: "Les frais", value: "Une ligne précise les frais prélevés par la plateforme." },
+      { id: "chat", kind: "RÉACTION", label: "Le chat", value: "Les spectateurs s'étonnent de cette ligne." },
+    ],
+    cluePair: ["frais", "chat"],
+    clue: "La ligne surprend le public, mais elle apparaît dans le bilan détaillé. Expliquer les frais est différent de dissimuler une somme.",
+  },
+  {
+    sceneId: "flo_charte", caseName: "Le vote du collectif",
+    instruction: "Compare la règle commune et la proposition rentable.",
+    evidence: [
+      { id: "charte", kind: "CHARTE", label: "Quatre voix", value: "Chaque membre du collectif dispose de la même voix." },
+      { id: "sponsor", kind: "OFFRE", label: "Le partenariat", value: "Un sponsor propose une rémunération importante." },
+      { id: "vote", kind: "PROCÈS-VERBAL", label: "Le désaccord", value: "Flo vote contre l'offre et tu as promis de respecter la décision commune." },
+    ],
+    cluePair: ["charte", "vote"],
+    clue: "Tu t'es engagé à respecter le vote collectif. Le montant du sponsor ne te donne pas une voix supplémentaire.",
+  },
+  {
+    sceneId: "nox_dette", caseName: "La ligne manquante",
+    instruction: "Vérifie si la déclaration correspond au relevé transmis.",
+    evidence: [
+      { id: "releve", kind: "RELEVÉ", label: "Les revenus du clip", value: "Nox envoie un relevé des revenus." },
+      { id: "declaration", kind: "DÉCLARATION", label: "Ta copie", value: "Une ligne du relevé ne figure pas sur la déclaration." },
+      { id: "delai", kind: "MESSAGE", label: "La relance", value: "Nox demande une réponse avant minuit." },
+    ],
+    cluePair: ["releve", "declaration"],
+    clue: "Les montants ne peuvent pas être validés tant qu'une ligne du relevé manque sur ta déclaration. La question est celle du partage réel, pas des vues.",
+  },
+  {
+    sceneId: "mona_silence", caseName: "Une parole sous contrat",
+    instruction: "Mets en parallèle ce que tu as signé et ce que demande Lina.",
+    evidence: [
+      { id: "clause", kind: "CONTRAT", label: "La confidentialité", value: "Tu as accepté une clause de silence." },
+      { id: "temoin", kind: "DEMANDE", label: "L'entretien de Lina", value: "Lina souhaite recueillir ton témoignage." },
+      { id: "conseil", kind: "AVIS", label: "Le risque", value: "Ton conseiller prévient que parler pourrait coûter cher." },
+    ],
+    cluePair: ["clause", "temoin"],
+    clue: "Lina te demande de parler d'une affaire couverte par la clause signée. Le témoignage a un coût potentiel qu'il faut comprendre avant de choisir.",
+  },
+  {
     sceneId: "offre_derniere", caseName: "Le direct sous conditions",
     instruction: "Repère la condition qui change la nature du direct.",
     evidence: [
