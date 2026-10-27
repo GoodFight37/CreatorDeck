@@ -13,8 +13,15 @@ statique `/audio-ecoute.html` pour Vercel. Tests scripts 5/5, logique audio 37/3
 Typecheck, lint avec exclusions des fichiers générés et build réussis.
 Jargon : zéro sur 167 fichiers suivis ; le test général bute sur le prototype
 Kyara local non suivi, préservé. Détails : [livraison audio](audio-livraison-2026-10-27.md).
-Publication et état distant consignés au prochain relevé ; accès Vercel natif
-HTTP 403, CLI absente. Ne pas annoncer déployé avant vérification du SHA.
+**Code poussé et vérifié sur GitHub** :
+[`87716db96572447f7020e43a6e9a47263f042576`](https://github.com/GoodFight37/CreatorDeck/commit/87716db96572447f7020e43a6e9a47263f042576),
+`main` distant identique. ZIP local vérifié : 117 fichiers, 13 395 624 octets,
+`C:/Users/Administrator/.codex/visualizations/2026/10/27/01a17d95-a0ee-7561-87d3-6e691e39e826/CreatorDeck-audio-2026-10-27.zip`.
+**CI et Vercel encore à confirmer** ; accès Vercel natif HTTP 403, CLI absente.
+Au dernier relevé : [CI 40520674349](https://github.com/GoodFight37/CreatorDeck/actions/runs/40520674349)
+`in_progress`, statut Vercel `pending` sur le SHA du code.
+Ne pas annoncer déployé avant vérification du SHA. Aucun processus local requis
+pour la suite des contrôles GitHub/Vercel ; réservation Beads libérée.
 Prochaine action : contrôler `git status`, HEAD/distant et le commit audio,
 puis GitHub CI et Vercel/site public ; enfin demander le choix A1 à C2.
 Les modifications locales préexistantes (Android, snapshots, prototypes et

@@ -1,6 +1,7 @@
 # Roadmap CreatorDeck
 
-**Audio premium — 27 octobre 2026 (D-176) :** lot autorisé, en validation locale.
+**Audio premium — 27 octobre 2026 (D-176) :** code poussé `87716db9`, tests locaux
+réussis (E2E 231/49 ignorés), CI et Vercel à confirmer après la pause demandée.
 36 prises acoustiques intégrées aux boosters, raretés, Atelier et récompenses ;
 6 extraits courts dans l'écoute comparative. Critères : budget cumulé protégé,
 pas de double déclenchement, réglages indépendants conservés, navigation muette,

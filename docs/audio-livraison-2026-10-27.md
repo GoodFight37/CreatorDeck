@@ -118,6 +118,9 @@ Les mesures ne constituent pas une validation auditive.
 
 Point d'arrêt demandé par Malik pour éteindre le PC : code et assets prêts,
 publication et contrôles distants à reprendre selon l'état du checkpoint.
+Code poussé et distant vérifié : `87716db96572447f7020e43a6e9a47263f042576`.
+ZIP local vérifié : 117 fichiers, 13 395 624 octets, sans clé ni `.env`.
+La CI et le déploiement ne sont pas encore annoncés réussis.
 Le connecteur Vercel refuse la liste des déploiements avec HTTP 403 sur l'équipe
 `hafsi37-2386` ; la CLI Vercel est absente. Les statuts GitHub et le site public
 restent des moyens indépendants de vérification, sans modifier la configuration.
