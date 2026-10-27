@@ -1419,3 +1419,63 @@
 @media (prefers-reduced-motion: reduce) {
   .story-page .story-live-murmur { transition: none !important; }
 }
+
+/* Reigns ergonomie : l'intention de glisser commande toujours le même seuil.
+   Seule la distance visuelle est amortie sur téléphone pour protéger la lecture. */
+.story-page .story-play-card {
+  --story-motion-x: var(--story-motion-desktop, 0px);
+  --story-tilt: var(--story-tilt-desktop, 0deg);
+}
+
+/* Le plateau porte désormais le texte des choix, indépendamment de la carte
+   qui pivote : il reste entièrement lisible même au seuil de validation. */
+.story-page .story-choice-preview-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: visible;
+}
+.story-page .story-choice-preview-layer .story-direction {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  right: auto;
+  translate: -50% -50%;
+  width: min(78%, 290px);
+  max-width: calc(100% - 26px);
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid #f1d7a4;
+  background: #121b24;
+  box-shadow: 0 8px 20px rgb(0 0 0 / .45);
+  transition: opacity .08s linear;
+}
+.story-page .story-choice-preview-layer .story-direction strong {
+  font-size: clamp(13px, 3.6vw, 15px);
+  line-height: 1.28;
+}
+@media (max-width: 600px) {
+  .story-page .story-play-card {
+    --story-motion-x: var(--story-motion-mobile, 0px);
+    --story-tilt: var(--story-tilt-mobile, 0deg);
+  }
+  .story-page .story-choice-preview-layer .story-direction {
+    top: 59%;
+    width: min(84%, 278px);
+    padding: 10px 11px;
+  }
+  /* Sur un écran étroit, les murmures doublonnent les libellés et
+     encombrent le portrait : ils restent seulement sur écran large. */
+  .story-page .story-live-murmur { display: none !important; }
+}
+/* La face doit rester opaque quand le joueur pose simplement le doigt.
+   Pas de fondu à l'entrée ni de couche d'opacité pendant le drag. */
+@keyframes story-card-arrive {
+  from { translate: 0 13px; scale: .976; }
+  to { translate: 0 0; scale: 1; }
+}
+.story-page .story-play-card[data-dragging="true"] { opacity: 1; will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .story-page .story-choice-preview-layer .story-direction { transition: none !important; }
+}

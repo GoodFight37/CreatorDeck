@@ -1,3 +1,10 @@
+# Checkpoint Histoire — correction swipe mobile depuis captures réelles, 27 octobre 2026
+
+- Base distante contrôlée : `0d72d003f29fc3e053f0b9da87012a7dad82a17a` sur la PR #24 brouillon, branche `feature/histoire-reigns-pilot-20261026`. La demande porte sur trois défauts rapportés sur Redmi : cartouches masqués hors écran pendant le swipe gauche/droite, messages LIVE en trop, effet de carte fantôme lors d'un appui immobile.
+- Correction purement UI : cartouches retirés de la face pivotante, ancrés au centre du plateau et visibles tout au long d'un geste ; sur ≤600 px, translation plafonnée à 48 px et inclinaison à 3,6°, **sans modifier le seuil logique de validation**. L'événement pointerdown ne lance plus d'animation de drag tant que l'utilisateur n'a pas déplacé horizontalement le doigt, entrée sans fondu d'opacité ; chat murmuré caché sur mobile. Exit conservé après décision.
+- Les anciennes assertions de cartouches enfants de la carte ont été adaptées à leur position dans le plateau. Test géométrique à 320×568/390×844 du texte gauche et droit et de l'appui sans transparence. CI / captures / WebKit et geste Android réel restent à vérifier sur le nouveau HEAD. Ne pas annoncer « corrigé sur Redmi » sans essai appareil.
+- Aucun changement de scénario, moteur, V4, effets, économie, Supabase, `main` ou production. Aucun merge.
+
 # Checkpoint Histoire — passe Gemini V2 décor de carrière et chat LIVE, 27 octobre 2026
 
 - Base contrôlée : PR #24 brouillon, HEAD `0493cde4cf67c8da5242489e8caa02fe3c262c5a`. Ne pas confondre la CI de cette base avec le nouveau commit.

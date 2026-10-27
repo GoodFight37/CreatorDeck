@@ -186,6 +186,8 @@ export function StoryMode() {
   const changedStats = lastEffects ? STORY_STATS.filter((stat) => (lastEffects[stat] ?? 0) !== 0) : [];
   const previewDirection: StoryDirection | null = exiting ? null : drag < -18 ? "left" : drag > 18 ? "right" : null;
   const swipeReveal = Math.min(1, Math.max(0, (Math.abs(drag) - 12) / 26));
+  // L\u0027amplitude des gestes reste réelle pour la validation ; seul le visuel est contenu sur petit écran.
+  const mobileVisualDrag = Math.sign(drag) * Math.min(48, Math.abs(drag) * 0.42);
   const previewStats = run && scene && previewDirection
     ? affectedStoryStats(run.stats, scene.choices[previewDirection].effects)
     : [];
@@ -245,7 +247,8 @@ export function StoryMode() {
     if (!scene || gesture.current || decisionPending.current) return;
     gesture.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId, startTime: performance.now() };
     swipeThresholdReached.current = false;
-    setDragging(true);
+    // Un appui immobile ne doit ni interrompre l\u0027animation ni créer une couche GPU.
+    // Le déplacement horizontal réel activera l\u0027état de glissement.
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
@@ -254,6 +257,7 @@ export function StoryMode() {
     const dx = event.clientX - gesture.current.x;
     const dy = event.clientY - gesture.current.y;
     const horizontal = Math.abs(dx) >= Math.abs(dy) * 1.2;
+    if (horizontal && Math.abs(dx) >= 8 && !dragging) setDragging(true);
     const armed = horizontal && Math.abs(dx) >= 64;
     if (armed && !swipeThresholdReached.current && typeof window.navigator.vibrate === "function") window.navigator.vibrate(8);
     swipeThresholdReached.current = armed;
@@ -443,7 +447,7 @@ export function StoryMode() {
                   style={{
                     "--story-drag-depth": `${Math.min(7, Math.abs(drag) * 0.055)}px`,
                     "--story-drag-light": Math.min(0.22, Math.abs(drag) * 0.0016),
-                    "--story-glint-shift": `${drag * 0.55}px`,
+                    "--story-glint-shift": `${mobileVisualDrag * 0.55}px`,
                   } as CSSProperties}>
                   <div className="story-deck-back story-deck-back-far" aria-hidden="true" />
                   <div className="story-deck-back story-deck-back-near" aria-hidden="true">
@@ -466,19 +470,17 @@ export function StoryMode() {
                   onPointerMove={pointerMove}
                   onPointerUp={(event) => pointerEnd(event)}
                   onPointerCancel={(event) => pointerEnd(event, true)}
-                  style={{ transform: exiting
-                    ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
-                    : `translate3d(${drag * 0.82}px, ${-Math.min(4, Math.abs(drag) * 0.04)}px, 0) rotate(${drag * 0.065}deg)` }}
+                  style={{
+                    "--story-motion-desktop": `${drag * 0.82}px`,
+                    "--story-motion-mobile": `${mobileVisualDrag}px`,
+                    "--story-tilt-desktop": `${drag * 0.065}deg`,
+                    "--story-tilt-mobile": `${Math.sign(drag) * Math.min(3.6, Math.abs(drag) * 0.035)}deg`,
+                    transform: exiting
+                      ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
+                      : `translate3d(var(--story-motion-x), ${-Math.min(4, Math.abs(drag) * 0.04)}px, 0) rotate(var(--story-tilt))`,
+                  } as CSSProperties}
                 >
                   <div className="story-touch-sheen" aria-hidden="true" />
-                  <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}
-                    style={{ opacity: drag < -12 ? swipeReveal : 0, translate: `${drag < -12 ? -14 * (1 - swipeReveal) : -14}px 0` }}>
-                    <span>← GAUCHE</span><strong>{scene.choices.left.label}</strong>
-                  </div>
-                  <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}
-                    style={{ opacity: drag > 12 ? swipeReveal : 0, translate: `${drag > 12 ? 14 * (1 - swipeReveal) : 14}px 0` }}>
-                    <span>DROITE →</span><strong>{scene.choices.right.label}</strong>
-                  </div>
                   <div className="story-card-meta" aria-hidden="true">
                     <span className="story-card-serial"><span className="story-card-monogram">CD</span> S01 / {String(run.step + 1).padStart(2, "0")}</span>
                      <span className="story-card-medium" aria-hidden="true">{STORY_MEDIA[scene.channel].name}</span>
@@ -506,7 +508,18 @@ export function StoryMode() {
                   </div>
                   <div className="story-speaker story-visually-hidden">{scene.speaker === "TOI" ? "Ton point de vue" : scene.speaker}</div>
                   {run.step === 0 && <div className="story-swipe-hint" data-intro={!dragging && !exiting}><span aria-hidden="true">‹</span> MAINTIENS ET GLISSE <span aria-hidden="true">›</span></div>}
-                  </section>
+                </section>
+                <div className="story-choice-preview-layer" aria-hidden="true">
+                  {/* Les libellés restent sur le plateau immobile, pas sur la carte transformée. */}
+                  <div className="story-direction story-direction-left" data-active={drag < -18 && !exiting}
+                    data-ready={drag <= -64 && !exiting} style={{ opacity: drag < -12 && !exiting ? swipeReveal : 0 }}>
+                    <span>← GAUCHE</span><strong>{scene.choices.left.label}</strong>
+                  </div>
+                  <div className="story-direction story-direction-right" data-active={drag > 18 && !exiting}
+                    data-ready={drag >= 64 && !exiting} style={{ opacity: drag > 12 && !exiting ? swipeReveal : 0 }}>
+                    <span>DROITE →</span><strong>{scene.choices.right.label}</strong>
+                  </div>
+                </div>
                 </div>
                 <div ref={actionsRef} className="story-actions">
                   <button className="story-choice" onPointerDown={markChoicePointer} onPointerEnter={restoreChoiceMouseHover} onClick={(event) => chooseFromButton(event, "left")}>

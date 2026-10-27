@@ -1,3 +1,5 @@
+**27 octobre 2026 · Correctif tactile Histoire PR #24 :** cartouches de réponse ancrés sur le plateau et non sur la face en mouvement, déplacement visuel limité sur ≤600 px sans changer l'activation du choix, carte opaque au simple contact, réactions LIVE supplémentaires masquées sur téléphone. Test de géométrie et annulation 320/390 ajouté, CI et revue du rendu mobile réel à confirmer. Pas de changement moteur, économie, sauvegardes V4 ni `main`.
+
 **27 octobre 2026 · Présentation mode Histoire (PR #24 brouillon) :** murmures neutres réservés aux décisions en LIVE lors du swipe, et variations de régie selon le progrès et l'argent. Le mode hors direct reste inchangé. Nouveaux tests de décor et geste mobile ; CI et rendu natif du SHA à vérifier. Moteur, sauvegarde V4, saison, fins, économie et `main` inchangés.
 
 **27 octobre 2026 · Mémoire du mode Histoire (PR #24 brouillon) :** six drapeaux existants reçoivent un rappel narratif dans les interludes appropriés, sans toucher au scénario, aux effets, aux sauvegardes V4 ni à la collection. Test unitaire ajouté ; vérifier CI du nouveau SHA et garder le mode isolé de `main`.

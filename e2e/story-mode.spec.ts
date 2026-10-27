@@ -51,7 +51,7 @@ test("Histoire : révélation progressive des options pendant un swipe partiel",
   expect(box).not.toBeNull();
   if (!box) return;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
-  const left = card.locator(".story-direction-left");
+  const left = page.locator(".story-deck .story-direction-left");
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x - 22, y, { steps: 3 });
@@ -243,8 +243,8 @@ test("Histoire : carte mobile dominante, portrait et options révélées au doig
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x - 42, y, { steps: 4 });
-  await expect(card.locator(".story-direction-left")).toHaveAttribute("data-active", "true");
-  await expect(card.locator(".story-direction-left")).toContainText("Rester avec le téléphone");
+  await expect(page.locator(".story-deck .story-direction-left")).toHaveAttribute("data-active", "true");
+  await expect(page.locator(".story-deck .story-direction-left")).toContainText("Rester avec le téléphone");
   await page.mouse.move(x, y, { steps: 4 });
   await page.mouse.up();
   await expect(page.locator(".story-progress")).toContainText("1 / 40");
@@ -385,7 +385,7 @@ test("Histoire : points neutres au-dessus de toutes les jauges touchées sans di
   await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(3);
   await expect(page.locator(".story-stat[data-affected='true'] .story-stat-orb")).toHaveCount(3);
   await expect(page.locator(".story-meter-preview")).toHaveCount(0);
-  await expect(card.locator(".story-direction-left")).toContainText("Rester avec le téléphone");
+  await expect(page.locator(".story-deck .story-direction-left")).toContainText("Rester avec le téléphone");
   await page.mouse.move(x, y, { steps: 3 });
   await page.mouse.up();
   await expect(page.locator(".story-stat[data-affected='true']")).toHaveCount(0);
@@ -658,7 +658,7 @@ test.describe("Histoire : gestes natifs simulés dans Chromium mobile", () => {
     for (const dx of [-18, -37, -58, -79, -99]) {
       await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + dx, y, id: 1 }] });
     }
-    await expect(card.locator(".story-direction-left")).toHaveAttribute("data-ready", "true");
+    await expect(page.locator(".story-deck .story-direction-left")).toHaveAttribute("data-ready", "true");
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect(page.locator(".story-progress")).toContainText("2 / 40");
     await expect(page.locator(".story-recap-live li")).toHaveCount(1);
@@ -854,7 +854,7 @@ test("Histoire : aperçu au glissement, annulation et validation au seuil", asyn
   if (!bounds) return;
   const x = bounds.x + bounds.width / 2;
   const y = bounds.y + bounds.height / 2;
-  const preview = card.locator(".story-direction-left");
+  const preview = page.locator(".story-deck .story-direction-left");
   await expect(preview).toHaveAttribute("aria-hidden", "true");
 
   await page.mouse.move(x, y);
@@ -1107,7 +1107,7 @@ test("Histoire : murmures LIVE uniquement, sans spoiler ni encombrement mobile",
   await expect(scene.locator(".story-career-gear")).toHaveAttribute("data-stage", "debut");
   const whispers = card.locator(".story-live-murmur");
   await expect(whispers).toHaveCount(2);
-  await expect(whispers.first()).toHaveAttribute("data-active", "false");
+  await expect(whispers.first()).toBeHidden();
   const box = await card.boundingBox();
   expect(box).not.toBeNull();
   if (!box) return;
@@ -1117,7 +1117,7 @@ test("Histoire : murmures LIVE uniquement, sans spoiler ni encombrement mobile",
   await page.mouse.move(x - 45, y, { steps: 4 });
   await expect(whispers.first()).toHaveAttribute("data-active", "true");
   await expect(whispers.last()).toHaveAttribute("data-active", "false");
-  await expect(whispers.first()).toHaveCSS("opacity", "1");
+  await expect(whispers.first()).toBeHidden();
   await page.mouse.move(x, y, { steps: 4 });
   await page.mouse.up();
   await expect(whispers.first()).toHaveAttribute("data-active", "false");
@@ -1127,4 +1127,60 @@ test("Histoire : murmures LIVE uniquement, sans spoiler ni encombrement mobile",
   await expect(card).toHaveAttribute("data-channel", "CHAT");
   await expect(card.locator(".story-live-murmur")).toHaveCount(0);
   await expect(scene.locator(".story-career-gear")).toHaveCount(0);
+});
+
+test("Histoire : libellés visibles sur plateau au swipe mobile, face opaque au contact", async ({ page }) => {
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
+    await page.goto("/histoire");
+    const card = page.locator(".story-play-card");
+    const left = page.locator(".story-deck .story-direction-left");
+    const right = page.locator(".story-deck .story-direction-right");
+    const outer = page.locator(".story-deck");
+    await expect(card.locator(".story-direction")).toHaveCount(0);
+    await expect(left).toHaveCount(1);
+    const bounds = await card.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (!bounds) continue;
+    const x = bounds.x + bounds.width / 2, y = bounds.y + bounds.height / 2;
+
+    // Un appui maintenu ne doit pas désactiver l'arrivée ou révéler le dos.
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await expect(card).toHaveAttribute("data-dragging", "false");
+    await expect(card).toHaveCSS("opacity", "1");
+    await expect(card).toHaveCSS("animation-name", "story-card-arrive");
+    await page.mouse.up();
+
+    for (const [dx, locator, label] of [
+      [-100, left, "Rester avec le téléphone"],
+      [100, right, "Acheter le micro"],
+    ] as const) {
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + dx, y, { steps: 7 });
+      await expect(locator).toHaveAttribute("data-active", "true");
+      await expect(locator).toContainText(label);
+      await expect(locator).toHaveCSS("opacity", "1");
+      await expect(card).toHaveCSS("opacity", "1");
+      const box = await locator.boundingBox();
+      expect(box).not.toBeNull();
+      if (box) {
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        expect(box.width).toBeGreaterThan(130);
+      }
+      const moved = await Promise.all([card.boundingBox(), outer.boundingBox()]);
+      if (moved[0] && moved[1]) {
+        expect(moved[0].x).toBeGreaterThan(0);
+        expect(moved[0].x + moved[0].width).toBeLessThanOrEqual(width);
+      }
+      await page.mouse.move(x, y, { steps: 5 });
+      await page.mouse.up();
+      await expect(locator).toHaveAttribute("data-active", "false");
+      await expect(page.locator(".story-progress")).toContainText("1 / 40");
+    }
+    await expect(card.locator(".story-live-murmur").first()).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+  }
 });

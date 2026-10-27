@@ -1,3 +1,11 @@
+## D-185 — 27 octobre 2026 : feedback de swipe ancré sur le plateau (Reigns, référence d'ergonomie)
+
+Sur capture réelle d'un Redmi, les textes des choix sortaient de l'écran car les cartouches étaient enfants de la carte transformée. Sur PC, la largeur disponible masquait ce défaut. Décision : ancrer les deux cartouches dans une couche absolue du **plateau non transformé** et les centrer, tout en conservant le seuil de décision et les choix vrais sur les boutons. Sur écran de 600 px ou moins, amortir uniquement la translation et la rotation de la carte en cours de geste ; le déplacement brut continue de déclencher les seuils (64 px, flick rapide). Conserver le véritable envol uniquement après confirmation.
+
+Un appui simple ne doit pas modifier l'état `data-dragging` et ne doit pas interrompre la transition d'entrée. La première transition n'anime plus l'opacité, évitant la vision fugace de la carte arrière. Pendant le geste, forcer la face opaque ; les murmures supplémentaires du chat sont cachés sur téléphone pour laisser la prévisualisation lisible. Tests ciblés ajoutés à 320 et 390 px : géométrie du cartouche des deux côtés, absence de défilement latéral, annulation, opacité au contact, ancienne carte intacte.
+
+Le rapport de l'APK Reigns (Unity IL2CPP, archives tierces non exécutées) ne donne pas de CSS à copier. La correction s'appuie sur les captures joueur et le DOM existant de CreatorDeck, sans reprendre de code ou d'illustrations tiers. Aucune scène, jauge, sauvegarde V4, moteur, économie, base ni `main` modifiés ; contrôler la CI et les captures du nouveau SHA avant validation native.
+
 ## D-184 — 27 octobre 2026 : décor de carrière et murmure discret du chat, PR #24
 
 Suite à la passation Gemini V2, le mode Histoire conserve ses 40 décisions, 84 scènes, neuf fins, quatre jauges, et sauvegarde locale V4 (flags : `string[]`, non le `Record` proposé dans l'audit externe). Les idées de statuts actifs, coûts automatiques par tour, scripts imposés aux semaines 8/24 et remplacement du thème graphique ont été rejetées : elles exigeraient une nouvelle version narrative ou contrediraient les règles existantes.
