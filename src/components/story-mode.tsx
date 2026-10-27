@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent, type CSSProperties } from "react";
 import Link from "next/link";
 import { StoryPortrait } from "./story-portrait";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
@@ -332,7 +332,12 @@ export function StoryMode() {
                     <p>{interlude.text}</p>
                   </div>
                 )}
-                <div className="story-deck" data-pulling={Math.abs(drag) >= 18} data-exiting={exiting !== null}>
+                <div className="story-deck" data-pulling={Math.abs(drag) >= 18} data-exiting={exiting !== null}
+                  style={{
+                    "--story-drag-depth": `${Math.min(7, Math.abs(drag) * 0.055)}px`,
+                    "--story-drag-light": Math.min(0.22, Math.abs(drag) * 0.0016),
+                    "--story-glint-shift": `${drag * 0.55}px`,
+                  } as CSSProperties}>
                   <div className="story-deck-back story-deck-back-far" aria-hidden="true" />
                   <div className="story-deck-back story-deck-back-near" aria-hidden="true" />
                   <section
@@ -352,11 +357,12 @@ export function StoryMode() {
                     ? `translate3d(${exiting === "left" ? "-120vw" : "120vw"}, -12px, 0) rotate(${exiting === "left" ? "-17deg" : "17deg"})`
                     : `translate3d(${drag * 0.82}px, 0, 0) rotate(${drag * 0.065}deg)` }}
                 >
+                  <div className="story-touch-sheen" aria-hidden="true" />
                   <div className="story-direction story-direction-left" aria-hidden="true" data-active={drag < -18} data-ready={drag <= -64}><span>← GAUCHE</span><strong>{scene.choices.left.label}</strong></div>
                   <div className="story-direction story-direction-right" aria-hidden="true" data-active={drag > 18} data-ready={drag >= 64}><span>DROITE →</span><strong>{scene.choices.right.label}</strong></div>
                   <div className="story-card-meta" aria-hidden="true">
-                    <span>DILEMME {String(run.step + 1).padStart(2, "0")}</span>
-                    <span className="story-card-meta-mark">● EN COURS</span>
+                    <span className="story-card-serial"><span className="story-card-monogram">CD</span> S01 / {String(run.step + 1).padStart(2, "0")}</span>
+                    <span className="story-card-meta-mark">ACTE {storyActNumber(run.step)}</span>
                   </div>
                   <div className="story-prompt">
                     <h2 aria-live="polite">{scene.title}</h2>

@@ -22,6 +22,26 @@ test("Histoire : retours sous forme de jetons sans consigne répétée", async (
   await expect(page.locator(".story-footnote")).toHaveCount(0);
 });
 
+test("Histoire : paquet souple et reflet proportionnel au mouvement", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/histoire");
+  await expect(page.locator(".story-card-monogram")).toHaveText("CD");
+  const card = page.locator(".story-play-card");
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 44, y, { steps: 4 });
+  const light = await page.locator(".story-deck").evaluate((el) =>
+    Number((el as HTMLElement).style.getPropertyValue("--story-drag-light")));
+  expect(light).toBeGreaterThan(0.02);
+  await expect(page.locator(".story-touch-sheen")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator(".story-progress")).toContainText("1 / 40");
+});
+
 test("Histoire : jauges projetées en couleur avant le lancer et remises à zéro après", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
