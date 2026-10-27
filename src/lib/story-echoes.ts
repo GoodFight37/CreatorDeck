@@ -19,7 +19,7 @@ const RULES = [
   { since:20, flag:"collecte_verifiee", family:"dons", title:"Des comptes à rendre", text:"L'association a tenu les comptes de la collecte. Les dons n'ont pas disparu dans le compteur des vues." },
   { since:20, flag:"archives_exposees", family:"archives", title:"Les images publiées trop vite", text:"Des visages ont été diffusés avant que chacun ait donné son accord. Le montage continue de circuler." },
   { since:20, flag:"charte_collectif", family:"collectif", title:"Les règles sur la table", text:"La charte écrite avec l'équipe reste une référence quand une décision divise le collectif." },
-  { since:28, flag:"studio_loue", family:"studio", title:"Une régie pour une soirée", text:"Le studio loué a tenu le temps d'un direct. La facture, elle, est restée dans les comptes." },
+  { since:28, flag:"studio_loue", family:"studio", title:"Une régie pour une soirée", text:"Le studio loué a sauvé le direct. La note a fini dans tes dépenses." },
   { since:36, flag:"source_menacee", family:"lina", title:"L'enquête a laissé une trace", text:"Le nom demandé en direct a mis la source de Lina en difficulté. Le public ne voit pas tout." },
   { since:36, flag:"filtre_agence", family:"mona", title:"Qui tient le montage ?", text:"L'agence a obtenu le dernier mot sur une publication. Cette concession pèse encore sur ta liberté." },
 ] as const;
