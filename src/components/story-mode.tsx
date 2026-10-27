@@ -3,6 +3,7 @@
 import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { StoryPortrait } from "./story-portrait";
+import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { STORY_PROLOGUE } from "../data/story-prologue";
 import {
   STORY_SAVE_KEY, STORY_STATS, chooseStory, currentStoryScene, lastStoryAppliedEffects, storyEndingNarrative, storyChoiceSignals,
@@ -25,11 +26,11 @@ function storyActNumber(step: number): string {
   }
   return "I";
 }
-const STAT_LABELS: Record<StoryStat, { name: string; symbol: string }> = {
-  public: { name: "Public", symbol: "◉" },
-  energie: { name: "Énergie", symbol: "ϟ" },
-  argent: { name: "Argent", symbol: "€" },
-  confiance: { name: "Confiance", symbol: "♥" },
+const STAT_LABELS: Record<StoryStat, { name: string }> = {
+  public: { name: "Public" },
+  energie: { name: "Énergie" },
+  argent: { name: "Argent" },
+  confiance: { name: "Confiance" },
 };
 
 const STORY_SCENES_BY_ID = new Map(SCRIPT.scenes.map((scene) => [scene.id, scene] as const));
@@ -244,7 +245,7 @@ export function StoryMode() {
               {STORY_STATS.map((key) => (
                 <div key={key} className="story-stat" data-low={run.stats[key] <= 20} data-preview={previewStats.includes(key)}>
                   <div className="story-stat-top">
-                    <span className="story-stat-icon" aria-hidden="true">{STAT_LABELS[key].symbol}</span>
+                    <span className="story-stat-icon"><StoryGaugeIcon stat={key} /></span>
                     <span className="story-stat-name">{STAT_LABELS[key].name}</span>
                     <strong>{run.stats[key]} <span>/ 100</span></strong>
                   </div>
@@ -324,7 +325,7 @@ export function StoryMode() {
                     <p>{scene.text}</p>
                   </div>
                   <div key={scene.id} className="story-scene-art" data-channel={scene.channel} aria-hidden="true">
-                    <span className="story-scene-art-channel">{scene.channel}</span>
+                    <span className="story-scene-art-channel"><StoryChannelGlyph channel={scene.channel} />{scene.channel}</span>
                     <StoryPortrait character={character} emoji={scene.emoji} />
                     <span className="story-scene-art-label">{scene.id === "double_crise" ? "NOX + MONA" : scene.speaker.split(" · ")[0]}</span>
                   </div>
