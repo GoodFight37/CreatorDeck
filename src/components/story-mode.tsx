@@ -3,6 +3,7 @@
 import { memo, useEffect, useRef, useState, type PointerEvent, type KeyboardEvent, type MouseEvent, type CSSProperties } from "react";
 import Link from "next/link";
 import { StoryPortrait } from "./story-portrait";
+import { StoryEndingArtwork } from "./story-ending-artwork";
 import { StoryGaugeIcon, StoryChannelGlyph } from "./story-glyphs";
 import { StorySetPieces } from "./story-setpieces";
 import { storyActEchoes } from "../lib/story-echoes";
@@ -51,7 +52,7 @@ const StoryJournal = memo(function StoryJournal({ run, completed = false }: { ru
           <div className="story-bonds-grid">
             {bonds.map((bond) => (
               <div className="story-bond" key={bond.id} data-person={bond.id}>
-                <span className="story-bond-portrait" aria-hidden="true">{bond.initials}</span>
+                <div className="story-bond-portrait" aria-hidden="true"><StoryPortrait character={bond.id} emoji="" /></div>
                 <div className="story-bond-copy">
                   <strong>{bond.name}</strong>
                   <span>{bond.status}</span>
@@ -378,7 +379,7 @@ export function StoryMode() {
                   <span className="story-ending-edition">CREATORDECK / CHRONIQUE N° 01</span>
                   <div className="story-ending-tower">
                     <span className="story-ending-tower-ring" />
-                    <StoryChannelGlyph channel="LIVE" />
+                    <StoryEndingArtwork ending={run.ending} />
                     <span className="story-ending-tower-line" />
                   </div>
                   <span className="story-ending-status">● DIRECT TERMINÉ</span>
@@ -489,7 +490,7 @@ export function StoryMode() {
                     <strong>{scene.choices.right.label}</strong>
                   </button>
                 </div>
-                {run.history.length > 0 && <StoryJournal run={run} />}
+                {run.history.length > 0 && <StoryJournal key={`journal-${run.step}`} run={run} />}
                 {run.step > 0 && (
                   <div className="story-restart">
                     {!restartPending ? (

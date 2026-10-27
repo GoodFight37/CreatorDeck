@@ -1,3 +1,10 @@
+# Checkpoint Histoire — neuf gravures finales et journal illustré, 27 octobre 2026
+
+- Base distante contrôlée : 65b3088df04e7e552a8155e71d7193e7f7169d51, branche feature/histoire-reigns-pilot-20261026, PR #24 brouillon ; six jobs généraux réussis sur cette base.
+- Livraison préparée : story-ending-artwork.tsx donne neuf emblèmes SVG différents aux fins ; story-bonds.ts repère les rencontres dans les scènes effectivement jouées ; StoryJournal affiche leurs portraits et se referme au chapitre suivant. Styles et tests mobiles 320/390.
+- Confirmer les runs CI unitaires, Playwright Chromium, WebKit et captures de dénouement du SHA final ; ne pas annoncer le passage des tests avant leur résultat réel.
+- Aucun changement sur main, production, Supabase, économie, effets, sauvegarde V4 ou autres modes ; pas d'émulateur Android natif accessible ici. Ponytail indisponible, conseils React consultés.
+
 # Checkpoint Histoire — correction de compilation des échos (27 octobre 2026)
 
 - Sur la PR brouillon #24, commit `ec1cb97561fa1bf3bd0e555bf86330eb1095b503` : WebKit vert, mais premier run « Vérification » a fait échouer les tests unitaires et TypeScript.

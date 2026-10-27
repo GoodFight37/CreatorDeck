@@ -148,3 +148,9 @@ Aux quatre transitions d'acte, un maximum de deux rappels narratifs issus des fl
 ## Entourage consultable dans le journal (27 octobre 2026)
 
 Le journal affiche désormais, après la première rencontre concernée, un état synthétique des liens avec Flo, Nox, Mona et Lina. Il est calculé à partir des décisions déjà enregistrées et affiche par exemple les limites respectées, les promesses fragilisées ou les accords signés. Il ne représente pas une cinquième jauge, ne crée aucun effet, ne révèle pas de personnage non rencontré et n'altère pas la sauvegarde.
+
+## Finition des fins et carnet illustré (27 octobre 2026)
+
+Chaque fin reçoit une gravure SVG originale et distincte, sélectionnée par l'identifiant de fin déjà calculé (silence, épuisement, faillite, scandale, surexposition, phénomène, indépendance, business et survivant). Aucun effet sur les règles, récompenses, jauges ou sauvegardes V4.
+
+Le journal affiche les portraits vectoriels de Flo, Nox, Mona et Lina à partir des interactions vécues. Un interlocuteur qui n'a pas été rencontré n'est pas révélé. Le volet journal se referme après chaque décision pour laisser place au prochain dilemme. Tests unitaires, E2E 320 px et capture 390 px à vérifier sur le SHA publié.

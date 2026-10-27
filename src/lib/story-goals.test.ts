@@ -78,3 +78,22 @@ describe("liens du journal narratif", () => {
     expect(Object.keys(run)).not.toContain("bonds");
   });
 });
+
+describe("rencontres réelles dans le carnet de relations", () => {
+  it("révèle les portraits selon les scènes passées et garde les futurs personnages secrets", async () => {
+    const { storyBonds } = await import("./story-bonds");
+    let run = startStory(STORY_PROLOGUE);
+    expect(storyBonds(run)).toHaveLength(0);
+    run = chooseStory(STORY_PROLOGUE, run, "left");
+    expect(storyBonds(run)).toHaveLength(0); // Le premier direct ne parle que du joueur.
+    run = chooseStory(STORY_PROLOGUE, run, "left");
+    expect(storyBonds(run).map(bond => bond.name)).toEqual(["Flo"]);
+    expect(storyBonds(run)[0].status).toBe("Modération en place");
+    run = chooseStory(STORY_PROLOGUE, run, "right");
+    expect(storyBonds(run).map(bond => bond.name)).toEqual(["Flo", "Nox"]);
+    expect(storyBonds(run)[1].status).toBe("Départ conflictuel");
+    run = chooseStory(STORY_PROLOGUE, run, "left");
+    expect(storyBonds(run).map(bond => bond.name)).toEqual(["Flo", "Nox", "Mona"]);
+    expect(storyBonds(run).some(bond => bond.name === "Lina")).toBe(false);
+  });
+});

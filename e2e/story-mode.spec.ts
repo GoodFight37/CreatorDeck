@@ -941,3 +941,46 @@ test("Histoire : boutons lisibles sur les deux formats de téléphone", async ({
     }
   }
 });
+
+test("Histoire : les relations montrent les vrais portraits et ne prédisent pas les rencontres", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/histoire");
+  const select = page.locator(".story-actions .story-choice").first();
+  await select.click();
+  await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  await page.waitForTimeout(460);
+  await select.click();
+  await expect(page.locator(".story-progress")).toContainText("3 / 40");
+  const journal = page.locator(".story-recap-live");
+  await journal.locator("summary").click();
+  await expect(journal.locator(".story-bond")).toHaveCount(1);
+  await expect(journal.locator(".story-bond[data-person='flo'] .story-portrait-illustration")).toBeVisible();
+  await expect(journal.locator(".story-bond-portrait")).toHaveCount(1);
+  await page.waitForTimeout(460);
+  await select.click();
+  await expect(page.locator(".story-progress")).toContainText("4 / 40");
+  await expect(page.locator(".story-recap-live")).not.toHaveAttribute("open", "");
+  await page.locator(".story-recap-live summary").click();
+  await expect(page.locator(".story-bond[data-person='nox'] .story-portrait-illustration")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
+});
+
+test("Histoire : le dénouement a une gravure dédiée, enregistrée à la fin de partie", async ({ page }) => {
+  let played = startStory(STORY_PROLOGUE);
+  for (let i = 0; i < STORY_PROLOGUE.totalSteps && !played.ending; i++) {
+    played = chooseStory(STORY_PROLOGUE, played, "right");
+  }
+  expect(played.ending).not.toBeNull();
+  await page.goto("/histoire");
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: STORY_SAVE_KEY, value: JSON.stringify(played),
+  });
+  await page.reload();
+  await expect(page.locator(".story-ending-artwork")).toHaveAttribute("data-ending-symbol", played.ending!);
+  await expect(page.locator(".story-ending-artwork")).toBeVisible();
+  expect(await page.locator(".story-ending-artwork path").count()).toBeGreaterThan(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await page.screenshot({ path: "test-results/mobile-observation-histoire/fin-gravure-mobile-390.png", fullPage: true, animations: "disabled" });
+  await expect(page.locator(".story-replay")).toBeVisible();
+});

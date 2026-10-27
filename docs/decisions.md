@@ -1,3 +1,11 @@
+## D-182 — 27 octobre 2026 : neuf dénouements dessinés et personnages reconnus à la rencontre
+
+Les neuf fins du mode Histoire partageaient une icône LIVE générique. Chaque issue possède une gravure vectorielle originale : écran éteint, batterie, facture, chat censuré, surexposition, étoile, pousse, studio et continuité du direct. Le moteur, les conditions de fin, les effets et les sauvegardes V4 ne changent pas.
+
+Le carnet remplace les monogrammes par les portraits SVG disponibles. Les protagonistes sont révélés uniquement après une scène réellement parcourue ou la décision correspondante, sans spoiler. Le volet journal se referme après chaque décision pour éviter de masquer le prochain dilemme. Couverture Playwright à 320 px, capture du dénouement à 390 px et tests unitaires sur les rencontres prévus.
+
+Changements exclusivement en PR #24 brouillon : aucun changement sur main, production, Supabase, cartes, économie ni audio. Validation Android/iPhone physique toujours indisponible.
+
 ## D-181 — 27 octobre 2026 : confort de lecture des deux décisions
 
 Les captures Playwright 320/390 du commit `7f747c0` montrent des choix correctement placés mais une typographie trop petite, héritée des règles compactes (11 px). Les deux boutons sont agrandis à au moins 62 px de haut ; direction à 11 px et libellé principal à au moins 12 px sur 320, 13 px sur 390. Les détails du portrait et le geste restent inchangés. Test d'écran ciblé sur les deux formats ; contrôler le nouveau SHA avant validation. Aucun changement global à la navigation ou aux autres modes.
