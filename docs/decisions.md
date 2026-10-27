@@ -1,3 +1,11 @@
+## D-176 — 27 octobre 2026 : double crise en portrait double
+
+Défaut identifié à la lecture de `StoryPortrait` : la scène `double_crise` affichait bien « NOX + MONA » en légende mais passait `character="duo"` à un portrait qui tombait dans le cas générique « Toi ». Cela faisait disparaître les deux protagonistes précisément au moment de leur confrontation.
+
+Décision : composer les portraits SVG déjà originaux de Nox et Mona dans deux panneaux juxtaposés, chacun gardant sa palette de personnage. Aucun nouveau média, ressource, donnée narrative, texte de scène ou effet chiffré. Ajouter des assertions Playwright sur les deux images SVG visibles, une capture 320 px et une capture 390 px au cours du parcours de crise, pour pouvoir examiner la composition après rendu.
+
+Ce lot est limité au mode Histoire en PR #24, avec note joueur, tests et documentation. Préserver la sauvegarde V4 et les autres modules. Contrôler la CI du commit exact et ne pas déduire la qualité physique d'un rendu navigateur simulé.
+
 ## D-175 — 27 octobre 2026 : geste cadencé et lisibilité du HUD Histoire
 
 Constat sur la PR #24 et sa capture Playwright WebKit 390 px (commit `f58a80b`) : le `pointermove` réactualisait React à chaque événement, potentiellement plusieurs fois entre deux images ; le HUD descendait à 39 px de hauteur de cible à 320 px ; le nom d'une jauge et une mission dépliée pouvaient rester ouverts pendant la scène suivante.

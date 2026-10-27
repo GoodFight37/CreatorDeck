@@ -130,3 +130,7 @@ Deux tests unitaires couvrent un dépassement simultané de 100 et de 0, la rest
 - La carte gagne un décollement de 4 px au maximum sous le doigt ; le dos possède un filet intérieur. Le décor ne réserve plus en permanence de couche de composition via `will-change`.
 - Les cibles des quatre jauges mesurent au moins 44 px, y compris à 320 px. L'inspection d'une jauge et le détail de mission ne restent plus ouverts après la décision suivante.
 - Tests Chromium et WebKit ajoutés pour ouverture/fermeture des panneaux, gestes partiels, hauteur tactile et absence de débordement. Résultats à relever après publication du commit ; simulation WebKit et véritable Safari iOS restent deux preuves différentes.
+
+## Double crise, deux portraits (27 octobre 2026)
+
+La confrontation `double_crise` ne doit plus afficher le personnage générique sous une légende « NOX + MONA ». Les bustes SVG fictifs Nox et Mona se partagent la scène dans une composition en diptyque, avec deux palettes et un séparateur discret. Le parcours E2E existant vérifie les deux personnages et prend des captures à 320 et 390 px. Aucun changement narratif ou économique ni modification du moteur/sauvegarde.

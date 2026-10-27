@@ -1,3 +1,10 @@
+# Checkpoint Histoire — diptyque Nox/Mona, 27 octobre 2026
+
+- Base de travail : `5e533f8d572f3b52d7cfb250bcf44f7bb2fbf7f5`, branche `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon. Le nouveau run WebKit `40447426307` est vert ; la Vérification générale `40447432129` a été lancée sur ce même SHA et devait être contrôlée jusqu'à fin avant nouvelle publication.
+- Défaut : l'événement `double_crise` annonce NOX + MONA, mais l'ancienne variante `duo` de `StoryPortrait` affichait le portrait générique « Toi ». Correction proposée : portrait double en panneaux juxtaposés avec les palettes originales de Nox et Mona, finitions CSS propres, tests de présence et captures Playwright à 320/390.
+- Validation de cette correction à confirmer après commit par la CI et par l'inspection des deux images générées ; pas de téléphone physique et aucun accès au PC Windows. Cette correction n'affecte que Histoire et les documents/notes associés ; pas de `main`, production, Supabase ni économie.
+- Ponytail absent ; guide React Vercel consulté. Ne pas fusionner.
+
 # Checkpoint CreatorDeck Histoire — gestes / HUD du 27 octobre 2026
 
 - Branche exclusive `feature/histoire-reigns-pilot-20261026`, PR #24 toujours en brouillon. Base distante vérifiée avant intervention : `f58a80b50580ef63235a2b63574c7a6853ffa9d5`. Ne jamais fusionner ou toucher `main`, la production, Supabase ni l'économie.

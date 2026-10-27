@@ -8,6 +8,15 @@ export const StoryPortrait = memo(function StoryPortrait({ character, emoji, moo
   const isMona = character === "mona";
   const isLina = character === "lina";
   const isCommunity = character === "community";
+  // Deux personnages face à face : la crise Nox/Mona ne doit pas réutiliser l’avatar du joueur.
+  if (character === "duo") {
+    return (
+      <div className="story-portrait story-portrait-duo" data-mood={mood} aria-hidden="true">
+        <div className="story-portrait-duo-panel" data-side="nox"><StoryPortrait character="nox" emoji="" mood={mood} /></div>
+        <div className="story-portrait-duo-panel" data-side="mona"><StoryPortrait character="mona" emoji="" mood={mood} /></div>
+      </div>
+    );
+  }
   return (
     <div className="story-portrait" data-mood={mood} aria-hidden="true">
       <svg className="story-portrait-illustration" viewBox="0 0 240 210" focusable="false" aria-hidden="true">

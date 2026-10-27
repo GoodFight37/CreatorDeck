@@ -948,3 +948,59 @@
   border-radius: 10px;
   pointer-events: none;
 }
+
+/* ÉVÉNEMENT DUO : deux portraits réellement distincts, sans image réseau ni
+   personnage générique recyclé. Panneaux symétriques sur petits téléphones. */
+.story-portrait-duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  overflow: hidden;
+}
+.story-portrait-duo-panel {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.story-portrait-duo-panel[data-side="nox"] {
+  --portrait-skin: #bd8f79;
+  --portrait-hair: #19192b;
+  --portrait-coat: #28233c;
+  --portrait-shirt: #9c7cd4;
+  --portrait-halo: #7561b5;
+  background: linear-gradient(110deg, rgb(30 20 65 / .25), transparent 85%);
+}
+.story-portrait-duo-panel[data-side="mona"] {
+  --portrait-skin: #e5b596;
+  --portrait-hair: #322339;
+  --portrait-coat: #5a3c66;
+  --portrait-shirt: #edc8a8;
+  --portrait-halo: #b67b9c;
+  background: linear-gradient(250deg, rgb(95 35 75 / .26), transparent 85%);
+}
+.story-portrait-duo-panel[data-side="nox"]::after {
+  content: "";
+  position: absolute;
+  top: 16%;
+  right: 0;
+  bottom: 8%;
+  border-right: 1px solid rgb(255 244 220 / .24);
+  pointer-events: none;
+}
+.story-portrait-duo-panel .story-portrait {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.story-portrait-duo-panel .story-portrait-illustration {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 165px !important;
+  height: auto !important;
+  max-height: 145% !important;
+}
+.story-portrait-duo-panel[data-side="nox"] .story-portrait-illustration { transform: translateX(4px); }
+.story-portrait-duo-panel[data-side="mona"] .story-portrait-illustration { transform: translateX(-4px); }

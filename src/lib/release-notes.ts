@@ -26,6 +26,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
       "Le dos de la prochaine carte reste caché jusqu'à son arrivée, sous une estampille de collection CreatorDeck.",
       "Le glissement suit la cadence de l'écran : les mouvements rapides sollicitent moins le téléphone, et la carte se soulève légèrement sous le doigt.",
       "Sur les petits téléphones, les emblèmes restent faciles à toucher. Les informations ouvertes se referment à la décision suivante.",
+      "Lors de la double crise, Nox et Mona apparaissent ensemble à l’écran dans une composition en deux portraits.",
     ] }],
   },
   {
