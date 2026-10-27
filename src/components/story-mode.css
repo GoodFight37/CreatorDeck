@@ -126,7 +126,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .story-page *, .story-page *::before, .story-page *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
-  .story-play-card { transform: none !important; }
+  /* Le geste suit le doigt, sans animation décorative. */
   .story-scene-art { animation: none !important; }
 }
 
@@ -420,3 +420,7 @@
   .story-deck-back, .story-scene-art[data-channel="LIVE"]::after,
   .story-stat[data-preview="true"] .story-gauge-glyph { animation: none !important; transition: none !important; }
 }
+
+/* MOBILE SCROLL INSURANCE: espace pour recadrer le chapitre suivant. */
+.story-page { padding-bottom: max(148px, env(safe-area-inset-bottom)); }
+@media (max-height: 640px) { .story-page { padding-bottom: max(158px, env(safe-area-inset-bottom)); } }

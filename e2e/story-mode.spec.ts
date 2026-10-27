@@ -384,6 +384,31 @@ test("Histoire : le support narratif suit la scène et n'affiche LIVE que pour u
   await expect(monitor.locator(".story-scene-art-channel")).toHaveText("CHAT");
 });
 
+test.describe("Histoire : geste accessible en mouvement réduit", () => {
+  test.use({ reducedMotion: "reduce", viewport: { width: 320, height: 568 } });
+  test("la carte suit toujours le doigt sans effets décoratifs", async ({ page }) => {
+    await page.goto("/histoire");
+    const card = page.locator(".story-play-card");
+    await expect(card).toBeVisible();
+    const box = await card.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) return;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x - 45, y, { steps: 3 });
+    expect(await card.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+    await page.mouse.up();
+    await expect(page.locator(".story-progress")).toContainText("1 / 40");
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 92, y, { steps: 5 });
+    await page.mouse.up();
+    await expect(page.locator(".story-progress")).toContainText("2 / 40");
+  });
+});
+
 test.describe("Histoire : mouvement réduit", () => {
   test.use({ reducedMotion: "reduce" });
   test("la transition du moniteur est supprimée sans cacher la scène", async ({ page }) => {

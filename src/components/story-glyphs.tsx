@@ -1,10 +1,11 @@
+import { memo } from "react";
 import type { StoryStat } from "../lib/story-mode";
 
 /**
  * Pictogrammes dessinés pour CreatorDeck Histoire, sans police d'icônes.
  * Le médaillon carré aux coins coupés fait écho à la tranche des cartes du Binder.
  */
-export function StoryGaugeIcon({ stat }: { stat: StoryStat }) {
+export const StoryGaugeIcon = memo(function StoryGaugeIcon({ stat }: { stat: StoryStat }) {
   return (
     <svg className="story-gauge-glyph" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" focusable="false" aria-hidden="true">
       <path className="story-glyph-frame" d="M11 3H37L45 11V37L37 45H11L3 37V11Z" strokeWidth="1.4" opacity=".52" />
@@ -39,10 +40,10 @@ export function StoryGaugeIcon({ stat }: { stat: StoryStat }) {
       )}
     </svg>
   );
-}
+});
 
 /** Petite estampille de diffusion, pas un catalogue d'icônes génériques. */
-export function StoryChannelGlyph({ channel }: { channel: string }) {
+export const StoryChannelGlyph = memo(function StoryChannelGlyph({ channel }: { channel: string }) {
   return (
     <svg className="story-channel-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
       {channel === "LIVE" ? (
@@ -59,5 +60,4 @@ export function StoryChannelGlyph({ channel }: { channel: string }) {
         <><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M4 8L12 14L20 8"/></>
       )}
     </svg>
-  );
-}
+  )});
