@@ -1,5 +1,7 @@
+import { memo } from "react";
+
 /** Portraits fictifs vectoriels : style CreatorDeck, sans illustration copiée ni image réseau. */
-export function StoryPortrait({ character, emoji }: { character: string; emoji: string }) {
+export const StoryPortrait = memo(function StoryPortrait({ character, emoji }: { character: string; emoji: string }) {
   const isPlatform = character === "platform";
   const isFlo = character === "flo";
   const isNox = character === "nox";
@@ -59,4 +61,4 @@ export function StoryPortrait({ character, emoji }: { character: string; emoji: 
       <span className="story-portrait-stamp">{emoji}</span>
     </div>
   );
-}
+});
