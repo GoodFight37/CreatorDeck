@@ -1,0 +1,40 @@
+{
+  "$commentaire": "Essai D1 demandé le 28 octobre : référence de menu de collection, analyses automatiques distinctes de l'écoute humaine. Une seule génération, même plafond cumulé 14000.",
+  "credits": {
+    "musiqueParMinute": 1200,
+    "effetParGeneration": 200,
+    "effetParSeconde": 40,
+    "planStarterMensuel": 30000
+  },
+  "musique": {
+    "modele": "music_v2_5",
+    "format": "mp3_44100_128",
+    "directions": [
+      {
+        "id": "collection-electronique",
+        "label": "D1 — Collection lumineuse",
+        "description": "Menu électronique doux : claviers et synthés arrondis, nappes, basse et groove discret. Phrase développée sur 90 secondes.",
+        "prompt": "Compose an original 90-second instrumental background cue for a polished mobile card-collection menu. Warm, clear, playful and quietly uplifting electronic production, relaxed mid-tempo around 110 BPM in 4/4. A rounded, soft digital keyboard / plucked synth lead carries a graceful melody in longer 8-bar question-and-answer phrases. Gentle electric piano chords and airy warm pads support it; a clean rounded synth bass and a small restrained electronic drum groove keep it moving, with delicate syncopated hi-hat or shaker details. Keep the melody soft and spacious, never piercing, never a raw oscillator beep. This is intimate menu music at low listening volume: no big dance-floor kick, no EDM drop, no epic swell. Develop the writing throughout the full 90 seconds: introduce a clear melodic idea; answer it with a different phrase; vary its rhythm and accompaniment; move to a related contrasting middle idea; return with small melodic ornaments and a changed voicing. Do not repeat a tiny two-bar hook for the entire track. Preserve an even, comfortable energy with natural breathing room for card sound effects. Start musically rather than with a long intro; end on harmony and texture compatible with the opening so a loop can be prepared. Create entirely new melodies and musical identity; do not quote, interpolate or reproduce any existing game theme.",
+        "negativeStyles": [
+          "vocals",
+          "acoustic folk guitar",
+          "pastoral fantasy village",
+          "orchestral adventure score",
+          "lo-fi crackle",
+          "aggressive EDM drops",
+          "harsh 8-bit bleeps",
+          "loud snare",
+          "tiny unchanging ostinato",
+          "copied game melody"
+        ],
+        "longueurMs": 90000,
+        "variantes": 1
+      }
+    ]
+  },
+  "effets": {
+    "modele": "eleven_text_to_sound_v2",
+    "format": "mp3_44100_128",
+    "sons": []
+  }
+}

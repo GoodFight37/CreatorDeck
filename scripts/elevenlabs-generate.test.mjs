@@ -45,3 +45,14 @@ test("aucun chemin du plan n'écrase un original du jeu", () => {
     assert.ok(etape.fichier.includes("/candidates/"), etape.fichier);
   }
 });
+
+test("la reprise Pocket ne demande qu'une candidate et protège les six premières", () => {
+  const reprise = JSON.parse(readFileSync(new URL("../src/data/audio-pocket-brief.json", import.meta.url), "utf8"));
+  const plan = construirePlan(reprise);
+  assert.equal(plan.length, 1);
+  assert.equal(plan[0].fichier, "public/music/candidates/collection-electronique-v1.mp3");
+  assert.equal(plan[0].corps.music_length_ms, 90000);
+  assert.equal(estimerCredits(plan), 1800);
+  assert.equal(plan[0].corps.force_instrumental, true);
+  assert.ok(!construirePlan(briefs).some(e => e.fichier === plan[0].fichier));
+});

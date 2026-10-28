@@ -5,6 +5,9 @@
 36 effets. E2E source verts en CI ; suite écrans complète corrigée : 267/267.
 Nouvelle CI : qualité complète et SQL réussis ; E2E encore en cours au relevé.
 ZIP final vérifié. Le choix musical final attend Malik (`CreatorDeck-Codex-brl`).
+Retour du 28 octobre : directions A/B/C refusées ; référence Library Menu Pocket,
+analyse automatisée de My Cards et candidate électronique D1, sans adoption de
+la BGM. Cumul crédits 3 845, solde 34 919. [Détails D1](audio-direction-pocket-2026-10-28.md).
 36 prises acoustiques intégrées aux boosters, raretés, Atelier et récompenses ;
 6 extraits courts dans l'écoute comparative. Critères : budget cumulé protégé,
 pas de double déclenchement, réglages indépendants conservés, navigation muette,

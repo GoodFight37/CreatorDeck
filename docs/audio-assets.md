@@ -2,6 +2,8 @@
 
 Actualisation du 27 octobre : [livraison audio et comparaison musicale](audio-livraison-2026-10-27.md).
 Six extraits originaux sont proposés ; la piste actuelle attend le choix de Malik.
+Retour du 28 octobre : aucune de ces directions n'est retenue (A répétitif,
+B hors thème). [Analyse de l'OST de référence et essai électronique D1](audio-direction-pocket-2026-10-28.md).
 
 `public/music/hub-late-night.mp3` conserve son chemin technique pour éviter de
 changer le moteur : son contenu est maintenant `springly_sprigs.mp3` du pack

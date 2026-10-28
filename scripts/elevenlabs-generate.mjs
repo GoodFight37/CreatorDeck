@@ -41,7 +41,7 @@ async function main() {
   const args = process.argv.slice(2);
   const option = name => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
   const budget = Number(option("--budget"));
-  const briefs = JSON.parse(readFileSync(path.join(ROOT, "src/data/audio-briefs.json"), "utf8"));
+  const briefs = JSON.parse(readFileSync(path.resolve(ROOT, option("--briefs") ?? "src/data/audio-briefs.json"), "utf8"));
   let plan = construirePlan(briefs);
   const only = option("--only");
   if (only && !["music", "Effets"].includes(only)) throw Error("--only music|Effets attendu.");

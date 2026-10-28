@@ -728,6 +728,23 @@
       "sourceConsommation": "compteur",
       "soldeCompte": 36044,
       "soldeRestant": 36044
+    },
+    {
+      "fichier": "public/music/candidates/collection-electronique-v1.mp3",
+      "estimation": 1800,
+      "avant": 2720,
+      "date": "2026-10-28T02:15:00.114Z",
+      "statut": "obtenu",
+      "http": 200,
+      "requestId": null,
+      "creditsEntete": null,
+      "octets": 1440749,
+      "apres": 3845,
+      "deltaCompteur": 1125,
+      "creditsObserves": 1125,
+      "sourceConsommation": "compteur",
+      "soldeCompte": 34919,
+      "soldeRestant": 34919
     }
   ]
 }

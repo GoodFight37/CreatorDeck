@@ -1,3 +1,13 @@
+## D-177 — 28 octobre 2026 : recadrage musical depuis le menu de collection Pocket
+
+Malik refuse A/B/C et demande d'exploiter une référence audio réelle avant
+un nouvel essai. Analyse du fichier My Cards de l'OST par deux modèles publics,
+limites et correspondance non prouvée au flux YouTube consignées. Une candidate
+D1 électronique de 90 s est générée avec un prompt original et une phrase plus
+développée, dans le plafond cumulé autorisé. Aucun audio Pokémon n'est livré,
+aucune BGM remplacée sans choix de Malik. Coût observé 1 125 crédits, cumul
+3 845, solde 34 919. [Brief et preuves](audio-direction-pocket-2026-10-28.md).
+
 ## D-176 — 27 octobre 2026 : effets acoustiques et sélection musicale
 
 Malik remplace explicitement le report audio et autorise une première passe

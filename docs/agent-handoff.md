@@ -1,3 +1,25 @@
+# Checkpoint Codex — référence Pocket analysée et candidate D1, 28 octobre 2026
+
+Malik refuse les directions A/B/C et demande d'analyser l'OST Pocket pour guider
+un nouvel essai. Suivi `CreatorDeck-Codex-brl`, base `e99a02fa`. Deux modèles
+publics (Music Flamingo et LP-MusicCaps) ont analysé le fichier My Cards de la
+même OST, cohérent avec Library Menu sans empreinte confirmant l'identité.
+Import YouTube direct refusé par le service ; lecteur conservé muet. Les
+hallucinations de structure temporelle du premier rapport sont écartées.
+
+Une seule candidate **D1**, 90 s demandées : synthés/claviers doux, nappes, basse,
+percussion électronique, développement en phrases plus longues. Brief, preuves
+et limites : [direction D1](audio-direction-pocket-2026-10-28.md). Le jeu conserve
+sa piste actuelle ; aucune candidate n'est adoptée sans le choix de Malik.
+Fichier `public/music/candidates/collection-electronique-v1.mp3`, 89,444 s,
+−20 LUFS, −3,9 dBTP, master sous `reports/audio/raw/`.
+
+Coût de cet appel : **1 125 crédits**, provision 1 800. Cumul **3 845/14 000**,
+solde **34 919**, réserve 24 764 protégée. Journal étendu à 43 appels réussis.
+Générateur et préparation réutilisés avec `--briefs` et rapport séparé ; anciens
+fichiers et mesures préservés. Tests scripts 6/6 et lint ciblé réussis. Aucun
+changement d'écran, aucune APK locale. Écoute humaine D1 attendue.
+
 # Checkpoint Codex — audio livré et contrôlé en ligne, 28 octobre 2026
 
 Suivi `CreatorDeck-Codex-4m4`. Source audio `87716db9`, tests corrigés

@@ -5,7 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const briefs = JSON.parse(readFileSync(path.join(root, "src/data/audio-briefs.json")));
+const args = process.argv.slice(2);
+const option = name => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
+const briefs = JSON.parse(readFileSync(path.resolve(root, option("--briefs") ?? "src/data/audio-briefs.json")));
 const report = [];
 const raw = path.join(root, "reports/audio/raw");
 mkdirSync(raw, { recursive: true });
@@ -80,6 +82,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     niveaux = JSON.parse(final.stderr.match(/\{\s*"input_i"[\s\S]*?\}/)[0]);
     report.push({ fichier: `public/music/candidates/${nom}`, source: `reports/audio/raw/${nom}`, boucle: "recouvrement 0.6 s", cibleLufs: -20, lufs: Number(niveaux.input_i), creteDbTp: Number(niveaux.input_tp), duree: (samples - overlap) / 44100 });
   }
-  writeFileSync(path.join(root, "docs/audio-measurements.json"), JSON.stringify(report, null, 2) + "\n");
-  console.log(`${report.length} fichiers préparés ; mesures dans docs/audio-measurements.json.`);
+  const rapport = option("--report") ?? "docs/audio-measurements.json";
+  writeFileSync(path.resolve(root, rapport), JSON.stringify(report, null, 2) + "\n");
+  console.log(`${report.length} fichiers préparés ; mesures dans ${rapport}.`);
 }

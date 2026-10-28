@@ -1,0 +1,11 @@
+[
+  {
+    "fichier": "public/music/candidates/collection-electronique-v1.mp3",
+    "source": "reports/audio/raw/collection-electronique-v1.mp3",
+    "boucle": "recouvrement 0.6 s",
+    "cibleLufs": -20,
+    "lufs": -20,
+    "creteDbTp": -3.9,
+    "duree": 89.44408163265307
+  }
+]
