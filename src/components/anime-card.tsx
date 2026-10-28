@@ -18,7 +18,7 @@ export function AnimeCard({ card, compact = false }: { card: MemeCard; compact?:
     </div>
     <div className={styles.caption}>
       <div><h3>{card.name}</h3><p>{card.flavor}</p></div>
-      <span className={styles.mark} aria-hidden="true">◌</span>
+      <span className={styles.mark} aria-hidden="true" />
     </div>
   </article>;
 }
