@@ -1,5 +1,13 @@
 # Roadmap CreatorDeck
 
+**Lots Codex — 28 octobre 2026 :** inventaire audio E1 et audit DPR2 des images
+livrés ; constantes MEMES/Imgflip/Anime extraites sans changer les valeurs (B).
+Quatre ouvertures et six glissés du carrousel validés sur l'APK officielle 886271,
+12 captures et mesures d'accompagnement ; suivi 3nq clôturé. Aucun son remplacé,
+essais A refusés gardés locaux, choix tonal de Claude toujours soumis à Malik.
+[Rapport Android et limites](verification-android-lots-2026-10-28.md),
+[images](audit-images-2026-10-28.md), [sons](audio-inventaire-evenements.md).
+
 **Clôture audio — 28 octobre 2026 :** Malik approuve D1 et tous les effets.
 La boucle D1 devient la BGM par défaut ; 36 prises acoustiques intégrées,
 réglages et identifiant de préférence conservés. Aucun nouvel appel payant.

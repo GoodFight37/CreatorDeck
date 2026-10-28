@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   deservesSpotlight,
+  MEME_REVEAL_TIMING,
   EPIC_SILENCE_MS,
   isFinalSlot,
   isPerfect,
@@ -28,6 +29,13 @@ import {
  * ici.
  */
 describe("la révélation", () => {
+  it("conserve les timings MEMES, Imgflip et Anime avant extraction", () => {
+    expect(MEME_REVEAL_TIMING).toEqual({
+      quickFlipMs: 280, specialFlipMs: 1080, finalDelayMs: 360, specialDelayMs: 210,
+      impactRatio: .55, swapRatio: .53, readyPaddingMs: 80, summaryHoldMs: 1500,
+    });
+    expect(MEME_REVEAL_TIMING.quickFlipMs).toBe(QUICK_FLIP_MS);
+  });
   it("ne reconnaît que le dernier emplacement comme le slot garanti", () => {
     expect(isFinalSlot(4, 5)).toBe(true);
     expect(isFinalSlot(0, 5)).toBe(false);

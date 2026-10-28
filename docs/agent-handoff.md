@@ -1,3 +1,38 @@
+# Checkpoint Codex — lots E1/B/C/D et carrousel, 28 octobre 2026
+
+Base visuelle `6c82d3ec6116727c194ee1410ba036809c2baedd`, branche réelle
+`docs/agents-demarrage-rapide` au même SHA que main avant le lot. Malik demande
+tout le travail de l'échange : E1 inventaire, B constantes, C images, D Android,
+suivi carrousel 3nq. Réservations Beads prises avant chaque lot.
+
+- E1 `4nw` : `docs/audio-inventaire-evenements.md`, code intact. Grâce=grace.wav,
+  marteau=gavel.wav, parfait=perfect/alt ; aucun plan de synthèse actif.
+- B `5sr` : uniquement reveal.ts, meme-reveal.tsx, reveal.test.ts ; mêmes valeurs,
+  constantes partagées. Unitaires 16/16, écrans ciblés 20/20, lint/typecheck verts.
+- C `vpb` : `docs/audit-images-2026-10-28.md` ; sous DPR2 à 390×844 : créateurs
+  998/1000, Imgflip 987/999, MEMES171/2150. Aucune des699 archives Upscayl ne
+  correspond aux170 créateurs Épiques/Légendaires. Aucun ajout dans public.
+- D `3rs` et carrousel `3nq` : APK officielle **886271 / 6c82d3ec**, manifeste,
+  taille et SHA256 conformes, installée sur AVD API36 headless muet GPU host.
+  Quatre ouvertures, douze captures, six glissés adb et vidéo ; tranches non
+  croisées sur les images inspectées, zéro erreur JS. P95 instrumentés 50–66,7 ms,
+  pas de promesse de 60 fps ni de validation physique. APK existante réutilisée,
+  pas de nouvelle publication native ; le refactor B n'est pas dans cette APK.
+
+Suite E2E complète locale base + diff B : **231 réussis / 49 ignorés / 0 échec**,
+21,4 min. CI source [40656194492](https://github.com/GoodFight37/CreatorDeck/actions/runs/40656194492)
+entièrement verte, snapshot Linux compris ; aucune régénération requise.
+Rapports détaillés et preuves locales : [Android](verification-android-lots-2026-10-28.md).
+Les erreurs initiales du harnais Android et la commande d'écran sans fichiers
+sont consignées sans les compter comme réussites. Bug Binder encore sonore :
+`CreatorDeck-Codex-6u3`, hors inventaire en lecture seule.
+
+**Exclusions** : A rejeté par Malik, fichiers/brief/scripts/ledger/labo restent
+locaux non committés ; Kenney non touché, aucune génération supplémentaire.
+Modifications Android générées, 4 PNG préexistants et ancien hunk Kyara de cette
+passation préservés hors commit. Publication ciblée uniquement du lot terminé ;
+SHA de ce checkpoint via `git log -1 --format=%H -- docs/agent-handoff.md`.
+
 # Checkpoint Codex — adoption D1 et clôture audio, 28 octobre 2026
 
 Malik approuve D1 et tous les effets et demande activation dans le jeu sur main.

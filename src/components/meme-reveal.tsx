@@ -5,11 +5,9 @@ import { CardBackEmblem } from "@/components/card-back-emblem";
 import { MemeCard } from "@/components/meme-card";
 import { buzz } from "@/lib/haptics";
 import { MEME_RARITY, type MemeCard as MemeCardData } from "@/lib/memes";
-import { revealHaptic } from "@/lib/reveal";
+import { MEME_REVEAL_TIMING, revealHaptic } from "@/lib/reveal";
 import { playBang, playReveal } from "@/lib/sfx";
 import { cardEffectsAllowed } from "@/lib/tilt";
-
-const SUMMARY_HOLD_MS = 1_500;
 
 export type CardRenderer = (card: MemeCardData, compact: boolean, copies: number) => ReactNode;
 
@@ -40,8 +38,8 @@ function MemeRevealCard({ card, number, copies, onAdvance, renderCard }: {
   const [showBack, setShowBack] = useState(effects);
   const start = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const special = card.rarity === "rare" || card.rarity === "epic" || card.rarity === "legendary" || card.rarity === "mythic";
-  const duration = effects ? special ? 1_080 : 280 : 0;
-  const delay = effects ? number === 4 ? 360 : special ? 210 : 0 : 0;
+  const duration = effects ? special ? MEME_REVEAL_TIMING.specialFlipMs : MEME_REVEAL_TIMING.quickFlipMs : 0;
+  const delay = effects ? number === 4 ? MEME_REVEAL_TIMING.finalDelayMs : special ? MEME_REVEAL_TIMING.specialDelayMs : 0 : 0;
   const rarityForHaptic = card.rarity === "mythic" ? "legendary" : card.rarity;
 
   useEffect(() => {
@@ -49,14 +47,14 @@ function MemeRevealCard({ card, number, copies, onAdvance, renderCard }: {
       buzz(revealHaptic(rarityForHaptic));
       if (special) playBang(rarityForHaptic, "standard");
       else playReveal(rarityForHaptic, "standard");
-    }, delay + Math.round(duration * .55));
-    const complete = window.setTimeout(() => setReady(true), delay + duration + 80);
+    }, delay + Math.round(duration * MEME_REVEAL_TIMING.impactRatio));
+    const complete = window.setTimeout(() => setReady(true), delay + duration + MEME_REVEAL_TIMING.readyPaddingMs);
     return () => { window.clearTimeout(impact); window.clearTimeout(complete); };
   }, [delay, duration, rarityForHaptic, special]);
 
   useEffect(() => {
     if (!effects) return;
-    const swap = window.setTimeout(() => setShowBack(false), delay + Math.round(duration * .53));
+    const swap = window.setTimeout(() => setShowBack(false), delay + Math.round(duration * MEME_REVEAL_TIMING.swapRatio));
     return () => window.clearTimeout(swap);
   }, [delay, duration, effects]);
 
@@ -110,7 +108,7 @@ export function MemeReveal({ cards, copies, onClose, labels = DEFAULT_LABELS, re
 
   useEffect(() => {
     if (!summary) return;
-    const timer = window.setTimeout(() => setSummaryReady(true), SUMMARY_HOLD_MS);
+    const timer = window.setTimeout(() => setSummaryReady(true), MEME_REVEAL_TIMING.summaryHoldMs);
     return () => window.clearTimeout(timer);
   }, [summary]);
 

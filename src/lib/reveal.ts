@@ -107,6 +107,18 @@ export function silenceBefore(rarity: Rarity): number {
  * rejoint la pile — ni silence, ni retournement, ni impact.
  */
 export const QUICK_FLIP_MS = 280;
+/** Timings MEMES/Imgflip/Anime conservés distincts du rituel Live. */
+export const MEME_REVEAL_TIMING = {
+  quickFlipMs: QUICK_FLIP_MS,
+  specialFlipMs: 1_080,
+  finalDelayMs: 360,
+  specialDelayMs: 210,
+  impactRatio: .55,
+  swapRatio: .53,
+  readyPaddingMs: 80,
+  summaryHoldMs: 1_500,
+} as const;
+
 export function revealTiming(rarity: Rarity, effectsOn: boolean, fifth = false, owned = false) {
   if (!effectsOn || owned) return { flipMs: 0, leadMs: 0, impactMs: 0 };
   const flipMs = rarity === "legendary" ? 1_120 : rarity === "epic" ? 960 : rarity === "rare" ? 840 : QUICK_FLIP_MS;

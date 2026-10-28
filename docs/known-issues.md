@@ -72,7 +72,13 @@ APK finale 882813 : noms entiers à 320 px, dix fiches aux deux tailles,
 tap/Retour/glissé vérifiés. Suite complète 215 réussis / 29 ignorés ; dernières
 relances ciblées vertes. Captures et publication dans la passation. Redmi non testé.
 
-## Carrousel : tranches qui se croisent — correction vérifiée localement, 25 octobre 2026
+## Carrousel : tranches qui se croisent — confirmé sur APK officielle, 28 octobre 2026
+
+Actualisation du 28 octobre : APK officielle **886271 / 6c82d3ec** installée et
+vérifiée, six glissés natifs entre les quatre univers, séquence d'univers et
+absence d'ouverture accidentelle contrôlées, croisements inspectés en vidéo.
+Défaut non reproduit ; publication APK désormais confirmée, suivi 3nq clôturé.
+Pas de nouvelle correction ni de preuve sur Redmi. [Rapport](verification-android-lots-2026-10-28.md).
 
 **Suivi `CreatorDeck-Codex-3nq`, P1, D-167, base `59becdd7`.** Vidéo joueur
 `Screenrecorder-2026-10-25-07-29-27-984.mp4` : glisser IMGFLIP ↔ MEMES ↔ LIVE,
