@@ -38,6 +38,29 @@ demander un second avis. Claude lit aussi [`CLAUDE.md`](CLAUDE.md).
   20 octobre 2026 à la demande de Malik. Ne pas la réinstaller
   sans nouvelle demande explicite. Les tests manuels et la CI restent disponibles.
 
+## Collaboration Claude et Codex (28 octobre 2026)
+
+- **Un seul auteur par branche et par checkout à la fois.** Deux agents ne
+  modifient jamais le même arbre en même temps ; sur une même branche, ils
+  passent l'un après l'autre : le premier livre, le second relit le diff avant
+  de reprendre.
+- **Fichiers locaux non committés** (aperçu Kyara, `.beads/`, captures, brouillons) :
+  ne pas les ajouter ni les nettoyer sans l'avoir demandé ; `git add` toujours
+  avec des noms de fichiers.
+- **Rôles par défaut :** Claude pour le design, les animations et l'intégration ;
+  Codex pour les lots délimités (liste de fichiers fixée), l'APK, l'émulateur et
+  les audits en lecture seule. L'agent qui travaille peut changer ce partage et
+  le dit dans la passation.
+- **Revue croisée avant de pousser** les changements risqués (cloud, migrations
+  SQL, argent du jeu, publication APK) : `/codex:adversarial-review` côté Claude,
+  le script de revue côté Codex. Un petit changement n'en demande pas.
+- **Blocage ou second avis :** `/codex:rescue`. Ne pas activer le « review gate »
+  du plugin (boucle coûteuse en quota).
+- **Quota :** les audits lourds et les relectures larges vont de préférence à
+  l'agent qui a le plus de quota ; effort de raisonnement bas par défaut, haut
+  pour les revues complexes.
+- Chaque lot finit par une passation en tête de `docs/agent-handoff.md`.
+
 ## À chaque début et reprise de session
 
 ### Démarrage rapide (commandes à lancer dans l'ordre)
