@@ -17,11 +17,12 @@ export function storyBonds(run: StoryRun): StoryBond[] {
   const encountered = (prefix: string) => run.history.some(entry => speakerByScene.get(entry.sceneId)?.startsWith(prefix));
   const bonds: StoryBond[] = [];
   if ((["flo_protegee","flo_epuisee","rupture_flo","reconciliation_flo","vote_respecte","vote_trahi","saison_collective"].some(k => f.has(k)) || encountered("FLO"))) {
-    const broken = f.has("rupture_flo") && !f.has("reconciliation_flo");
+    const watchingFreely = f.has("flo_spectatrice_libre");
+    const broken = f.has("rupture_flo") && !f.has("reconciliation_flo") && !watchingFreely;
     const repaired = f.has("reconciliation_flo");
     bonds.push({ id:"flo", name:"Flo", initials:"FL",
-      status: repaired ? "Dialogue retrouvé" : broken ? "Lien rompu" : f.has("vote_trahi") ? "Confiance fragilisée" : f.has("flo_epuisee") ? "À bout de souffle" : f.has("flo_protegee") ? "Limites respectées" : f.has("flo_modo") ? "Modération en place" : "Premiers échanges",
-      detail: repaired ? "Des excuses ont rouvert la discussion, sans effacer le passé." : broken ? "La rupture reste une décision qui pèse." : f.has("vote_trahi") ? "Le vote du collectif a été contourné." : f.has("flo_epuisee") ? "La charge de modération reste lourde." : f.has("flo_protegee") ? "Son travail et son temps comptent dans tes choix." : f.has("flo_modo") ? "Flo a accepté de modérer tes premiers directs." : "Vous avez commencé à discuter dans le chat." });
+      status: watchingFreely ? "Lien retrouvé, sans obligation" : repaired ? "Dialogue retrouvé" : broken ? "Lien rompu" : f.has("vote_trahi") ? "Confiance fragilisée" : f.has("flo_epuisee") ? "À bout de souffle" : f.has("flo_protegee") ? "Limites respectées" : f.has("flo_modo") ? "Modération en place" : "Premiers échanges",
+      detail: watchingFreely ? "Flo peut regarder tes directs sans reprendre la modération. Vous avez renoué le contact, chacun à sa place." : repaired ? "Des excuses ont rouvert la discussion, sans effacer le passé." : broken ? "La rupture reste une décision qui pèse." : f.has("vote_trahi") ? "Le vote du collectif a été contourné." : f.has("flo_epuisee") ? "La charge de modération reste lourde." : f.has("flo_protegee") ? "Son travail et son temps comptent dans tes choix." : f.has("flo_modo") ? "Flo a accepté de modérer tes premiers directs." : "Vous avez commencé à discuter dans le chat." });
   }
   if ((["respect_nox","guerre_nox","duo_nox","pacte_brise","paix_durable_nox","paix_nox","dette_nox_refusee","dette_nox_reglee"].some(k => f.has(k)) || encountered("NOX"))) {
     bonds.push({ id:"nox", name:"Nox", initials:"NX",
