@@ -32,9 +32,24 @@ describe("la révélation", () => {
   it("conserve les timings MEMES, Imgflip et Anime avant extraction", () => {
     expect(MEME_REVEAL_TIMING).toEqual({
       quickFlipMs: 280, specialFlipMs: 1080, finalDelayMs: 360, specialDelayMs: 210,
-      impactRatio: .55, swapRatio: .53, readyPaddingMs: 80, summaryHoldMs: 1500,
+      impactRatio: .55, swapRatio: .53, readyPaddingMs: 80, summaryHoldMs: 1500, easing: "cubic-bezier(.22,.65,.24,1)",
     });
     expect(MEME_REVEAL_TIMING.quickFlipMs).toBe(QUICK_FLIP_MS);
+  });
+  it("cale les quatre boosters sur Anime, y compris cinquième carte, effets et doublons", () => {
+    for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"] as const) {
+      const special = ["rare", "epic", "legendary"].includes(rarity);
+      for (const fifth of [false, true]) {
+        const flipMs = special ? 1080 : 280;
+        const leadMs = fifth ? 360 : special ? 210 : 0;
+        expect(revealTiming(rarity, true, fifth)).toEqual({ flipMs, leadMs, impactMs: leadMs + Math.round(flipMs * .55) });
+        expect(revealTiming(rarity, false, fifth)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
+        expect(revealTiming(rarity, true, fifth, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
+      }
+    }
+    const component = readFileSync(path.join(process.cwd(), "src/components/meme-reveal.tsx"), "utf8");
+    expect(component).toContain('card.rarity === "mythic" ? "legendary" : card.rarity');
+    expect(component).toContain("revealTiming(rarityForHaptic, effects, number === 4, copies > 1)");
   });
   it("ne reconnaît que le dernier emplacement comme le slot garanti", () => {
     expect(isFinalSlot(4, 5)).toBe(true);
@@ -217,13 +232,13 @@ describe("la révélation", () => {
 describe("fluidité de la révélation (D-157)", () => {
   it("retourne une Commune ou une Peu commune en 280 ms, sans silence", () => {
     expect(QUICK_FLIP_MS).toBe(280);
-    expect(revealTiming("common", true)).toEqual({ flipMs: 280, leadMs: 0, impactMs: 0 });
+    expect(revealTiming("common", true)).toEqual({ flipMs: 280, leadMs: 0, impactMs: 154 });
     expect(revealTiming("uncommon", true).flipMs).toBe(280);
     expect(revealTiming("rare", true).flipMs).toBeGreaterThan(QUICK_FLIP_MS);
   });
 
   it("un doublon de toute rareté ne se retourne pas ; une nouvelle garde son silence", () => {
-    expect(revealTiming("legendary", true).leadMs).toBe(EPIC_SILENCE_MS);
+    expect(revealTiming("legendary", true).leadMs).toBe(MEME_REVEAL_TIMING.specialDelayMs);
     for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"] as const) {
       expect(revealTiming(rarity, true, false, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
       expect(revealTiming(rarity, true, true, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });

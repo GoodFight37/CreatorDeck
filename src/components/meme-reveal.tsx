@@ -5,7 +5,7 @@ import { CardBackEmblem } from "@/components/card-back-emblem";
 import { MemeCard } from "@/components/meme-card";
 import { buzz } from "@/lib/haptics";
 import { MEME_RARITY, type MemeCard as MemeCardData } from "@/lib/memes";
-import { MEME_REVEAL_TIMING, revealHaptic } from "@/lib/reveal";
+import { MEME_REVEAL_TIMING, revealHaptic, revealTiming } from "@/lib/reveal";
 import { playBang, playReveal } from "@/lib/sfx";
 import { cardEffectsAllowed } from "@/lib/tilt";
 
@@ -35,25 +35,24 @@ function MemeRevealCard({ card, number, copies, onAdvance, renderCard }: {
   const [ready, setReady] = useState(false);
   // Un seul élément qui tourne : le dos, puis le recto au milieu du tour.
   const effects = cardEffectsAllowed();
-  const [showBack, setShowBack] = useState(effects);
+  const [showBack, setShowBack] = useState(effects && copies <= 1);
   const start = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const special = card.rarity === "rare" || card.rarity === "epic" || card.rarity === "legendary" || card.rarity === "mythic";
-  const duration = effects ? special ? MEME_REVEAL_TIMING.specialFlipMs : MEME_REVEAL_TIMING.quickFlipMs : 0;
-  const delay = effects ? number === 4 ? MEME_REVEAL_TIMING.finalDelayMs : special ? MEME_REVEAL_TIMING.specialDelayMs : 0 : 0;
   const rarityForHaptic = card.rarity === "mythic" ? "legendary" : card.rarity;
+  const { flipMs: duration, leadMs: delay, impactMs } = revealTiming(rarityForHaptic, effects, number === 4, copies > 1);
 
   useEffect(() => {
     const impact = window.setTimeout(() => {
       buzz(revealHaptic(rarityForHaptic));
       if (special) playBang(rarityForHaptic, "standard");
       else playReveal(rarityForHaptic, "standard");
-    }, delay + Math.round(duration * MEME_REVEAL_TIMING.impactRatio));
-    const complete = window.setTimeout(() => setReady(true), delay + duration + MEME_REVEAL_TIMING.readyPaddingMs);
+    }, impactMs);
+    const complete = window.setTimeout(() => setReady(true), duration === 0 ? 0 : delay + duration + MEME_REVEAL_TIMING.readyPaddingMs);
     return () => { window.clearTimeout(impact); window.clearTimeout(complete); };
-  }, [delay, duration, rarityForHaptic, special]);
+  }, [delay, duration, impactMs, rarityForHaptic, special]);
 
   useEffect(() => {
-    if (!effects) return;
+    if (!effects || duration === 0) return;
     const swap = window.setTimeout(() => setShowBack(false), delay + Math.round(duration * MEME_REVEAL_TIMING.swapRatio));
     return () => window.clearTimeout(swap);
   }, [delay, duration, effects]);
@@ -80,14 +79,14 @@ function MemeRevealCard({ card, number, copies, onAdvance, renderCard }: {
     }} onLostPointerCapture={(event) => {
       if (start.current?.pointerId === event.pointerId) start.current = null;
     }}>
-      <div className={`meme-reveal-flip rarity-${card.rarity}${special ? "" : " is-quick"}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
-        {showBack
+      <div className={`meme-reveal-flip rarity-${card.rarity}${special ? "" : " is-quick"}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color, animationTimingFunction: MEME_REVEAL_TIMING.easing } as CSSProperties}>
+        {showBack && duration > 0
           // Le dos des cartes sorties du sachet, emblème compris : la carte qu'on retourne est la même.
           ? <div className="meme-reveal-back" aria-hidden="true"><span className="foil-back-emblem"><CardBackEmblem /></span></div>
           : <div className="meme-reveal-front">{renderCard?.(card, false, copies) ?? <MemeCard card={card} copies={copies} />}</div>}
       </div>
     </div>
-    <p className="meme-reveal-rarity">{ready ? MEME_RARITY[card.rarity].label : ""}</p>
+    <p className="meme-reveal-rarity" style={{ "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>{ready ? MEME_RARITY[card.rarity].label : ""}</p>
     <p className="meme-reveal-gesture" aria-hidden="true">{ready ? "GLISSE LA CARTE" : ""}</p>
     <button className="meme-reveal-next" type="button" disabled={!ready} onClick={onAdvance}>
       {ready ? number === 4 ? "VOIR LES 5 CARTES" : "CARTE SUIVANTE" : "RÉVÉLATION…"}

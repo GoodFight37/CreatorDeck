@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
@@ -32,6 +32,7 @@ import {
   isPerfect,
   PERFECT_HAPTIC,
   PERFECT_LOCK_MS,
+  MEME_REVEAL_TIMING,
   revealHaptic,
   revealTiming,
   silenceBefore,
@@ -42,9 +43,6 @@ import { streakRewardLabel } from "@/lib/progression";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { useCircle } from "@/lib/circle-store";
 import { circleLabel } from "@/lib/circle";
-
-const FIFTH_CARD_REVEAL_BEAT_MS = 360;
-const SUMMARY_HOLD_MS = 1_500;
 
 export function RevealOverlay({
   cards: drawnCards,
@@ -117,7 +115,7 @@ export function RevealOverlay({
   useEffect(() => {
     if (!showSummary) return;
     // Le récap reste lisible 1,5 s, même après un double appui.
-    const timer = window.setTimeout(() => setSummaryReady(true), SUMMARY_HOLD_MS);
+    const timer = window.setTimeout(() => setSummaryReady(true), MEME_REVEAL_TIMING.summaryHoldMs);
     return () => window.clearTimeout(timer);
   }, [showSummary]);
 
@@ -127,7 +125,6 @@ export function RevealOverlay({
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const effectsAllowed = cardEffectsAllowed();
     const immediate = !effectsAllowed || duplicate;
-    const fifthRevealBeat = effectsAllowed && isFifthSequentialReveal ? FIFTH_CARD_REVEAL_BEAT_MS : 0;
     const reducedFallback = immediate
       ? window.setTimeout(() => {
           setFlippedCardId(cardId);
@@ -137,7 +134,9 @@ export function RevealOverlay({
       ? null
       : window.setTimeout(() => {
           setFlippedCardId(cardId);
-        }, 1_200 + (alreadyOwned ? 0 : silenceBefore(rarity)) + fifthRevealBeat);
+        }, overlay
+          ? 1_200 + silenceBefore(rarity) + (isFifthSequentialReveal ? MEME_REVEAL_TIMING.finalDelayMs : 0)
+          : timing.leadMs + timing.flipMs + MEME_REVEAL_TIMING.readyPaddingMs);
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setFlippedCardId(cardId);
@@ -149,7 +148,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [alreadyOwned, cardId, duplicate, isFifthSequentialReveal, perfect, rarity]);
+  }, [cardId, duplicate, perfect, overlay, rarity, isFifthSequentialReveal, timing.leadMs, timing.flipMs]);
 
   useEffect(() => {
     if (!card || perfect) return;
@@ -244,11 +243,6 @@ export function RevealOverlay({
   function cancelRevealSwipe() {
     swipeStart.current = null;
     resetRevealDrag(anchorRef.current);
-  }
-
-  function finishFlip(event: AnimationEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget) return;
-    setFlippedCardId(card.id);
   }
 
   function skipRemainingCards() {
@@ -409,11 +403,13 @@ export function RevealOverlay({
             <div
               key={card.id}
               style={isFifthSequentialReveal
-                ? { "--fifth-reveal-beat": `${FIFTH_CARD_REVEAL_BEAT_MS}ms` } as CSSProperties
+                ? { "--fifth-reveal-beat": `${MEME_REVEAL_TIMING.finalDelayMs}ms` } as CSSProperties
                 : undefined}
               className={`reveal-flip rarity-${card.rarity}${isFifthSequentialReveal ? " reveal-fifth-card" : ""}`}
             >
-              <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
+              <div className="reveal-flip-face" style={overlay ? undefined : { animationTimingFunction: MEME_REVEAL_TIMING.easing }} onAnimationEnd={overlay ? (event) => {
+                if (event.target === event.currentTarget) setFlippedCardId(card.id);
+              } : undefined}>
                 <CreatorCard
                   creator={creator}
                   variant={card.variant}

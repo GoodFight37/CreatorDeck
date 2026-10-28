@@ -165,6 +165,7 @@ for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 999
       // Les communes durent 280 ms : figer au départ, avant le polling Playwright.
       document.addEventListener("animationstart", (event) => {
         if (event.target instanceof HTMLElement && event.target.matches(".reveal-flip-face")) {
+          Object.assign(window, { __ritualBlockedAtStart: (event.target.closest(".reveal-game")?.querySelector(".reveal-next") as HTMLButtonElement | null)?.disabled });
           event.target.getAnimations().forEach(animation => animation.pause());
         }
       }, true);
@@ -191,9 +192,11 @@ for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 999
       const impact = matrix();
       animation.currentTime = Number(timing.delay) + duration * .58;
       const held = matrix();
-      return { impact, held, name: getComputedStyle(node).animationName, duration };
+      return { impact, held, name: getComputedStyle(node).animationName, duration,
+        blockedAtStart: (window as typeof window & { __ritualBlockedAtStart?: boolean }).__ritualBlockedAtStart };
     });
-    await expect(reveal.locator(".reveal-next")).toBeDisabled();
+    // Le verrou suit l'horloge commune, même si ce test fige l'animation CSS.
+    expect(motion.blockedAtStart).toBe(true);
     if (rarity === "common") {
       expect(motion.name).toBe("card-turn-quick");
       expect(motion.impact).not.toEqual(motion.held);

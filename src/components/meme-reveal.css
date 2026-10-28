@@ -19,7 +19,7 @@
 .meme-reveal-card-wrap { position: relative; z-index: 1; display: grid; place-items: center; width: var(--scene-card-width, min(66vw, 285px, 36dvh)); aspect-ratio: .715;
   margin: auto 0 0; perspective: 1000px; touch-action: none; cursor: grab; }
 .meme-reveal-flip { position: relative; width: 100%; height: 100%;
-  animation: meme-reveal-turn var(--meme-flip-ms) cubic-bezier(.2,.7,.2,1) var(--meme-flip-delay) both; }
+  animation: meme-reveal-turn var(--meme-flip-ms) cubic-bezier(.22,.65,.24,1) var(--meme-flip-delay) both; }
 .meme-reveal-front, .meme-reveal-back { position: absolute; inset: 0; }
 .meme-reveal-front .meme-card { width: 100%; height: 100%; }
 /* Grande carte : le cartouche couvre ce qu'il y a dessous. Les mèmes portent
@@ -51,7 +51,7 @@
 }
 /* Commune et Peu commune : le geste sec de la révélation Live (280 ms, ease-out),
    sans la pose immobile du début. Rare et mieux gardent leur mise en scène. */
-.meme-reveal-flip.is-quick { animation-name: meme-reveal-turn-quick; animation-timing-function: var(--ease-out); }
+.meme-reveal-flip.is-quick { animation-name: meme-reveal-turn-quick; animation-timing-function: cubic-bezier(.22,.65,.24,1); }
 @keyframes meme-reveal-turn-quick {
   0% { transform: translateY(10px) scale(.97); }
   53% { transform: translateY(0) scale(1) scaleX(.02); }
@@ -60,7 +60,7 @@
 .meme-reveal-flip.rarity-rare, .meme-reveal-flip.rarity-epic,
 .meme-reveal-flip.rarity-legendary, .meme-reveal-flip.rarity-mythic {
   }
-.meme-reveal-rarity { z-index: 1; min-height: 28px; margin: 22px 0 0; color: var(--accent-soft);
+.meme-reveal-rarity { z-index: 1; min-height: 28px; margin: 22px 0 0; color: var(--rarity);
   font: 800 17px var(--font-display); letter-spacing: .12em; }
 .meme-reveal-gesture { z-index: 1; min-height: 20px; margin: 2px 0 auto; color: var(--muted);
   font: 700 11px var(--font-display); letter-spacing: .17em; }

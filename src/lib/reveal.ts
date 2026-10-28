@@ -8,9 +8,8 @@
  *
  * Trois idées, empruntées à ce qui marche dans les jeux de cartes :
  *
- *   1. **le silence est un son.** Un Légendaire qui arrive après un blanc de
- *      520 ms frappe plus fort que le même Légendaire enchaîné — c'est le
- *      silence qui fait le bruit ;
+ *   1. **la respiration prépare la carte.** Le jeu reprend le rythme Anime :
+ *      un délai de 210 ms dès Rare, sans ajouter l'ancien silence de 520 ms ;
  *   2. **la résistance crée la valeur.** Le dernier emplacement, celui du
  *      tirage garanti, ne se retourne pas du premier coup : il frémit. Le
  *      joueur insiste, et c'est *lui* qui a retourné la carte ;
@@ -22,11 +21,8 @@
 import type { CardVariant, Rarity } from "@/lib/catalog";
 
 /**
- * Le silence avant le retournement d'une carte Épique ou mieux, en ms.
- *
- * 520 ms et pas 400 : sur un téléphone, le blanc doit être **assez long pour
- * qu'on le remarque**, sinon il ne fait que décaler le son. C'est le silence
- * qui fait le bruit — à condition qu'il s'entende.
+ * Silence historique de l'overlay OBS. Le jeu utilise la référence Anime
+ * dans revealTiming, sans cumuler ces 520 ms avec son délai.
  */
 export const EPIC_SILENCE_MS = 520;
 
@@ -107,7 +103,7 @@ export function silenceBefore(rarity: Rarity): number {
  * rejoint la pile — ni silence, ni retournement, ni impact.
  */
 export const QUICK_FLIP_MS = 280;
-/** Timings MEMES/Imgflip/Anime conservés distincts du rituel Live. */
+/** Référence Anime commune aux quatre boosters ; réglage du flip ordinaire ci-dessus. */
 export const MEME_REVEAL_TIMING = {
   quickFlipMs: QUICK_FLIP_MS,
   specialFlipMs: 1_080,
@@ -117,13 +113,15 @@ export const MEME_REVEAL_TIMING = {
   swapRatio: .53,
   readyPaddingMs: 80,
   summaryHoldMs: 1_500,
+  easing: "cubic-bezier(.22,.65,.24,1)",
 } as const;
 
 export function revealTiming(rarity: Rarity, effectsOn: boolean, fifth = false, owned = false) {
   if (!effectsOn || owned) return { flipMs: 0, leadMs: 0, impactMs: 0 };
-  const flipMs = rarity === "legendary" ? 1_120 : rarity === "epic" ? 960 : rarity === "rare" ? 840 : QUICK_FLIP_MS;
-  const leadMs = silenceBefore(rarity) + (fifth ? 360 : 0);
-  const impactMs = leadMs + (["rare", "epic", "legendary"].includes(rarity) ? Math.round(flipMs * 0.48) : 0);
+  const special = ["rare", "epic", "legendary"].includes(rarity);
+  const flipMs = special ? MEME_REVEAL_TIMING.specialFlipMs : QUICK_FLIP_MS;
+  const leadMs = fifth ? MEME_REVEAL_TIMING.finalDelayMs : special ? MEME_REVEAL_TIMING.specialDelayMs : 0;
+  const impactMs = leadMs + Math.round(flipMs * MEME_REVEAL_TIMING.impactRatio);
   return { flipMs, leadMs, impactMs };
 }
 

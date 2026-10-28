@@ -17,11 +17,17 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
+import { MEME_REVEAL_TIMING, PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
+
 import { CREATORS, PACKS, RARITY_META } from "@/lib/catalog";
 import { createInitialState } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 import { EMPTY_LIVE, indexLive, type LiveSnapshot } from "@/lib/live";
+
+function readyAfter(rarity: Parameters<typeof revealTiming>[0]) {
+  const timing = revealTiming(rarity, true);
+  return timing.leadMs + timing.flipMs + MEME_REVEAL_TIMING.readyPaddingMs;
+}
 
 // Le direct est lu tel quel, sauf quand un test pose une chaîne en direct.
 const liveMock = vi.hoisted(() => ({ current: null as unknown }));
@@ -238,7 +244,9 @@ describe("les effets de révélation", () => {
         index={1} onNext={suivant} onClose={fermer} />,
     );
     banc.ecran(`jeu-derniere-${rarity}`);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200 + silenceBefore(rarity)); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter(rarity) - 1); });
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     banc.appuyer("Ranger dans le classeur");
     expect(document.querySelector(".reveal-summary")).toBeNull();
     expect(fermer).toHaveBeenCalledTimes(1);
@@ -565,7 +573,7 @@ describe("fin du booster : regarder ou ranger", () => {
     const fermer = vi.fn();
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={fermer} />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
     expect(document.querySelector(".reveal-next-pack"), "pas d'heure de sachet quand on va regarder").toBeNull();
     banc.appuyer("Ranger dans le classeur");
     expect(fermer).not.toHaveBeenCalled();
@@ -594,7 +602,7 @@ describe("fin du booster : regarder ou ranger", () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
     expect(document.querySelector(".reveal-next-pack")).toBeNull();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
     const heure = new Date(T0 + PACKS.live.regenMs).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
     expect(document.querySelector(".reveal-next-pack")?.textContent).toBe(`Prochain sachet à ${heure}`);
     expect(document.querySelectorAll(".reveal-next-pack")).toHaveLength(1);
@@ -606,7 +614,7 @@ describe("fin du booster : regarder ou ranger", () => {
     gameStore.replaceState(state);
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
     expect(document.querySelector(".reveal-next-pack")?.textContent).toBe("Un sachet t’attend");
   });
 });
