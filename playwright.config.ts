@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_CLOUD_KEY, E2E_CLOUD_URL, e2eCloudActive } from "./e2e/cloud-factice";
 
 /**
  * Tests de bout en bout : le jeu est ouvert dans un vrai navigateur et on
@@ -36,9 +37,14 @@ export default defineConfig({
     command: process.env.CREATORDECK_LOCAL_QUALITY ? "npm run dev -- --webpack" : "npm run dev",
     url: "http://localhost:3000",
     timeout: process.env.CREATORDECK_LOCAL_QUALITY ? 180_000 : 120_000,
-    // Un serveur déjà lancé (le `npm run dev` du joueur) est réutilisé : les
-    // tests ne se battent pas avec lui pour le port 3000.
-    reuseExistingServer: !process.env.CI,
+    // Sans cloud par défaut, quel que soit `.env.local` ; `CREATORDECK_E2E_CLOUD=1`
+    // donne la configuration factice (RPC interceptés). Vider les variables ne
+    // suffit pas si un serveur déjà lancé garde les vraies : il n'est donc
+    // réutilisé que sur demande (`CREATORDECK_E2E_REUSE=1`).
+    env: e2eCloudActive()
+      ? { NEXT_PUBLIC_SUPABASE_URL: E2E_CLOUD_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: E2E_CLOUD_KEY }
+      : { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" },
+    reuseExistingServer: !process.env.CI && process.env.CREATORDECK_E2E_REUSE === "1",
   },
   projects: [
     {

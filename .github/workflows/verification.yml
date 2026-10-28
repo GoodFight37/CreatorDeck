@@ -181,18 +181,14 @@ jobs:
         run: npm ci
       - name: Installer Chromium et ses dépendances système
         run: npx playwright install --with-deps chromium
-      - name: Créer une configuration Supabase factice
-        # Les RPC sont interceptés par Playwright : cette clé ne sort jamais
-        # du job, et rien n'est envoyé à la vraie base.
-        run: |
-          cat > .env.local <<'EOF'
-          NEXT_PUBLIC_SUPABASE_URL=https://verification-test.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-key-ne-verifie-jamais-rien-000000000000000000000000
-          EOF
       - name: Tester le tirage cloud (tous les RPC sont simulés)
+        # CREATORDECK_E2E_CLOUD=1 donne la configuration Supabase factice
+        # (e2e/cloud-factice.ts) : les RPC sont interceptés par Playwright,
+        # rien n'est envoyé à la vraie base.
         run: npm run e2e -- --grep "avec le serveur"
         env:
           CI: "true"
+          CREATORDECK_E2E_CLOUD: "1"
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Joindre les rapports du navigateur en cas d'échec
         if: ${{ failure() }}

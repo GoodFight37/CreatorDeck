@@ -77,8 +77,8 @@ bd ready
 ```
 
 - Lire le **premier** checkpoint de `docs/agent-handoff.md` et le dernier message
-  de la copie active de l'échange (`CreatorDeck-Codex-vers-Claude.md` dans le
-  checkout `CreatorDeck-Codex`). Les messages plus anciens sont de l'historique.
+  de l'échange (`CreatorDeck-Codex-vers-Claude.md`, à la racine de `CreatorDeck`,
+  non suivi par Git). Les messages plus anciens sont de l'historique.
 - Réserver un lot avant d'y toucher : `bd update <id> --claim`. Un lot réservé
   n'est pas modifié par l'autre agent sans accord écrit dans l'échange.
 - Ne jamais toucher aux modifications non commitées d'un autre checkout.
@@ -146,10 +146,11 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   Pas de push forcé, de suppression de branche ou de réécriture d'historique dans
   une reprise ordinaire. Les anciennes recettes de reset/mise à plat ne sont
   pas des autorisations : sauvegarder et vérifier avant toute récupération.
-- Préserver les worktrees existants : `C:/Users/Administrator/Desktop/CreatorDeck`
-  sur `main`, `CreatorDeck-Codex` comme checkout de travail à jour, et
-  `CreatorDeck-Claude` sur `claude/review` pour les relectures. Ne pas créer,
-  supprimer ni remplacer de worktrees.
+- Claude et Codex travaillent tous deux dans `C:/Users/Administrator/Desktop/CreatorDeck`
+  (28 octobre 2026). `CreatorDeck-Codex` (branche `codex/phase2-completion`, figée
+  au 22 octobre) et `CreatorDeck-Claude` sont d'anciens checkouts : ne pas y
+  travailler ni les supprimer sans accord de Malik. Ne pas créer, supprimer ni
+  remplacer de worktrees.
 - Pour une revue indépendante demandée, le script
   `node scripts/delegate-claude.mjs` (Codex appelle Claude) reste un outil de revue
   distinct, en lecture seule, limité au SHA commité et au worktree `claude/review`.

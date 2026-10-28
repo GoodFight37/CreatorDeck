@@ -1,6 +1,5 @@
-import { loadEnvConfig } from "@next/env";
-import { readCloudConfig } from "../src/lib/cloud/config";
 import { expect, type Page } from "@playwright/test";
+import { E2E_CLOUD_URL, e2eCloudActive } from "./cloud-factice";
 export { expect, test } from "@playwright/test";
 
 /** Les cinq chaînes que les scénarios nomment : les cinq premières du catalogue. */
@@ -39,10 +38,9 @@ export async function gotoDeck(page: Page, tutorial = true, options: { withoutCi
   }
 }
 
-/** Même configuration publique que Next dev ; aucun RPC réel dans les scénarios cloud. */
+/** URL factice du mode cloud simulé (voir `playwright.config.ts`) ; `null` sans cloud. */
 export function cloudUrl(): string | null {
-  loadEnvConfig(process.cwd(), true);
-  return readCloudConfig()?.url ?? null;
+  return e2eCloudActive() ? E2E_CLOUD_URL : null;
 }
 
 /**
