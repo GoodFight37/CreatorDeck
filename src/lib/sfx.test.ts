@@ -103,8 +103,8 @@ describe("mix de la musique", () => {
   });
 
   it("remonte uniquement les deux sons de manipulation des cartes", () => {
-    expect(NIVEAUX_SFX.niveaux["card-draw"].cibleDb).toBe(-25);
-    expect(NIVEAUX_SFX.niveaux["card-turn"].cibleDb).toBe(-28.6);
+    expect(NIVEAUX_SFX.niveaux["card-draw"].cibleDb).toBe(-30);
+    expect(NIVEAUX_SFX.niveaux["card-turn"].cibleDb).toBe(-32);
     expect(NIVEAUX_SFX.niveaux.click.cibleDb).toBe(-32);
   });
 

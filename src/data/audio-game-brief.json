@@ -1,0 +1,46 @@
+{
+  "$commentaire": "28 octobre 2026 : sons de JEU (récompense), pas de bruitage réaliste. Principe demandé par Malik : un swoosh doux pour tout le défilement, un vrai son seulement quand la carte le mérite (rare, épique, légendaire, parfait). Trois variantes par son, à choisir à l'écoute.",
+  "credits": { "musiqueParMinute": 1200, "effetParGeneration": 0, "effetParSeconde": 40 },
+  "musique": { "directions": [] },
+  "effets": {
+    "modele": "eleven_text_to_sound_v2",
+    "format": "mp3_44100_128",
+    "sons": [
+      {
+        "nom": "game-swoosh",
+        "label": "Swoosh doux (déchirure, extraction, retournement)",
+        "variantes": 3,
+        "dureeSecondes": 0.7,
+        "prompt": "Soft smooth airy whoosh swipe sound effect for a mobile game user interface, one quick gentle sweep from low to high, clean and pleasant, rounded like a cartoon game transition. No hiss, no crackle, no noise burst, no paper or plastic texture, no voice, no music."
+      },
+      {
+        "nom": "game-reward-rare",
+        "label": "Récompense carte rare",
+        "variantes": 3,
+        "dureeSecondes": 1.0,
+        "prompt": "Mobile card game reward sound effect: a single bright pleasant glassy bell ding with one tiny quick sparkle on top, warm and satisfying, clean natural fade-out to silence with no ringing whistle at the end. Game user interface style, not realistic foley, no voice."
+      },
+      {
+        "nom": "game-reward-epic",
+        "label": "Récompense carte épique",
+        "variantes": 3,
+        "dureeSecondes": 1.4,
+        "prompt": "Mobile card game reward sound effect for an epic card: a rising three-note magical chime on celesta and harp with a soft shimmering sparkle sweep, bright, warm and satisfying, short natural decay that ends cleanly in silence, no high-pitched whistle, game user interface style, not realistic foley."
+      },
+      {
+        "nom": "game-reward-legendary",
+        "label": "Récompense carte légendaire",
+        "variantes": 3,
+        "dureeSecondes": 1.9,
+        "prompt": "Mobile card game reward sound effect for a legendary card: a rich ascending magical harp and bell flourish landing on a warm shimmering chord with a soft sparkle cascade and a gentle low whoosh underneath, triumphant but gentle, mobile gacha reveal feeling, smooth decay to silence, no harsh or piercing high frequencies."
+      },
+      {
+        "nom": "game-reward-perfect",
+        "label": "Récompense booster parfait",
+        "variantes": 3,
+        "dureeSecondes": 2.4,
+        "prompt": "Mobile card game celebration reward sound for a perfect booster pack: a sparkling bell cascade rising up then a warm full major chord with a soft airy pad and a twinkling bell tail, joyful and very satisfying, smooth ending to silence, no harsh or piercing high frequencies, game user interface style, not realistic foley."
+      }
+    ]
+  }
+}

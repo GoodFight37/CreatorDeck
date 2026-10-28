@@ -1,0 +1,18 @@
+{
+  "$commentaire": "28 octobre 2026 : le premier « parfait » (cascade scintillante) est rejeté par Malik. Refait sur le modèle du légendaire, qui a plu : chaud, rond, graves et médiums, sans scintillement ni aigus.",
+  "credits": { "musiqueParMinute": 1200, "effetParGeneration": 0, "effetParSeconde": 40 },
+  "musique": { "directions": [] },
+  "effets": {
+    "modele": "eleven_text_to_sound_v2",
+    "format": "mp3_44100_128",
+    "sons": [
+      {
+        "nom": "game-reward-perfect-b",
+        "label": "Récompense booster parfait (refait)",
+        "variantes": 3,
+        "dureeSecondes": 2.4,
+        "prompt": "Mobile card game reward sound effect for a perfect booster pack, the grandest reward: a warm rich harp and soft bell flourish rising into a big warm major chord with a gentle choir-like pad, rounded and full, low and mid frequencies emphasized, soft attack, smooth long decay to silence. Like a legendary reward but bigger. No sparkles, no glitter, no high-pitched tones, no harsh or piercing highs, no whistle."
+      }
+    ]
+  }
+}
