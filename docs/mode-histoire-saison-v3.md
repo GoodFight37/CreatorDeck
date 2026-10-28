@@ -79,7 +79,7 @@ Les identifiants sont stables et constituent la source de vérité pour les sauv
 | 31. Une vidéo sans ta voix (`mona_filtres`) | `filtre_agence` | Réclamer le contrôle éditorial / Accepter la campagne |
 | 31. La dernière proposition (`mona_nouveau`) | Repli | Négocier un calendrier humain / Accepter la tournée complète |
 | 32. Le silence de la source (`lina_verite`) | Repli | Exiger le nom en direct / Défendre le secret de la source |
-| 33. La porte de chez toi (`fan_retour`) | `limites_vie_privee` | Répondre discrètement sans relancer / Faire une vidéo sur son cas |
+| 33. La porte de chez toi (`fan_retour`) | `limites_vie_privee`, `communaute_saine` | Répondre discrètement sans relancer / Faire une vidéo sur son cas |
 | 33. Le lieu sur une capture (`fan_dox`) | `frontieres_floues` | Quitter le live sans explication / Faire retirer les informations privées |
 | 33. La convention des visages (`fan_rencontre`) | Repli | Prendre le temps de remercier / Signer vite pour voir tout le monde |
 | 34. La diffusion limitée (`plateforme_alerte`) | Repli | Déplacer le live sans expliquer / Contester avec un dossier vérifiable |
