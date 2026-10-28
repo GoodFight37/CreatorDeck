@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-28-musique-collection", date: "2026-10-28", title: "Une musique pour ta collection",
+    summary: "Une nouvelle boucle électronique douce accompagne le jeu.",
+    sections: [{ title: "Ambiance sonore", items: [
+      "La nouvelle musique rejoint les bruitages des sachets, des cartes et des récompenses.",
+      "Tes réglages de musique et d’effets sont conservés et restent indépendants.",
+    ] }],
+  },
+  {
     id: "2026-10-27-audio-tactile", date: "2026-10-27", title: "Des sons pour tes cartes",
     summary: "Le papier, les sachets et les récompenses adoptent une famille de sons plus chaleureuse.",
     sections: [{ title: "À chaque action", items: [

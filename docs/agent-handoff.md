@@ -1,3 +1,25 @@
+# Checkpoint Codex — adoption D1 et clôture audio, 28 octobre 2026
+
+Malik approuve D1 et tous les effets et demande activation dans le jeu sur main.
+Base `fe36b821745a01e346dfca2289a1982cb29695f0`, suivi `CreatorDeck-Codex-brl`.
+La source BGM pointe maintenant vers `collection-electronique-v1.mp3` ; identifiant
+historique conservé pour les préférences, libellé Collection lumineuse. Les 36
+prises acoustiques étaient déjà intégrées et publiées. Note joueur ajoutée.
+Aucun appel payant supplémentaire : cumul final 3 845, dernier solde 34 919.
+Malik demande de ne plus subir de lecteur ou fenêtre de test laissés ouverts :
+aucune page ouverte et aucune lecture audible pour cette livraison.
+Décision D-178 ; les anciens choix en attente ci-dessous sont remplacés.
+Validation sur cette base et le diff d'activation : `npx vitest run
+src/lib/sfx.test.ts src/lib/audio-briefs.test.ts src/lib/release-notes.test.ts`
+**37/37** ; lint ciblé et `tsc --noEmit` réussis. `playwright test
+e2e/audio-premium.spec.ts --grep "les gestes du booster"` : **2/2**, bureau et
+téléphone simulé, Chromium sans fenêtre avec `--mute-audio`. Une seule BGM D1
+chargée/décodée, plus de 30 effets préchargés, gestes sans oscillateur brut ni
+double déchirure. Décodage complet D1 par FFmpeg sans erreur.
+Pas de nouvelle APK ni de validation physique ; suite E2E entière non répétée
+pour ce remplacement de source audio. Publication normale de ce commit sur
+main ; SHA et état final de Vercel/CI consignés dans `CreatorDeck-Codex-brl`.
+
 # Checkpoint Codex — référence Pocket analysée et candidate D1, 28 octobre 2026
 
 Malik refuse les directions A/B/C et demande d'analyser l'OST Pocket pour guider

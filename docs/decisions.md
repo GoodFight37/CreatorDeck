@@ -1,3 +1,12 @@
+## D-178 — 28 octobre 2026 : adoption de D1 et clôture audio
+
+Malik approuve la musique D1 et tous les effets, demande leur activation dans
+le jeu sur main et la clôture du chantier. Le moteur utilise le fichier D1
+déjà livré ; l'identifiant historique de piste est conservé pour les réglages.
+Les 36 prises d'effets intégrées restent actives. Aucun nouvel appel payant,
+aucune lecture ni fenêtre de test sur le PC de Malik. Tests ciblés et contrôle
+du fichier déployé, sans validation auditive humaine par l'agent.
+
 ## D-177 — 28 octobre 2026 : recadrage musical depuis le menu de collection Pocket
 
 Malik refuse A/B/C et demande d'exploiter une référence audio réelle avant

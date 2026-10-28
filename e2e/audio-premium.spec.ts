@@ -19,6 +19,7 @@ test("les gestes du booster jouent des fichiers, une seule déchirure, sans synt
   const probe = () => page.evaluate(() => (window as typeof window & { __audioPremium: { effects: number; loops: number; oscillators: number } }).__audioPremium);
   await gotoDeck(page);
   await expect.poll(async () => (await probe()).loops).toBe(1);
+  expect(await page.evaluate(() => performance.getEntriesByType("resource").filter(r => r.name.endsWith("/music/candidates/collection-electronique-v1.mp3")).length)).toBe(1);
   await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").filter(r => r.name.endsWith(".wav")).length)).toBeGreaterThan(30);
   const before = (await probe()).effects;
   await page.getByRole("button", { name: /^(Ouvrir le booster|Essayer)$/ }).click();

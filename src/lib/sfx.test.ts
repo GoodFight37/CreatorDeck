@@ -262,10 +262,10 @@ describe("les bruitages embarqués", () => {
   });
 
   it("embarque une boucle BGM compressée et lisible par le navigateur", () => {
-    const fichier = path.join(process.cwd(), "public", "music", "hub-late-night.mp3");
+    const fichier = path.join(process.cwd(), "public", MUSIC_TRACKS[0].src.slice(1));
     const audio = readFileSync(fichier);
     expect(audio.length).toBeGreaterThan(32_000);
-    expect(audio.length).toBeLessThan(1_000_000);
+    expect(audio.length).toBeLessThan(1_200_000);
     expect(audio.includes(Buffer.from([0xff, 0xfb])) || audio.includes(Buffer.from([0xff, 0xf3]))).toBe(true);
   });
 
@@ -522,9 +522,9 @@ describe("volumes séparés et pistes (laboratoire audio)", () => {
     }
   });
 
-  it("ne connaît qu'une piste tant qu'aucune autre n'est validée", () => {
+  it("utilise D1 approuvée en conservant l'identifiant des préférences existantes", () => {
     expect(MUSIC_TRACKS).toHaveLength(1);
-    expect(MUSIC_TRACKS[0]).toMatchObject({ id: "hub-late-night", src: "/music/hub-late-night.mp3" });
+    expect(MUSIC_TRACKS[0]).toMatchObject({ id: "hub-late-night", label: "Collection lumineuse", src: "/music/candidates/collection-electronique-v1.mp3" });
     expect(getMusicTrackId()).toBe("hub-late-night");
     setMusicTrack("piste-inconnue");
     expect(getMusicTrackId()).toBe("hub-late-night");

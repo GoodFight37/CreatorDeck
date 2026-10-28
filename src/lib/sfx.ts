@@ -63,7 +63,7 @@ export type Note = {
 
 const STORAGE_KEY = "creatordeck.muted";
 const MUSIC_STORAGE_KEY = "creatordeck.music-muted";
-const MUSIC_SRC = "/music/hub-late-night.mp3";
+const MUSIC_SRC = "/music/candidates/collection-electronique-v1.mp3";
 
 /**
  * Onde de base par rareté.
@@ -348,7 +348,7 @@ let musicTrackId = "hub-late-night";
 
 /** Pistes musicales que le moteur sait enchaîner avec un fondu. */
 export const MUSIC_TRACKS: readonly { id: string; label: string; src: string }[] = [
-  { id: "hub-late-night", label: "Late Night (actuelle)", src: MUSIC_SRC },
+  { id: "hub-late-night", label: "Collection lumineuse", src: MUSIC_SRC },
 ];
 
 export function clampVolume(value: number): number {
@@ -492,8 +492,7 @@ export function getMusicTrackId(): string {
 /**
  * Bascule la BGM vers une autre piste du catalogue, en fondu : l'ancienne
  * s'arrête, la nouvelle est chargée puis lancée si la musique jouait.
- * Sert au laboratoire audio ; le jeu ne propose que la piste actuelle tant
- * qu'aucune autre n'est validée.
+ * L'identifiant historique conserve les préférences après remplacement de la piste.
  */
 export function setMusicTrack(id: string): void {
   loadPreference();

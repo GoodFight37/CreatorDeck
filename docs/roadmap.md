@@ -1,5 +1,11 @@
 # Roadmap CreatorDeck
 
+**Clôture audio — 28 octobre 2026 :** Malik approuve D1 et tous les effets.
+La boucle D1 devient la BGM par défaut ; 36 prises acoustiques intégrées,
+réglages et identifiant de préférence conservés. Aucun nouvel appel payant.
+Décision D-178 ; validation et publication dans le premier checkpoint de passation.
+Les mentions de choix en attente ci-dessous sont historiques et remplacées.
+
 **Audio premium — 28 octobre 2026 (D-176) :** effets publiés, Vercel Production
 `READY` sur `629a293a`, écoute réelle en ligne vérifiée sur les six candidates et
 36 effets. E2E source verts en CI ; suite écrans complète corrigée : 267/267.

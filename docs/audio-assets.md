@@ -1,4 +1,13 @@
-# Couche musicale — mise à jour 14 octobre 2026
+# Couche musicale — mise à jour 28 octobre 2026
+
+Malik approuve D1 et demande la clôture du chantier le 28 octobre :
+`public/music/candidates/collection-electronique-v1.mp3` devient la BGM du jeu.
+Boucle électronique originale de 89,444 s, −20 LUFS, −3,9 dBTP. Le moteur garde
+l'identifiant `hub-late-night` pour préserver les préférences ; la source et le
+libellé deviennent D1 / Collection lumineuse. Les 36 prises acoustiques sont
+déjà intégrées. Aucun nouvel appel de génération. Cumul final : 3 845 crédits.
+
+## Historique — piste provisoire remplacée le 28 octobre
 
 Actualisation du 27 octobre : [livraison audio et comparaison musicale](audio-livraison-2026-10-27.md).
 Six extraits originaux sont proposés ; la piste actuelle attend le choix de Malik.
