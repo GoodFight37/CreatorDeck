@@ -16,16 +16,16 @@
   background: #12121c;
 }
 
+/* Les illustrations sont toutes en portrait (ratio ~0,67) : on remplit la carte, sans bandes sombres ni fond flou. */
 .backdrop {
-  object-fit: cover;
-  filter: blur(14px) saturate(0.72) brightness(0.55);
-  transform: scale(1.12);
+  display: none;
 }
 
 .portrait {
   z-index: 1;
-  object-fit: contain;
-  filter: saturate(0.9) contrast(1.03);
+  object-fit: cover;
+  object-position: 50% 26%;
+  filter: saturate(1.06) contrast(1.04);
 }
 
 .image::after {
@@ -89,7 +89,7 @@
   border-top: 1px solid rgb(255 255 255 / 12%);
 }
 
-.caption > div { min-width: 0; }
+.caption > div { min-width: 0; text-align: left; }
 
 .caption h3 {
   overflow: hidden;

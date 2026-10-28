@@ -32,6 +32,7 @@ export function MemeCard({ card, compact = false, copies = 0, interactiveFoil = 
       }}
       aria-label={`${card.name}, ${rarity.label}${card.fullArt ? ", Full Art" : ""}${copies ? `, ${copies} exemplaire${copies > 1 ? "s" : ""}` : ", non obtenue"}`}>
       <div className="card-photo-wrap">
+        {card.image && !compact ? <Image className="card-photo-backdrop" src={card.image} alt="" fill sizes="(max-width: 600px) 65vw, 300px" aria-hidden="true" /> : null}
         {card.image ? (
           <Image className="card-photo" src={card.image} alt="" fill sizes={compact ? "(max-width: 600px) 27vw, 160px" : "(max-width: 600px) 65vw, 300px"} />
         ) : <div className="card-photo-placeholder" aria-hidden="true"><span>?</span></div>}

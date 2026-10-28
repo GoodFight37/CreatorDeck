@@ -75,7 +75,10 @@
 .meme-card { background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--rarity) 24%, #15111b), #110f18 75%); }
 .meme-card .card-photo-wrap { z-index: 1; }
 .meme-card .card-photo { object-fit: contain; filter: none; }
-.meme-card .card-photo-shade { background: linear-gradient(180deg, rgb(0 0 0 / .42), transparent 19% 67%, rgb(0 0 0 / .48)); }
+/* Une classe de plus que la règle des cartes Créateur : ni trame de points ni ombre intérieure sur un meme. */
+.creator-card.meme-card .card-photo-shade { background: linear-gradient(180deg, rgb(0 0 0 / .42), transparent 19% 67%, rgb(0 0 0 / .48)); box-shadow: none; }
+/* Le meme reste entier (son texte est en haut et en bas) ; ses bandes reprennent l'image, floutée. Grande carte seulement : un flou par vignette de grille coûterait trop sur mobile. */
+.meme-card .card-photo-backdrop { object-fit: cover; filter: blur(16px) saturate(1.15) brightness(.6); transform: scale(1.15); }
 .meme-card .card-nameplate { background: linear-gradient(150deg, rgb(15 13 20 / .94), rgb(12 10 17 / .98)); }
 .meme-card .card-nameplate h3 { font-size: clamp(15px, 5vw, 27px); }
 /* La vignette Mème garde la taille de cartouche du deck dans TOUS les écrans

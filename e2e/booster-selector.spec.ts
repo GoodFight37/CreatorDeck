@@ -83,7 +83,7 @@ test("Anime ouvre cinq cartes dans le Drop et les conserve dans son classeur loc
   await expect.poll(() => scene.evaluate((node) => {
     const style = getComputedStyle(node);
     return [style.getPropertyValue("--back-ink").trim(), style.getPropertyValue("--pack-accent").trim()];
-  })).toEqual(["#fcf4ff", "#b49bff"]);
+  })).toEqual(["#f2d98e", "#b49bff"]);
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /anime-opening/);
   await expect.poll(() => scene.locator(".foil-printed-art").first().evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([1050, 1540]);
   const tear = scene.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });

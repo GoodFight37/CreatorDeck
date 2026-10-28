@@ -38,10 +38,11 @@
     radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 79, 163, .12), transparent 90%),
     #07051c;
   --back-surface:
-    radial-gradient(circle at 51% 40%, rgba(255, 122, 200, .3), transparent 64%),
+    linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, .16) 47%, transparent 58%),
+    radial-gradient(circle at 51% 40%, rgba(255, 122, 200, .34), transparent 64%),
     repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .07) 15px 16px),
     linear-gradient(146deg, #6a47e8, #1c0f5e 52%, #8a5cff);
-  --back-edge: rgba(233, 224, 255, .85);
+  --back-edge: rgba(255, 226, 176, .92);
   --back-inset: rgba(233, 224, 255, .16);
   --back-ink: #fff4e6;
   --back-glow: rgba(255, 122, 200, .3);
@@ -56,8 +57,9 @@
     radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 108, 188, .12), transparent 90%),
     #050d09;
   --back-surface:
-    radial-gradient(circle at 51% 40%, rgba(217, 255, 58, .26), transparent 64%),
-    radial-gradient(circle, rgba(217, 255, 58, .1) 1.6px, transparent 2px) 0 0 / 14px 14px,
+    linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, .15) 47%, transparent 58%),
+    radial-gradient(circle at 51% 40%, rgba(217, 255, 58, .3), transparent 64%),
+    radial-gradient(circle, rgba(217, 255, 58, .16) 1.8px, transparent 2.3px) 0 0 / 14px 14px,
     linear-gradient(146deg, #2f9e5a, #0a3a24 52%, #4fae3a);
   --back-edge: rgba(217, 255, 58, .85);
   --back-inset: rgba(217, 255, 58, .16);
@@ -71,8 +73,10 @@
     radial-gradient(ellipse 80% 70% at 50% 66%, rgba(7, 58, 104, .3), transparent 90%),
     #030b16;
   --back-surface:
-    radial-gradient(circle at 51% 40%, rgba(129, 255, 221, .28), transparent 64%),
-    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .07) 15px 16px),
+    linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, .16) 47%, transparent 58%),
+    radial-gradient(circle at 51% 40%, rgba(129, 255, 221, .3), transparent 64%),
+    repeating-linear-gradient(0deg, transparent 0 17px, rgba(129, 255, 221, .1) 18px 19px),
+    repeating-linear-gradient(90deg, transparent 0 17px, rgba(129, 255, 221, .1) 18px 19px),
     linear-gradient(146deg, #0f5a96, #073a68 52%, #09234b);
   --back-edge: rgba(129, 255, 221, .85);
   --back-inset: rgba(129, 255, 221, .16);
@@ -86,13 +90,14 @@
     radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 59, 136, .14), transparent 90%),
     #080718;
   --back-surface:
-    radial-gradient(circle at 51% 40%, rgba(255, 107, 184, .32), transparent 64%),
-    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .08) 15px 16px),
-    linear-gradient(146deg, #5e35b1, #160a36 52%, #8e24aa);
-  --back-edge: rgba(220, 205, 255, .88);
-  --back-inset: rgba(220, 205, 255, .18);
-  --back-ink: #fcf4ff;
-  --back-glow: rgba(255, 96, 178, .35);
+    linear-gradient(115deg, transparent 36%, rgba(255, 236, 170, .2) 47%, transparent 58%),
+    radial-gradient(circle at 51% 40%, rgba(214, 170, 74, .26), transparent 62%),
+    repeating-linear-gradient(-14deg, transparent 0 9px, rgba(214, 170, 74, .11) 10px 11px),
+    linear-gradient(146deg, #0c0a10, #1d150b 52%, #09080b);
+  --back-edge: rgba(228, 190, 100, .95);
+  --back-inset: rgba(228, 190, 100, .2);
+  --back-ink: #f2d98e;
+  --back-glow: rgba(228, 190, 100, .38);
   --pack-accent: #b49bff;
 }
 .booster-presentation[data-universe="vault"] {
@@ -521,9 +526,9 @@ html:has(.booster-presentation) { overflow: hidden; }
 @keyframes scene-body-fold {
   0%, 18% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0) rotateZ(0); }
   37% { opacity: 1; transform: translateY(3%) translateZ(7px) rotateX(-23deg) rotateY(4deg) rotateZ(2deg); }
-  54% { opacity: .36; transform: translate(-2%, 8%) translateZ(1px) rotateX(-13deg) rotateY(-7deg) rotateZ(-3deg); }
-  78% { opacity: .3; transform: translateY(25%) translateZ(-8px) rotateX(-25deg) rotateY(4deg); }
-  100% { opacity: .26; transform: translateY(34%) translateZ(-12px) rotateX(-28deg) rotateY(4deg); }
+  54% { opacity: .16; transform: translate(-2%, 8%) translateZ(1px) rotateX(-13deg) rotateY(-7deg) rotateZ(-3deg); }
+  78% { opacity: 0; transform: translateY(25%) translateZ(-8px) rotateX(-25deg) rotateY(4deg); }
+  100% { opacity: 0; transform: translateY(34%) translateZ(-12px) rotateX(-28deg) rotateY(4deg); }
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-glow { animation: scene-cut-light 620ms ease-out both; }
 @keyframes scene-cut-light {
@@ -623,6 +628,13 @@ html:has(.booster-presentation) { overflow: hidden; }
   color: var(--back-ink, rgba(255,228,196,.94)); font-size: clamp(40px, 13vw, 84px);
   text-shadow: none;
 }
+/* Un glyphe par univers (CardBackEmblem) ; sans univers, l'étoile. */
+.cb-memes, .cb-imgflip, .cb-anime { display: none; }
+[data-universe="memes"] .cb-star, [data-universe="imgflip"] .cb-star, [data-universe="anime"] .cb-star { display: none; }
+[data-universe="memes"] .cb-memes, [data-universe="imgflip"] .cb-imgflip, [data-universe="anime"] .cb-anime { display: inline; }
+/* Ces glyphes remplissent moins leur boîte que l'étoile : on les agrandit. */
+[data-universe="memes"] .foil-back-emblem svg, [data-universe="imgflip"] .foil-back-emblem svg, [data-universe="anime"] .foil-back-emblem svg,
+[data-universe="memes"] .reveal-back-sigil svg, [data-universe="imgflip"] .reveal-back-sigil svg, [data-universe="anime"] .reveal-back-sigil svg { transform: scale(1.4); }
 [data-card-fx="off"] .foil-material-sheen { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .foil-material-sheen { display: none; }
