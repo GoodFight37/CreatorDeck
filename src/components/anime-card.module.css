@@ -17,10 +17,6 @@
 }
 
 /* Les illustrations sont toutes en portrait (ratio ~0,67) : on remplit la carte, sans bandes sombres ni fond flou. */
-.backdrop {
-  display: none;
-}
-
 .portrait {
   z-index: 1;
   object-fit: cover;

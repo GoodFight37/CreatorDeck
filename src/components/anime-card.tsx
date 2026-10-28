@@ -8,7 +8,6 @@ export function AnimeCard({ card, compact = false }: { card: MemeCard; compact?:
   return <article className={styles.card} data-rarity={card.rarity} data-compact={compact}>
     <div className={styles.image}>
       {card.image ? <>
-        <Image className={styles.backdrop} src={card.image} alt="" fill sizes={compact ? "250px" : "(max-width: 600px) 88vw, 390px"} aria-hidden="true" />
         <Image className={styles.portrait} src={card.image} alt={card.name} fill sizes={compact ? "250px" : "(max-width: 600px) 88vw, 390px"} />
       </> : null}
       <span className={styles.foil} aria-hidden="true" />
