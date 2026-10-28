@@ -40,6 +40,26 @@ demander un second avis. Claude lit aussi [`CLAUDE.md`](CLAUDE.md).
 
 ## À chaque début et reprise de session
 
+### Démarrage rapide (commandes à lancer dans l'ordre)
+
+Ces commandes remplacent la relecture complète des documents pour une reprise
+ordinaire. Ouvre ensuite seulement les sections liées à la tâche.
+
+```bash
+git status --short
+git branch --show-current
+git rev-parse HEAD
+git ls-remote --heads origin <branche>
+bd ready
+```
+
+- Lire le **premier** checkpoint de `docs/agent-handoff.md` et le dernier message
+  de la copie active de l'échange (`CreatorDeck-Codex-vers-Claude.md` dans le
+  checkout `CreatorDeck-Codex`). Les messages plus anciens sont de l'historique.
+- Réserver un lot avant d'y toucher : `bd update <id> --claim`. Un lot réservé
+  n'est pas modifié par l'autre agent sans accord écrit dans l'échange.
+- Ne jamais toucher aux modifications non commitées d'un autre checkout.
+
 ### Exception de lecture : reprise du chantier portraits (12 octobre 2026)
 
 À la demande de Malik pour économiser le quota, **pour les seuls portraits**,
