@@ -1,3 +1,25 @@
+# Checkpoint Codex — livraison audio, reprise du 28 octobre 2026
+
+Suivi `CreatorDeck-Codex-4m4`. Source audio `87716db9`, checkpoint `e82d97df`.
+Vercel Production **READY**, SHA exact `e82d97df8f4ec52e628a42cb14d4d3101388e81d`,
+`dpl_3cT1vCPnNRwhdWSTVq1iCWe8ZWQN`, alias du jeu confirmé.
+Écoute : **https://creator-deckk.vercel.app/audio-ecoute** (sans `.html`).
+Lecture réelle des six candidates, un lecteur à la fois, passage de boucle,
+arrêt et décodage des 36 WAV mono vérifiés sur le site ; capture 375×812 relue.
+L'export `out/` exclut le labo, mais Vercel Next sert aussi `/audio-lab` ; ne pas
+confondre ces deux sorties. Aucun changement de configuration Vercel.
+
+CI initiale : trois shards E2E, 1 221 unitaires, cloud simulé et SQL jetable
+réussis ; deux assertions d'écrans audio obsolètes ont échoué. Tests corrigés
+(noms des candidates, préchargement et prise unique par verdict, mute, six
+lectures disponibles). Suite écrans complète **267/267**, 40 fichiers. Aucun
+code joueur ni asset modifié à la reprise. Nouvelle CI à relever après push.
+
+Budget confirmé par GET le 28 octobre : **2 720 consommés, 36 044 restants**,
+aucun dépassement facturé ni nouvelle génération. La piste du hub reste en place,
+le choix A1/A2/B1/B2/C1/C2 appartient à Malik. Pas d'APK locale ni validation
+auditive sur téléphone physique. Rapport : [livraison audio](audio-livraison-2026-10-27.md).
+
 # Checkpoint Codex — audio prêt, arrêt demandé pour éteindre le PC, 27 octobre 2026
 
 Demande de Malik : chantier audio complet, remplaçant le report précédent.

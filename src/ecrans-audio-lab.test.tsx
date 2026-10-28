@@ -1,5 +1,5 @@
 import { act } from "react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AudioLab } from "@/app/audio-lab/audio-lab";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { getMusicVolume, getSfxVolume, setMusicVolume, setSfxVolume } from "@/lib/sfx";
@@ -17,19 +17,31 @@ describe("laboratoire audio (développement)", () => {
     setMusicVolume(1);
     setSfxVolume(1);
   });
-  afterEach(() => banc.nettoyer());
+  afterEach(() => { banc.nettoyer(); vi.restoreAllMocks(); });
 
   it("présente les trois directions, la piste actuelle et le silence", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: false } as Response);
     await banc.monter(<AudioLab />);
     const html = banc.ecran("audio-lab");
     expect(html).toContain("Laboratoire audio");
-    expect(html).toContain("Douce et mélodique");
-    expect(html).toContain("Chaleureuse et accueillante");
-    expect(html).toContain("Minimaliste, très discrète");
+    expect(html).toContain("Clairière d’aventure");
+    expect(html).toContain("Comptoir des voyageurs");
+    expect(html).toContain("Cartes sous les étoiles");
     expect(html).toContain("Sans musique");
     expect(html).toContain("Late Night (actuelle)");
-    // Sans fichiers générés, les candidats sont annoncés, pas jouables.
+    // La fixture refuse les fichiers : ils sont annoncés, pas jouables.
     expect(html).toContain("à générer");
+  });
+
+  it("permet d'écouter les six candidates lorsque leurs fichiers sont disponibles", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true } as Response);
+    await banc.monter(<AudioLab />);
+    await vi.waitFor(() => {
+      const boutons = [...document.querySelectorAll<HTMLButtonElement>(".al-piste button")]
+        .filter(button => /^Écouter v[12]$/.test(button.textContent ?? ""));
+      expect(boutons).toHaveLength(6);
+      expect(boutons.every(button => !button.disabled)).toBe(true);
+    });
   });
 
   it("écrit les volumes dans les préférences du moteur, séparément", async () => {

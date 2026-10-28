@@ -78,12 +78,44 @@ instrumentaux et originaux, sans nom d'artiste ni imitation de thème.
 Les références `snow_day` et `springly_sprigs` restent la direction générale ;
 les anciennes propositions refusées ne sont pas remises en sélection.
 
-`/audio-lab` demeure exclu de l'export. La page statique **/audio-ecoute.html**
-fournit la comparaison publiée : six lecteurs natifs, une seule musique à la
+L'export `out/` retire `/audio-lab`. En revanche, le déploiement Next.js de
+Vercel sert aussi cette route depuis ses sorties de framework : constat réel
+du 28 octobre, sans modification de sa configuration. L'écoute conseillée est
+**[https://creator-deckk.vercel.app/audio-ecoute](https://creator-deckk.vercel.app/audio-ecoute)**,
+sans extension ; `/audio-ecoute.html` répond 404 sur Vercel. Le fichier `.html`
+reste utilisable hors ligne dans le ZIP. La comparaison publiée propose
+six lecteurs natifs, une seule musique à la
 fois, volume commun, arrêt et arrêt au passage en arrière-plan. Le laboratoire
 local réutilise les mêmes prises préparées que le moteur.
 
 ## Validation et limites
+
+### Reprise et contrôles du 28 octobre
+
+Vercel Production `READY`, SHA `e82d97df8f4ec52e628a42cb14d4d3101388e81d`,
+déploiement `dpl_3cT1vCPnNRwhdWSTVq1iCWe8ZWQN`, alias du site confirmé.
+L'accès natif par hostname fonctionne à la reprise ; le refus 403 observé
+la veille concernait la requête de liste avec l'équipe explicitée.
+
+Sur le site publié, Playwright Chromium en viewport 375×812 a lu les six MP3
+réels (31,426 s chacun), vérifié l'absence de superposition, joué le passage
+de fin de boucle, arrêté tous les lecteurs et décodé les 36 WAV mono.
+Aucun débordement horizontal ; capture examinée dans
+`reports/audio-ecoute-vercel-2026-10-28.png`. Cette preuve concerne le navigateur,
+pas l'écoute acoustique d'un téléphone physique.
+
+La CI initiale `40520674349` du code `87716db9` a réussi les 1 221 unitaires,
+les trois shards E2E, le chemin cloud simulé et les migrations jetables.
+Elle a échoué sur deux assertions d'écrans restées sur l'ancienne version :
+anciens noms des directions musicales et compteur d'oscillateurs du Tribunal.
+Les assertions vérifient maintenant les noms livrés, la disponibilité des six
+candidates, une seule prise par verdict et le silence quand les effets sont
+coupés, après préchargement comme dans l'application. **Suite écrans complète :
+267/267**, 40 fichiers, le 28 octobre. Aucun code joueur ni asset n'est modifié
+par cette correction de tests. Les bilans ci-dessous restent ceux du 27 octobre.
+
+Compte relu le 28 octobre : Starter actif, **2 720 crédits utilisés, 36 044
+restants, dépassement facturé 0**. Aucun nouvel appel de génération.
 
 Validation locale sur base `b3922daf` avec le diff audio :
 

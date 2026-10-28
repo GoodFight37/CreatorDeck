@@ -1,7 +1,9 @@
 # Roadmap CreatorDeck
 
-**Audio premium — 27 octobre 2026 (D-176) :** code poussé `87716db9`, tests locaux
-réussis (E2E 231/49 ignorés), CI et Vercel à confirmer après la pause demandée.
+**Audio premium — 28 octobre 2026 (D-176) :** effets publiés, Vercel Production
+`READY` sur `e82d97df`, écoute réelle en ligne vérifiée sur les six candidates et
+36 effets. E2E source verts en CI ; suite écrans complète corrigée : 267/267.
+Nouvelle CI de ces tests à relever. Le choix musical final attend Malik.
 36 prises acoustiques intégrées aux boosters, raretés, Atelier et récompenses ;
 6 extraits courts dans l'écoute comparative. Critères : budget cumulé protégé,
 pas de double déclenchement, réglages indépendants conservés, navigation muette,

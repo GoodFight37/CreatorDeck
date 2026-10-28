@@ -24,7 +24,7 @@ import { TribunalView } from "@/components/tribunal-view";
 import { CREATOR_BY_SLUG, type Creator } from "@/lib/catalog";
 import { EMPTY_LIVE, type LiveSnapshot, type LiveStream } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
-import { setMuted } from "@/lib/sfx";
+import { preloadSamples, sampleBuffer, setMuted } from "@/lib/sfx";
 import { dossiersDuJour } from "@/lib/tribunal";
 import type { OwnedCard, TribunalSeance } from "@/lib/game-engine";
 
@@ -32,7 +32,7 @@ const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 const JOUR = gameDay(T0);
 const JOUEUSE = "joueuse-de-test";
 
-/** Le compteur de sons du banc (oscillateurs réellement créés). */
+/** Les sources audio instrumentées par le banc, synthèse et fichiers séparés. */
 function compteur() {
   return (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } }).__sons;
 }
@@ -269,24 +269,32 @@ describe("le Tribunal des Bannis", () => {
   });
 
   it("fait entendre la grâce et le marteau, et se tait quand le son est coupé", async () => {
+    preloadSamples(["grace", "gavel"]);
+    await vi.waitFor(() => {
+      expect(sampleBuffer("grace")).not.toBeNull();
+      expect(sampleBuffer("gavel")).not.toBeNull();
+    });
     const { presider, juger } = await ouvrir();
     presider();
     const sons = compteur();
 
-    const avant = sons.oscillateurs;
+    const avant = sons.bruitages;
+    const syntheseAvant = sons.oscillateurs;
     await juger("deban");
-    const apresGrace = sons.oscillateurs;
-    expect(apresGrace, "la grâce n'a pas sonné").toBeGreaterThan(avant);
+    const apresGrace = sons.bruitages;
+    expect(apresGrace, "la grâce doit jouer une seule prise").toBe(avant + 1);
 
     await juger("ban");
-    expect(sons.oscillateurs, "le marteau n'a pas sonné").toBeGreaterThan(apresGrace);
+    expect(sons.bruitages, "le marteau doit jouer une seule prise").toBe(apresGrace + 1);
+    expect(sons.oscillateurs, "les verdicts utilisent les prises acoustiques").toBe(syntheseAvant);
 
     // L'interrupteur du joueur coupe le Tribunal comme le reste du jeu.
     setMuted(true);
-    const avantMuet = sons.oscillateurs;
+    const avantMuet = sons.bruitages;
     await juger("deban");
     await juger("ban");
-    expect(sons.oscillateurs, "le Tribunal a sonné malgré le silence").toBe(avantMuet);
+    expect(sons.bruitages, "le Tribunal a sonné malgré le silence").toBe(avantMuet);
+    expect(sons.oscillateurs).toBe(syntheseAvant);
   });
 
   it("reprend au troisième dossier quand on quitte et qu'on revient", async () => {

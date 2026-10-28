@@ -7,7 +7,9 @@ Perfect superposait également bang et signature. Les confirmations de
 Correction : motif unique par révélation, signature unique Perfect, fabrication,
 recyclage et refus raccordés aux résultats. Prises acoustiques, niveaux mesurés
 et validation navigateur suivis dans [la livraison audio](audio-livraison-2026-10-27.md).
-Statut : corrigé localement, publication et contrôle audif final à distinguer.
+Statut : publié, Vercel `READY` vérifié le 28 octobre ; 36 fichiers décodés sur
+le site. Contrôle audif sur haut-parleur physique non réalisé. Deux anciennes
+assertions de tests audio ont été corrigées ; suite écrans complète 267/267.
 La musique actuelle reste en place jusqu'au choix explicite de Malik.
 
 ## Catalogue Manga Drop incomplet — 27 octobre 2026
