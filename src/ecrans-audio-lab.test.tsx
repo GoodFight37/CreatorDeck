@@ -28,7 +28,7 @@ describe("laboratoire audio (développement)", () => {
     expect(html).toContain("Comptoir des voyageurs");
     expect(html).toContain("Cartes sous les étoiles");
     expect(html).toContain("Sans musique");
-    expect(html).toContain("Late Night (actuelle)");
+    expect(html).toContain("Collection lumineuse");
     // La fixture refuse les fichiers : ils sont annoncés, pas jouables.
     expect(html).toContain("à générer");
   });
