@@ -117,6 +117,22 @@ par cette correction de tests. Les bilans ci-dessous restent ceux du 27 octobre.
 Compte relu le 28 octobre : Starter actif, **2 720 crédits utilisés, 36 044
 restants, dépassement facturé 0**. Aucun nouvel appel de génération.
 
+La correction des tests est publiée dans `629a293aa7974a1220276e8e5824722d993fd7b7`.
+Vercel Production `READY` confirmé sur ce même SHA, déploiement
+`dpl_8CpeLci5inBwmZ3xgtFMS6Hm5DzM` et alias principal.
+[CI 40617029314](https://github.com/GoodFight37/CreatorDeck/actions/runs/40617029314) :
+qualité complète (unitaires, écrans, statique, build) réussie et SQL jetable réussi ;
+E2E/cloud simulé encore en cours au relevé. Leurs résultats restent distincts
+des trois shards verts du premier commit et de la suite locale 231/49 ignorés.
+
+ZIP final `CreatorDeck-audio-final-2026-10-28.zip` : **120 fichiers**, 13 409 129
+octets, source et tests `629a293`, patch depuis `b3922daf`, six masters musicaux,
+assets et écoute HTML hors ligne. Intégrité ZIP, absence de doublons et de secret
+vérifiées. SHA-256 :
+`7cc6505502dd0ad37ced63d102ab64b353bb58411a010a50290722f1e986821b`.
+Le choix musical reste suivi dans `CreatorDeck-Codex-brl` ; aucune candidate
+n'est adoptée automatiquement.
+
 Validation locale sur base `b3922daf` avec le diff audio :
 
 - `node --test scripts/elevenlabs-generate.test.mjs scripts/prepare-audio.test.mjs` :

@@ -1,9 +1,10 @@
 # Roadmap CreatorDeck
 
 **Audio premium — 28 octobre 2026 (D-176) :** effets publiés, Vercel Production
-`READY` sur `e82d97df`, écoute réelle en ligne vérifiée sur les six candidates et
+`READY` sur `629a293a`, écoute réelle en ligne vérifiée sur les six candidates et
 36 effets. E2E source verts en CI ; suite écrans complète corrigée : 267/267.
-Nouvelle CI de ces tests à relever. Le choix musical final attend Malik.
+Nouvelle CI : qualité complète et SQL réussis ; E2E encore en cours au relevé.
+ZIP final vérifié. Le choix musical final attend Malik (`CreatorDeck-Codex-brl`).
 36 prises acoustiques intégrées aux boosters, raretés, Atelier et récompenses ;
 6 extraits courts dans l'écoute comparative. Critères : budget cumulé protégé,
 pas de double déclenchement, réglages indépendants conservés, navigation muette,

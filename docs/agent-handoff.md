@@ -1,8 +1,9 @@
-# Checkpoint Codex — livraison audio, reprise du 28 octobre 2026
+# Checkpoint Codex — audio livré et contrôlé en ligne, 28 octobre 2026
 
-Suivi `CreatorDeck-Codex-4m4`. Source audio `87716db9`, checkpoint `e82d97df`.
-Vercel Production **READY**, SHA exact `e82d97df8f4ec52e628a42cb14d4d3101388e81d`,
-`dpl_3cT1vCPnNRwhdWSTVq1iCWe8ZWQN`, alias du jeu confirmé.
+Suivi `CreatorDeck-Codex-4m4`. Source audio `87716db9`, tests corrigés
+`629a293aa7974a1220276e8e5824722d993fd7b7`, code audité inchangé.
+Vercel Production **READY**, SHA exact `629a293aa7974a1220276e8e5824722d993fd7b7`,
+`dpl_8CpeLci5inBwmZ3xgtFMS6Hm5DzM`, alias du jeu confirmé.
 Écoute : **https://creator-deckk.vercel.app/audio-ecoute** (sans `.html`).
 Lecture réelle des six candidates, un lecteur à la fois, passage de boucle,
 arrêt et décodage des 36 WAV mono vérifiés sur le site ; capture 375×812 relue.
@@ -13,12 +14,24 @@ CI initiale : trois shards E2E, 1 221 unitaires, cloud simulé et SQL jetable
 réussis ; deux assertions d'écrans audio obsolètes ont échoué. Tests corrigés
 (noms des candidates, préchargement et prise unique par verdict, mute, six
 lectures disponibles). Suite écrans complète **267/267**, 40 fichiers. Aucun
-code joueur ni asset modifié à la reprise. Nouvelle CI à relever après push.
+code joueur ni asset modifié à la reprise.
+[Nouvelle CI 40617029314](https://github.com/GoodFight37/CreatorDeck/actions/runs/40617029314)
+sur `629a293` : **qualité complète réussie** (unitaires, écrans, statique, build),
+SQL jetable réussi ; trois shards E2E et cloud simulé encore en cours au dernier
+relevé. Les laisser finir côté GitHub, sans les annoncer verts par avance.
 
 Budget confirmé par GET le 28 octobre : **2 720 consommés, 36 044 restants**,
 aucun dépassement facturé ni nouvelle génération. La piste du hub reste en place,
 le choix A1/A2/B1/B2/C1/C2 appartient à Malik. Pas d'APK locale ni validation
 auditive sur téléphone physique. Rapport : [livraison audio](audio-livraison-2026-10-27.md).
+**ZIP final du code/tests `629a293`**, 120 fichiers, 13 409 129 octets :
+`C:/Users/Administrator/.codex/visualizations/2026/10/27/01a17d95-a0ee-7561-87d3-6e691e39e826/CreatorDeck-audio-final-2026-10-28.zip`.
+SHA-256 : `7cc6505502dd0ad37ced63d102ab64b353bb58411a010a50290722f1e986821b`.
+Archive testée sans erreur, noms uniques, contrôle d'absence de clé et `.env`.
+Les compléments de statut documentaire sont consultables dans ce checkpoint.
+Choix musical suivi séparément dans **`CreatorDeck-Codex-brl`**, question d'écoute
+transmise à Malik. Ne remplacer aucun morceau sans sa réponse ; aucun nouvel
+appel de génération. Les modifications locales préexistantes restent exclues.
 
 # Checkpoint Codex — audio prêt, arrêt demandé pour éteindre le PC, 27 octobre 2026
 
