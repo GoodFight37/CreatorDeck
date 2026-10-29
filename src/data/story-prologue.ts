@@ -1,0 +1,231 @@
+import type { StoryScript } from "../lib/story-mode";
+import { STORY_SEASON_SCENES } from "./story-season";
+
+/** Scénario écrit et contrôlé en amont. Aucune requête IA pendant la partie. */
+export const STORY_PROLOGUE: StoryScript = {
+  id: "zero-spectateur",
+  version: 4,
+  title: "Zéro spectateur",
+  subtitle: "Jusqu'à quarante décisions. Tes raccourcis ont une facture, tes promesses une mémoire.",
+  totalSteps: 40,
+  initialStats: { public: 35, energie: 65, argent: 55, confiance: 55 },
+  scenes: [
+    {
+      id: "studio", step: 0, title: "Le grand départ", speaker: "TOI", emoji: "🎙️", channel: "LIVE",
+      text: "Il est 22 h 04. Ton premier live commence dans six minutes. Ton téléphone filme en 720p. Dans ton panier, un micro que tu ne peux pas vraiment te payer.",
+      choices: {
+        left: { label: "Rester avec le téléphone", effects: { energie: 6, argent: 9, public: -3 }, addFlags: ["debut_modeste"] },
+        right: { label: "Acheter le micro", effects: { argent: -17, public: 7, energie: -3 }, addFlags: ["micro_cher"] },
+      },
+    },
+    {
+      id: "premier_chat", step: 1, title: "Une personne dans le chat", speaker: "FLO · future modo", emoji: "💬", channel: "CHAT",
+      text: "« Salut, je suis ta seule viewer. Si tu veux, je peux modérer. Mais là, tu viens de dire bonjour à ta propre caméra trois fois. »",
+      choices: {
+        left: { label: "Donner les clés à Flo", effects: { confiance: 10, energie: 5, argent: -3 }, addFlags: ["flo_modo"] },
+        right: { label: "Tout gérer seul", effects: { energie: -8, public: 5, confiance: -3 }, addFlags: ["solo"] },
+      },
+    },
+    {
+      id: "clip_risque", step: 2, title: "Le clip de trop", speaker: "NOX · streamer rival", emoji: "🔥", channel: "CLIP",
+      text: "Nox rate une action spectaculaire sur un jeu en coop. Ton chat réclame un montage humiliant pour ta chaîne vidéo. Une minute de montage peut faire décoller tes vues.",
+      choices: {
+        left: { label: "Faire un clip drôle, sans l'afficher", effects: { public: 8, confiance: 5, energie: -5 }, addFlags: ["respect_nox"] },
+        right: { label: "Le ridiculiser en public", effects: { public: 18, confiance: -14, energie: -4 }, addFlags: ["humiliation_nox", "clip_viral"] },
+      },
+    },
+    {
+      id: "premier_sponsor", step: 3, title: "Un mail à 3 h du matin", speaker: "MONA · régie publicitaire", emoji: "📨", channel: "MAIL",
+      text: "Mona te propose une campagne pour une boisson inconnue. L'argent réglerait le loyer. La marque demande d'oublier le mot « publicité ».",
+      choices: {
+        left: { label: "Refuser le placement caché", effects: { argent: -7, confiance: 12, energie: 4 }, addFlags: ["refus_sponsor"] },
+        right: { label: "Accepter sans rien dire", effects: { argent: 25, confiance: -15, public: 5 }, addFlags: ["sponsor_cache"] },
+      },
+    },
+    {
+      id: "flo_present", step: 4, requiresFlags: ["flo_modo"], title: "Le message de Flo", speaker: "FLO · modératrice", emoji: "🛡️", channel: "CHAT",
+      text: "Flo a supprimé soixante messages agressifs et rate son examen demain. « Je t'aime bien, mais je ne peux pas être la police de ton chat chaque nuit. »",
+      choices: {
+        left: { label: "Lui donner deux jours de repos", effects: { energie: -5, confiance: 12, public: -5 }, addFlags: ["flo_protegee"] },
+        right: { label: "Lui demander de tenir encore", effects: { public: 10, energie: 4, confiance: -10 }, addFlags: ["flo_epuisee"] },
+      },
+    },
+    {
+      id: "sans_modo", step: 4, title: "Le chat déborde", speaker: "FLO · spectatrice", emoji: "🧯", channel: "CHAT",
+      text: "Ton chat grossit. Flo te propose encore son aide, mais elle a vu les insultes que tu as laissées passer pendant le dernier live.",
+      choices: {
+        left: { label: "T'excuser et accepter", effects: { confiance: 10, public: -4, energie: 5 }, addFlags: ["flo_protegee"] },
+        right: { label: "Prétendre que c'est le jeu", effects: { public: 8, confiance: -12, energie: -9 }, addFlags: ["chat_toxique"] },
+      },
+    },
+    {
+      id: "invitation", step: 5, requiresFlags: ["respect_nox"], title: "Un DM inattendu", speaker: "NOX · streamer rival", emoji: "🤝", channel: "DM",
+      text: "Nox a vu ton clip. « Tu aurais pu me détruire. Merci d'avoir gardé ça drôle. Tu veux faire un duo ? »",
+      choices: {
+        left: { label: "Accepter le duo", effects: { public: 15, energie: -8, confiance: 8 }, addFlags: ["duo_nox"] },
+        right: { label: "Garder ton rythme", effects: { energie: 8, public: -3, confiance: 3 }, addFlags: ["independance"] },
+      },
+    },
+    {
+      id: "nox_revanche", step: 5, title: "Nox a vu ton clip", speaker: "NOX · streamer rival", emoji: "⚡", channel: "CLIP",
+      text: "Nox répond à ton montage sur sa propre chaîne vidéo : « Voilà comment il démarre sa carrière. » La vidéo-réaction explose et entraîne ton audience dans la dispute.",
+      choices: {
+        left: { label: "Présenter des excuses", effects: { confiance: 11, public: -9, energie: -5 }, addFlags: ["excuses_nox"] },
+        right: { label: "En faire un feuilleton", effects: { public: 17, confiance: -15, energie: -8 }, addFlags: ["guerre_nox"] },
+      },
+    },
+    {
+      id: "sponsor_retour", step: 6, requiresFlags: ["sponsor_cache"], title: "Le reçu retrouvé", speaker: "MONA · régie publicitaire", emoji: "🧾", channel: "CONTRAT",
+      text: "Une capture du contrat circule. Mona te dit de supprimer les questions du chat. Flo te demande : « On leur ment vraiment ? »",
+      choices: {
+        left: { label: "Publier le contrat et s'excuser", effects: { argent: -12, confiance: 15, public: -8 }, addFlags: ["transparence_tardive"] },
+        right: { label: "Effacer les preuves", effects: { argent: 8, public: 6, confiance: -22 }, addFlags: ["preuve_effacee"] },
+      },
+    },
+    {
+      id: "sponsor_refuse", step: 6, title: "La proposition propre", speaker: "MONA · régie publicitaire", emoji: "💼", channel: "MAIL",
+      text: "La campagne cachée est partie chez un concurrent. Mona revient avec une offre plus petite, clairement étiquetée. Ton loyer approche.",
+      choices: {
+        left: { label: "Accepter en étant transparent", effects: { argent: 13, confiance: 6, energie: -6 }, addFlags: ["sponsor_clair"] },
+        right: { label: "Continuer sans sponsor", effects: { argent: -10, energie: 5, confiance: 8 }, addFlags: ["sans_marque"] },
+      },
+    },
+    {
+      id: "flo_au_bord", step: 7, requiresFlags: ["flo_epuisee"], title: "Flo ne répond plus", speaker: "FLO · modératrice", emoji: "🌙", channel: "DM",
+      text: "Ton chat attend Flo. Son dernier message date d'hier : « Je dois dormir. Je te l'avais dit. » Tu retrouves trente signalements sans réponse.",
+      choices: {
+        left: { label: "Fermer le chat et la rappeler", effects: { public: -9, energie: 6, confiance: 12 }, addFlags: ["reconciliation_flo"] },
+        right: { label: "Remplacer Flo sans la prévenir", effects: { public: 6, confiance: -14, energie: -8 }, addFlags: ["rupture_flo"] },
+      },
+    },
+    {
+      id: "flo_soutien", step: 7, requiresFlags: ["flo_protegee"], title: "Le retour de Flo", speaker: "FLO · modératrice", emoji: "💜", channel: "CHAT",
+      text: "Flo revient après deux jours. « J'ai réussi mon examen. Et j'ai préparé des règles de chat. Tu les affiches, cette fois ? »",
+      choices: {
+        left: { label: "Mettre les règles en avant", effects: { confiance: 13, energie: 5, public: -5 }, addFlags: ["communaute_saine"] },
+        right: { label: "Les garder en coulisse", effects: { public: 6, confiance: -5, energie: -3 }, addFlags: ["regles_discretes"] },
+      },
+    },
+    {
+      id: "chat_nuit", step: 7, title: "Le grand silence", speaker: "TOI", emoji: "🌑", channel: "CHAT",
+      text: "Tu reçois des messages en rafale, puis plus rien. Ta communauté attend de savoir si tu vas enfin fixer des limites.",
+      choices: {
+        left: { label: "Poser des règles claires", effects: { confiance: 12, public: -4, energie: 3 }, addFlags: ["communaute_saine"] },
+        right: { label: "Laisser faire la foule", effects: { public: 8, confiance: -12, energie: -7 }, addFlags: ["chat_toxique"] },
+      },
+    },
+    {
+      id: "agence_flo", step: 8, requiresFlags: ["communaute_saine", "flo_protegee"], title: "Les clés du studio", speaker: "FLO · modératrice", emoji: "🔑", channel: "DM",
+      text: "Flo a réuni trois bénévoles pour tenir le chat sans s'épuiser. Mona, elle, propose de racheter les droits sur tes rediffusions. « Une équipe, ça se construit. Une audience, ça se vend », souffle Flo.",
+      choices: {
+        left: { label: "Construire un collectif avec Flo", effects: { confiance: 12, energie: 8, argent: -9, public: -3 }, addFlags: ["collectif_flo", "libre"] },
+        right: { label: "Vendre les rediffusions à Mona", effects: { argent: 19, public: 5, confiance: -8, energie: -5 }, addFlags: ["agence", "catalogue_vendu"] },
+      },
+    },
+    {
+      id: "agence_nox", step: 8, requiresFlags: ["duo_nox"], title: "La chaîne à deux voix", speaker: "NOX · streamer rival", emoji: "🎙️", channel: "DM",
+      text: "Votre duo a attiré une agence. Elle veut vous signer ensemble, mais le contrat autorise l'un de vous à diffuser sans l'autre. Nox demande : « On est partenaires, ou juste une affiche ? »",
+      choices: {
+        left: { label: "Négocier deux contrats indépendants", effects: { confiance: 9, argent: -8, energie: -4 }, addFlags: ["libre", "pacte_nox"] },
+        right: { label: "Signer le contrat commun", effects: { argent: 20, public: 9, confiance: -9, energie: -9 }, addFlags: ["agence", "contrat_duo"] },
+      },
+    },
+    {
+      id: "agence", step: 8, title: "L'offre qui change tout", speaker: "MONA · agent artistique", emoji: "📑", channel: "CONTRAT",
+      text: "Une agence t'offre un contrat d'exclusivité : argent assuré, calendrier imposé, vidéos validées par un comité que tu ne connais pas.",
+      choices: {
+        left: { label: "Rester propriétaire de la chaîne", effects: { confiance: 8, argent: -7, energie: 3 }, addFlags: ["libre"] },
+        right: { label: "Signer les yeux ouverts", effects: { argent: 23, energie: -11, confiance: -8, public: 9 }, addFlags: ["agence"] },
+      },
+    },
+    {
+      id: "double_crise", step: 9, requiresFlags: ["guerre_nox", "preuve_effacee"], title: "Deux affaires, une caméra", speaker: "NOX · live / MONA · téléphone", emoji: "⚠️", channel: "LIVE",
+      text: "Nox ouvre un direct sur votre conflit. Au même instant, le contrat publicitaire que tu avais fait disparaître réapparaît. Flo t'envoie : « Les gens méritent mieux que deux mensonges. »",
+      choices: {
+        left: { label: "Tout reconnaître et couper le direct", effects: { confiance: 20, public: -15, argent: -10, energie: 2 }, addFlags: ["aveu_double"] },
+        right: { label: "Accuser Nox d'avoir truqué le contrat", effects: { public: 14, confiance: -22, energie: -10 }, addFlags: ["double_mensonge"] },
+      },
+    },
+    {
+      id: "nox_derniere", step: 9, requiresFlags: ["guerre_nox"], title: "La guerre des clips", speaker: "NOX · streamer rival", emoji: "🥊", channel: "LIVE",
+      text: "Nox annonce un live « vérités » sur toi. Tes abonnés réclament une riposte plus violente encore. Ton pouce flotte sur « publier ».",
+      choices: {
+        left: { label: "Arrêter le conflit", effects: { public: -12, confiance: 17, energie: 6 }, addFlags: ["paix_nox"] },
+        right: { label: "Lancer un dernier clash", effects: { public: 18, confiance: -18, energie: -12 }, addFlags: ["escalade_finale"] },
+      },
+    },
+    {
+      id: "sponsor_scandale", step: 9, requiresFlags: ["preuve_effacee"], title: "Les preuves reviennent", speaker: "FLO · dans le chat", emoji: "📸", channel: "CHAT",
+      text: "Les captures que tu croyais supprimées réapparaissent. Flo t'envoie : « Une vérité effacée est toujours une vérité. »",
+      choices: {
+        left: { label: "Reconnaître la faute en direct", effects: { public: -10, confiance: 16, energie: -8 }, addFlags: ["aveu"] },
+        right: { label: "Accuser un montage", effects: { public: 8, confiance: -19, argent: -5 }, addFlags: ["mensonge_final"] },
+      },
+    },
+    {
+      id: "retour_souvenir", step: 9, title: "Le premier abonné", speaker: "FLO · spectatrice", emoji: "📼", channel: "ARCHIVE",
+      text: "Flo retrouve une capture de ton tout premier live : une chaise bancale, un spectateur et un message « Bienvenue ». Elle demande si tu reconnais encore la personne à l'écran.",
+      choices: {
+        left: { label: "Revoir la vidéo avec le chat", effects: { confiance: 12, energie: 6, public: -4 }, addFlags: ["souvenir"] },
+        right: { label: "Préparer plutôt un gros événement", effects: { public: 12, argent: -8, energie: -10 }, addFlags: ["spectacle"] },
+      },
+    },
+    {
+      id: "flo_alliee_final", step: 10, requiresFlags: ["flo_protegee", "communaute_saine"], title: "Le message épinglé", speaker: "FLO · modératrice", emoji: "🛡️", channel: "CHAT",
+      text: "Pendant que tu prépares le premier bilan, Flo épingle les règles que vous avez écrites ensemble. « Tu m'as laissé souffler quand j'en avais besoin. Cette fois, je peux tenir le chat. Mais toi, tu dois aussi tenir debout. »",
+      choices: {
+        left: { label: "Lui confier le direct et te reposer", effects: { energie: 13, confiance: 7, public: -5 }, addFlags: ["flo_pilier"] },
+        right: { label: "Assurer le direct à deux", effects: { public: 10, energie: -8, confiance: 6 }, addFlags: ["duo_flo"] },
+      },
+    },
+    {
+      id: "nox_duo_final", step: 10, requiresFlags: ["duo_nox"], title: "La proposition de Nox", speaker: "NOX · en appel", emoji: "🎧", channel: "DM",
+      text: "Nox te propose un duo avant le bilan. Il se souvient du clip que tu avais choisi de ne pas transformer en humiliation. « On peut partager la scène sans se voler la lumière. »",
+      choices: {
+        left: { label: "Partager le direct avec Nox", effects: { public: 11, energie: -7, confiance: 8 }, addFlags: ["nox_allie_final"] },
+        right: { label: "Le remercier et préserver ta pause", effects: { energie: 12, confiance: 4, public: -4 }, addFlags: ["nox_respecte_final"] },
+      },
+    },
+    {
+      id: "course", step: 10, title: "La semaine du premier bilan", speaker: "TOI", emoji: "⏰", channel: "LIVE",
+      text: "Ton téléphone vibre même quand personne n'écrit. Tu peux tenir une semaine de plus, ou laisser une soirée sans caméra.",
+      choices: {
+        left: { label: "Couper un soir et retrouver tes proches", effects: { energie: 17, public: -7, confiance: 6 }, addFlags: ["pause"] },
+        right: { label: "Streamer chaque soir", effects: { public: 17, energie: -19, argent: 10 }, addFlags: ["marathon"] },
+      },
+    },
+    {
+      id: "finale_collectif", step: 11, requiresFlags: ["collectif_flo"], title: "Les voix derrière la caméra", speaker: "FLO · collectif", emoji: "🎛️", channel: "LIVE",
+      text: "Flo passe le micro aux bénévoles. Chacun raconte ce qu'il a apporté à la chaîne. Une marque propose de financer le collectif, mais veut le nom de Flo sur une affiche sans lui demander son avis.",
+      choices: {
+        left: { label: "Laisser Flo décider de sa place", effects: { confiance: 14, energie: 6, argent: -6 }, addFlags: ["collectif_autonome", "final_humain"] },
+        right: { label: "Accepter l'offre pour toute l'équipe", effects: { argent: 18, public: 8, confiance: -12, energie: -5 }, addFlags: ["collectif_commercial", "final_spectacle"] },
+      },
+    },
+    {
+      id: "finale_pacte", step: 11, requiresFlags: ["pacte_nox"], title: "Deux directs, un seul public", speaker: "NOX · streamer partenaire", emoji: "📡", channel: "LIVE",
+      text: "Les deux chaînes lancent leur direct en même temps. Le chat demande qui a gagné. Nox t'envoie : « On avait promis de ne pas faire de l'autre un adversaire. »",
+      choices: {
+        left: { label: "Partager les revenus et le générique", effects: { confiance: 13, argent: -6, public: 5 }, addFlags: ["pacte_tenu", "final_humain"] },
+        right: { label: "Réserver l'annonce à ta chaîne", effects: { public: 16, argent: 10, confiance: -15 }, addFlags: ["pacte_brise", "final_spectacle"] },
+      },
+    },
+    {
+      id: "finale_collective", step: 11, requiresFlags: ["communaute_saine"], title: "Le premier bilan", speaker: "FLO · équipe de modération", emoji: "🫶", channel: "LIVE",
+      text: "Le soir du premier bilan, Flo lance le chat : « On ne vient plus seulement pour les chiffres. On vient pour ce qu'on construit ici. » La caméra est prête.",
+      choices: {
+        left: { label: "Faire un live tranquille avec eux", effects: { confiance: 12, energie: 8, public: 4 }, addFlags: ["final_humain"] },
+        right: { label: "Transformer la soirée en show", effects: { public: 17, energie: -11, argent: -6 }, addFlags: ["final_spectacle"] },
+      },
+    },
+    {
+      id: "finale", step: 11, title: "Tout est en direct", speaker: "TOI", emoji: "🔴", channel: "LIVE",
+      text: "Tu es seul devant le bouton « Démarrer ». Tu as de l'audience, des factures et quelques regrets. Quel sera le ton de ton premier bilan public ?",
+      choices: {
+        left: { label: "Dire la vérité sur cette année", effects: { confiance: 15, energie: 5, public: -5 }, addFlags: ["final_humain"] },
+        right: { label: "Faire le plus gros show possible", effects: { public: 19, energie: -13, argent: -8 }, addFlags: ["final_spectacle"] },
+      },
+    },
+    ...STORY_SEASON_SCENES,
+  ],
+};

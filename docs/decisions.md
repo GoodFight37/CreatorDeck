@@ -1,3 +1,20 @@
+## D-189 — 29 octobre 2026 : intégrer Histoire dans CreatorDeck, sans application séparée
+
+Malik autorise explicitement les fusions #27 puis #24 et refuse l'APK Histoire
+séparée : « on met tout dans CreatorDeck ». La route `/histoire` rejoint le même
+export web et Android. Aucun accès depuis le menu principal n'est ajouté dans
+ce lot, conformément au périmètre demandé ; le Tribunal reste accessible.
+Le workflow `histoire-apk-preview.yml`, le suffixe `.histoire`, son libellé et
+le drapeau `NEXT_PUBLIC_STORY_ANDROID_PREVIEW` ne sont pas retenus. L'identifiant,
+la signature, la version et le workflow APK de test de main restent inchangés.
+Le workflow WebKit Histoire reste un contrôle séparé, sans publication d'APK.
+Cette décision remplace les instructions de prévisualisation Android et de
+navigation de la passation Histoire historique, conservée ci-dessous.
+Les deux côtés des conflits documentaires et toutes les notes de version sont
+conservés ; D-179/D-180, sons d'origine, Binder muet et performances mobiles restent.
+Aucune règle de tirage, booster, économie, jeton ou migration Supabase ne change.
+Les validations sont consignées au checkpoint d'intégration, sans preuve Redmi.
+
 ## D-180 — 29 octobre 2026 : carte sans métal, rareté au contour
 
 Malik juge la plaque métallisée sous le portrait « cheap », trop de matières
@@ -131,6 +148,137 @@ palette violette et rose cohérente avec le dos des cartes. Le SVG demeure la
 source et le WebP est rendu par le script existant. Vérification ciblée : E2E
 Anime bureau/téléphone avec dimensions du média et variables CSS. Aucune règle
 de tirage, donnée de collection ou APK ne change.
+
+## D-188 — 27 octobre 2026 : revue des ressources de Papers, Please et finition du dossier CreatorDeck
+
+Deux archives utilisateur du même jeu PC comparées sans exécuter le binaire : `PapersPlease.rar` (ancienne) et `PapersPlease.zip` (nouvelle), toutes deux contenant 56 fichiers réels identiques (chemins/tailles/CRC32), aucun ajout après lancement. Jeu Unity IL2CPP (fichiers GameAssembly.dll et global-metadata.dat), version `1.4.11.124`. Les ressources embarquées illustrent des familles d'objets distinctes : documents, registre de règles, reçus, outils de recherche, boutons de justification et tampons, mais leurs textures/code ne sont **pas** copiés. Le fichier ZIP de localisation française (`StreamingAssets/loc/fr.zip`) regroupe 134 images, dont des gabarits de plusieurs types de papiers. Ces observations guident la scénographie, pas une reprise de leur habillage propriétaire.
+
+Évolution du dossier CreatorDeck initié en D-187 : 8 → 13 dossiers, ajout de l'archive avec pseudonyme de Flo, bilan des dons avec frais, charte du collectif, ligne manquante sur le relevé de Nox et clause de silence de Mona. Chaque paire et sa conclusion sont cohérentes avec une scène existante ; les papiers sont désormais différenciés du plateau sombre par une teinte de dossier beige originale, coins graphiques, numérotation et état de sélection 0/2. Comparer des documents ne modifie jamais la sauvegarde ni l'issue. Boutons de choix inchangés. Tests : 13 dossiers vérifiés par Vitest et interaction à 320px qui vérifie aussi que localStorage ne change pas à l'inspection. CI complète à contrôler sur le SHA de ce commit, surtout Playwright du nouveau scénario.
+
+## D-187 — 27 octobre 2026 : inspection facultative des preuves, sans copier Papers, Please
+
+Le mode Histoire conserve ses 40 décisions binaires et ses 4 jauges (inspiration Reigns). Pour donner à certains contrats et scandales une vraie action de joueur, création d'une petite mécanique de **comparaison de deux pièces parmi trois**, inspirée du principe d'examen de documents de Papers, Please (la source de Lucas Pope décrit son adaptation tactile). Tous les dossiers sont écrits spécifiquement pour des scènes CreatorDeck existantes (premier sponsor, contrat publicitaire, clause d'exclusivité, contrat fantôme, dates de captures, dons, offre de live final). Bonne paire : explication sans spoiler des choix futurs ; mauvaise paire : aucun indice accordé et nouvelle tentative libre. Les boutons sous la carte restent accessibles et le dossier est fermé par défaut : le joueur ne doit jamais être obligé de lire ni de résoudre pour avancer.
+
+Implémentation `src/lib/story-inspection.ts` (données et vérification pures) et `src/components/story-inspection-desk.tsx` (sélection accessible, aria-pressed, feedback status), insérée **après les boutons de décision**, afin de ne pas changer la position initiale du swipe. Aucune nouvelle sauvegarde, flag ou altération de l'histoire ; zéro image, texte, code, marque ou aspect d'interface de l'œuvre tierce récupéré. Unitaires : vérification des indices, de l'absence de spoilers, des trois pièces uniques et des ID existants. Playwright à 320×568 : mauvaise comparaison, bonne comparaison, absence d'avancement avant choix et changement de scène après. Pas de fusion vers `main`, pas de déploiement avant levée du quota Vercel.
+
+## D-186 — 27 octobre 2026 : analyse native des gestes de Reigns et nouvelle sensation tactile CreatorDeck
+
+Analyse statique du `lib/arm64-v8a/libil2cpp.so` de l'APK Reigns fourni et appariement avec les RVA du `types.cs` généré par Il2CppInspector : `InputAct.CheckSlide` 0x00F4B4CC, `CheckUp` 0x00F4A8B4, `CheckBounds` 0x00F4AA60, `CardAct.LerpToPos` 0x00F054CC, `SlerpToPos` 0x00F05544. Le binaire ARM64 montre un seuil horizontal de `2 × stopamo` dans `CheckBounds`, une temporisation de 0,05 s dans `CheckUp` et une interpolation clampée à 0..1. Une partie des transitions est liée au pas de temps ; les signatures seules n'en révèlent pas toute la sensation. Fichiers natifs tiers non intégrés, non exécutés, non publiés dans le dépôt.
+
+Implémentation **originale** CreatorDeck d'un amortissement exponentiel de la translation sur ≤600 px, plafonné à 48 px, angle plafonné à 3,6 degrés, durée de lancer bornée selon la vitesse de relâchement et retour doux lorsque le geste est annulé. Les gestes gardent les seuils de validation **inchangés** (64 px, flick rapide à ≥56 px), la prévisualisation est sur le plateau fixe. Aucune nouvelle dépendance, moteur narratif, scènes, jauges, économie, stockage V4, Supabase ou production modifiés. Tests unitaires de bornes/symétrie/durée ; scénario Playwright tactile mobile d'annulation et validation. Les comportements réels Android demandent une vérification de rendu sur appareil/émulateur distincte de Playwright.
+
+## D-185 — 27 octobre 2026 : feedback de swipe ancré sur le plateau (Reigns, référence d'ergonomie)
+
+Sur capture réelle d'un Redmi, les textes des choix sortaient de l'écran car les cartouches étaient enfants de la carte transformée. Sur PC, la largeur disponible masquait ce défaut. Décision : ancrer les deux cartouches dans une couche absolue du **plateau non transformé** et les centrer, tout en conservant le seuil de décision et les choix vrais sur les boutons. Sur écran de 600 px ou moins, amortir uniquement la translation et la rotation de la carte en cours de geste ; le déplacement brut continue de déclencher les seuils (64 px, flick rapide). Conserver le véritable envol uniquement après confirmation.
+
+Un appui simple ne doit pas modifier l'état `data-dragging` et ne doit pas interrompre la transition d'entrée. La première transition n'anime plus l'opacité, évitant la vision fugace de la carte arrière. Pendant le geste, forcer la face opaque ; les murmures supplémentaires du chat sont cachés sur téléphone pour laisser la prévisualisation lisible. Tests ciblés ajoutés à 320 et 390 px : géométrie du cartouche des deux côtés, absence de défilement latéral, annulation, opacité au contact, ancienne carte intacte.
+
+Le rapport de l'APK Reigns (Unity IL2CPP, archives tierces non exécutées) ne donne pas de CSS à copier. La correction s'appuie sur les captures joueur et le DOM existant de CreatorDeck, sans reprendre de code ou d'illustrations tiers. Aucune scène, jauge, sauvegarde V4, moteur, économie, base ni `main` modifiés ; contrôler la CI et les captures du nouveau SHA avant validation native.
+
+## D-184 — 27 octobre 2026 : décor de carrière et murmure discret du chat, PR #24
+
+Suite à la passation Gemini V2, le mode Histoire conserve ses 40 décisions, 84 scènes, neuf fins, quatre jauges, et sauvegarde locale V4 (flags : `string[]`, non le `Record` proposé dans l'audit externe). Les idées de statuts actifs, coûts automatiques par tour, scripts imposés aux semaines 8/24 et remplacement du thème graphique ont été rejetées : elles exigeraient une nouvelle version narrative ou contrediraient les règles existantes.
+
+Deux ajouts **purement visuels** sont retenus : (1) lors d'un geste en direct LIVE, une seule micro-réaction neutre apparaît sur le flanc actif du décor, sans spoiler l'effet, sans nouveau panneau ni nouvelle hauteur ; pas d'effet en CHAT, DM, CLIP, CONTRAT, MAIL ou ARCHIVE ; (2) des accessoires SVG originaux distinguent un début modeste, une équipe et une régie selon l'étape et l'argent disponibles. Le décor avancé n'est donc pas automatiquement offert à une carrière financièrement fragile. Pas d'accès à des médias externes, pas de boucle IA et pas de nouvelle donnée persistée.
+
+Tests ajoutés : calcul pur des seuils de décor, premier direct à 320×568 avec glissement annulé et disparition du murmure en CHAT, absence de débordement. Vérifier sur le nouveau SHA les suites CI/Playwright, puis les captures Android/iOS avant de déclarer les détails visuels terminés. PR reste brouillon : aucune fusion, main, production, économie, Supabase ni mise à jour de sauvegarde.
+
+## D-183 — 27 octobre 2026 : mémoire narrative renforcée sans réécrire la saison
+
+Après analyse du rapport Gemini et du moteur réel de la PR #24, six conséquences déjà mémorisées sont rendues visibles aux changements d'acte : collecte vérifiée, archives publiées trop tôt, charte du collectif, studio loué, source de Lina menacée et contrôle éditorial de l'agence. Ce sont des échos narratifs, **pas** de nouvelles scènes, jauges ou contraintes de gameplay. Ils utilisent exclusivement les drapeaux existants, aux actes où leur choix peut déjà avoir eu lieu.
+
+Préserver le maximum de deux échos par interlude et la priorité à l'acte le plus récent ; aucun texte ne doit annoncer une conséquence avant le choix source. La sauvegarde V4, le moteur, les 84 scènes et les neuf fins restent inchangés. Test ciblé de présence, d'absence de spoiler, de limite à deux et d'absence de mutation ajouté. Cette passe n'implémente ni chat réactif au swipe (à évaluer visuellement) ni économie/récompenses (hors périmètre). GitHub CI et captures natives à vérifier sur le nouveau SHA, PR #24 toujours en brouillon, aucune fusion.
+
+## D-182 — 27 octobre 2026 : neuf dénouements dessinés et personnages reconnus à la rencontre
+
+Les neuf fins du mode Histoire partageaient une icône LIVE générique. Chaque issue possède une gravure vectorielle originale : écran éteint, batterie, facture, chat censuré, surexposition, étoile, pousse, studio et continuité du direct. Le moteur, les conditions de fin, les effets et les sauvegardes V4 ne changent pas.
+
+Le carnet remplace les monogrammes par les portraits SVG disponibles. Les protagonistes sont révélés uniquement après une scène réellement parcourue ou la décision correspondante, sans spoiler. Le volet journal se referme après chaque décision pour éviter de masquer le prochain dilemme. Couverture Playwright à 320 px, capture du dénouement à 390 px et tests unitaires sur les rencontres prévus.
+
+Changements exclusivement en PR #24 brouillon : aucun changement sur main, production, Supabase, cartes, économie ni audio. Validation Android/iPhone physique toujours indisponible.
+
+## D-181 — 27 octobre 2026 : confort de lecture des deux décisions
+
+Les captures Playwright 320/390 du commit `7f747c0` montrent des choix correctement placés mais une typographie trop petite, héritée des règles compactes (11 px). Les deux boutons sont agrandis à au moins 62 px de haut ; direction à 11 px et libellé principal à au moins 12 px sur 320, 13 px sur 390. Les détails du portrait et le geste restent inchangés. Test d'écran ciblé sur les deux formats ; contrôler le nouveau SHA avant validation. Aucun changement global à la navigation ou aux autres modes.
+
+## D-180 — 27 octobre 2026 : priorité à la mémoire récente et paix reconnue
+
+Après ajout des échos et relations sur la PR #24, audit logique : la liste fixe des échos favorisait toujours deux souvenirs du premier acte, même si des événements plus récents existaient. Décision : prioriser les règles par acte le plus récent (ordre trié une seule fois au chargement), puis conserver le maximum de deux histoires distinctes. Le journal de Nox reconnaît aussi le drapeau `paix_nox` qui apaise une guerre antérieure, sans supprimer l'historique de rivalité. Tests explicites du classement et de la paix.
+
+Correctif narratif d'interface, sans nouveau drapeau, changement du moteur, édition des scènes, récompense ou changement de sauvegarde V4. Ne pas fusionner ; la CI générale et WebKit du nouveau SHA sont requises avant validation.
+
+## D-179 — 27 octobre 2026 : carte relationnelle dans le journal de bord
+
+La continuité du mode Histoire ne doit pas seulement apparaître aux fins et changements d'acte : le joueur peut relire les conséquences au fil des chapitres. `storyBonds` établit un état de relation descriptif depuis des drapeaux déjà écrits par les scènes (Flo, Nox, Mona, Lina) ; aucun personnage non rencontré n'est affiché et aucun nouveau score n'est inventé. Les situations contradictoires privilégient les événements récents de réparation quand ils sont documentés (notamment réconciliation après rupture).
+
+L'interface se limite au journal facultatif (et au journal final) pour ne pas alourdir le HUD permanent ni forcer des chiffres secrets. Monogrammes graphiques de la famille CreatorDeck, résumés courts, cibles et textes accessibles, test unitaire et scénario Playwright sur sauvegarde réelle rejouée. Les enjeux économiques, le moteur, les sauvegardes V4, les scènes et le récit d'origine restent intacts. Validation native encore requise.
+
+## D-178 — 27 octobre 2026 : scénographie des cartes et conséquences rappelées
+
+Sur la PR #24 seulement, chaque canal de diffusion reçoit des accessoires de plateau en SVG local : projecteurs de LIVE, bulles de CHAT/DM, feuilles et annotations de MAIL/CONTRAT, bandes d'ARCHIVE et cadre de CLIP. Les portraits SVG existants sont enrichis d'accessoires lisibles (Flo, Nox, Mona, Lina et la communauté). Le seuil de validation d'une carte donne un contour positif. La réserve GPU `will-change` devient limitée au geste et à la sortie plutôt que permanente.
+
+Le moteur, les scènes et les effets ne sont pas modifiés. `storyActEchoes` dérive deux rappels maximum de drapeaux d'histoire authentifiés, seulement aux transitions des actes II à V. Ils ne sont ni des bonus ni des anticipations : uniquement des souvenirs d'actions réellement prises, sans nouvel état dans les sauvegardes V4. Tests unitaires Chromium/WebKit et capture d'acte II ajoutés. Contrôler les preuves du SHA final, sur navigateur puis appareil natif. Aucun appel Work/Codex, média réseau, SQL, économie ou modification de `main`. Ponytail indisponible ; recommandations React Vercel appliquées.
+
+## D-177 — 27 octobre 2026 : portrait diptyque cadré au moniteur
+
+Après récupération de la vraie capture Playwright `scene-double-crise-390.png` du commit `cafe79a`, les deux protagonistes étaient bien présents, mais leurs bustes occupaient la partie basse du moniteur, laissant une grande zone vide dans la partie supérieure. L'image à 320 px était moins touchée : l'ancienne taille dépendait de la largeur de chaque demi-panneau et non de la hauteur de la scène.
+
+Décision : dimensionner chacun des deux bustes SVG à 96 % de la hauteur du moniteur, conserver les demi-panneaux comme cadrage et la lisibilité des deux visages, sans changer la scène, le texte ou les effets. Tester la hauteur réellement rendue (au moins 90 % de celle du moniteur) à 320 et 390 px et joindre les deux nouvelles captures automatiques dans l'artefact GitHub du shard Playwright.
+
+Ce changement vient d'un défaut visuel constaté sur capture et non d'un ajustement arbitraire. Aucun effet sur la sauvegarde V4, la production, le mode de collection ni `main`. À vérifier sur la nouvelle CI et sur appareil mobile réel.
+
+## D-176 — 27 octobre 2026 : double crise en portrait double
+
+Défaut identifié à la lecture de `StoryPortrait` : la scène `double_crise` affichait bien « NOX + MONA » en légende mais passait `character="duo"` à un portrait qui tombait dans le cas générique « Toi ». Cela faisait disparaître les deux protagonistes précisément au moment de leur confrontation.
+
+Décision : composer les portraits SVG déjà originaux de Nox et Mona dans deux panneaux juxtaposés, chacun gardant sa palette de personnage. Aucun nouveau média, ressource, donnée narrative, texte de scène ou effet chiffré. Ajouter des assertions Playwright sur les deux images SVG visibles, une capture 320 px et une capture 390 px au cours du parcours de crise, pour pouvoir examiner la composition après rendu.
+
+Ce lot est limité au mode Histoire en PR #24, avec note joueur, tests et documentation. Préserver la sauvegarde V4 et les autres modules. Contrôler la CI du commit exact et ne pas déduire la qualité physique d'un rendu navigateur simulé.
+
+## D-175 — 27 octobre 2026 : geste cadencé et lisibilité du HUD Histoire
+
+Constat sur la PR #24 et sa capture Playwright WebKit 390 px (commit `f58a80b`) : le `pointermove` réactualisait React à chaque événement, potentiellement plusieurs fois entre deux images ; le HUD descendait à 39 px de hauteur de cible à 320 px ; le nom d'une jauge et une mission dépliée pouvaient rester ouverts pendant la scène suivante.
+
+Décision : regrouper les coordonnées du doigt avec au plus un `requestAnimationFrame` en attente, annuler la frame à la fin du geste et au démontage, conserver les seuils et le verrou de choix existants, et ajouter une élévation légère (4 px maximum) pendant l'inclinaison. Réserver `will-change` du décor au geste actif. Cibles des quatre emblèmes à 44 px minimum et mission recréée à chaque chapitre pour éviter un panneau abandonné sur le récit suivant. L'inspection des jauges se referme après décision ; un filet intérieur discret précise le dos de carte.
+
+Aucun changement du moteur, des scènes, effets, objectifs, fins, sauvegardes V4, audio, économie ni autre mode. Scénarios Playwright Chromium/WebKit à 320 px ajoutés ; la CI au SHA exact et la revue Android/iOS réelle restent des contrôles distincts. Ponytail absent des skills accessibles ; guide React Best Practices de Vercel consulté.
+
+## D-174 — 27 octobre 2026 : tableau de jeu compact, objectifs et prévisualisation neutre
+
+Référence utilisateur : capture Reigns avec les quatre emblèmes au centre, un compteur de temps à gauche, un objectif de partie à droite et des points indiquant **quelles jauges seront affectées**, sans dévoiler si elles gagnent ou perdent. Choix retenu : quatre pictogrammes au centre du HUD sans texte visible permanent, épisode à gauche, mission facultative à droite. Un appui sur une jauge affiche son nom et sa valeur ; ses libellés restent annoncés aux lecteurs d'écran.
+
+Les points neutres au-dessus des emblèmes remplacent les barres vertes/rouges et les indices de direction pendant le glissement. Les effets restent exacts et visibles **après** validation. Une jauge réellement plafonnée et inchangée ne signale aucun effet fictif. Les boutons alternatifs ne divulguent plus les directions de variation.
+
+Cinq objectifs courts accompagnent les cinq actes : survivre au premier direct, protéger la confiance, conserver l'énergie, sécuriser l'argent, terminer la saison. Ils sont dérivés à partir des étapes et des jauges, **non persistés dans la sauvegarde V4** ; leurs résultats apparaissent aux passages d'acte et ne modifient ni économie, ni scène, ni issue. Il ne s'agit pas encore d'une progression de plusieurs heures.
+
+Deux dos de carte sous la scène restent cachés, avec estampille CD/Histoire. Tous les changements demeurent dans le périmètre d'UI pilote PR #24 et conservent le mode audio global pour plus tard.
+
+## D-173 — 27 octobre 2026 : ADN visuel et cartes tactiles mobiles du mode Histoire (PR #24)
+
+Retour utilisateur : l'expérience était un questionnaire tactile sans personnalité ; les symboles de jauges et les portraits paraissaient génériques. Priorité à un **langage visuel propre à CreatorDeck** plutôt qu'à davantage de scènes. Décision : réemployer les couleurs Pocket et la matière « studio / carton / diffusion » de `DESIGN.md`, mais dessiner quatre emblèmes de jauge en SVG (médaillon à coins coupés) et des estampilles de canal. Les types LIVE, CHAT, CLIP et CONTRAT ont des textures locales différentes. Les personnages fictifs possèdent plusieurs expressions selon l'ambiance ; le plateau et la pile de cartes réagissent au déplacement du doigt.
+
+Geste : conserver le seuil et le verrou anti-double validation, rendre l'empilement visible, proposer un retour léger facultatif par `navigator.vibrate`, et afficher les conséquences immédiates sous forme de jetons. Ne pas ajouter de son local ni de composant payant : l'audio sera mutualisé avec le jeu complet. Protéger `prefers-reduced-motion` **sans désactiver le mouvement fonctionnel de la carte**. Maintenir les deux boutons, le clavier, les libellés accessibles des jauges et les sauvegardes V4.
+
+Le skill Vercel React Best Practices est accessible et a servi pour la mémoïsation des composants visuels ; Ponytail est absent du catalogue disponible, donc non exécuté. Ne pas confondre déploiement de prévisualisation, vérification Playwright/CI et revue réelle sur téléphone. Pas de fusion, d'effet économique, de récompense, de SQL ou de modification de `main`.
+
+## D-172 — 26 octobre 2026 : identité visuelle du mode Histoire (PR #24 uniquement)
+
+Le prototype narratif fonctionnait mais ressemblait encore à un tableau de bord. Conserver les tokens et polices du design CreatorDeck et redonner la priorité à **la carte événement** : décor de studio composé en CSS local, bord de carte lié au protagoniste (Toi, Flo, Nox, Mona), speaker toujours écrit explicitement, jauges compactes, lecture des conséquences et deux vrais boutons de choix. Pas de sprites téléchargés, de dépendance graphique, d'animations perpétuelles ou d'appel à un service externe ; les emojis existants restent provisoires et peuvent être remplacés ultérieurement par des portraits originaux testés.
+
+La distinction des personnages ne repose jamais uniquement sur la couleur ; le nom reste visible. Les jauges critiques ont un indicateur de risque supplémentaire et les valeurs numériques restent affichées. Les deux boutons réalisent les mêmes choix que le glissé et respectent l'alternative à la manipulation exigée par WCAG 2.2, 2.5.7. Le mode de mouvement réduit coupe les translations décoratives. Vérifier le texte, l'absence de débordement et les cibles tactiles sur 320/390 px.
+
+Périmètre volontairement strict : `src/components/story-mode.tsx`, `src/components/story-mode.css`, tests `e2e/story-mode.spec.ts`, documentation de ce pilote et sa note joueur. Pas de changement au moteur, aux cartes, au portefeuille, à la navigation générale, aux migrations ou à `main`. Les nouveaux scénarios E2E ne sont pas une preuve de réussite tant que la CI du SHA ne les a pas exécutés.
+
+## D-171 — 26 octobre 2026 : mode Histoire en pilote indépendant
+
+Malik demande de lancer un mode carrière narratif inspiré des choix gauche/droite de Reigns. Le joueur incarne un streamer fictif qui part de zéro, et non les chaînes réelles des cartes à collectionner. Une IA peut aider à fabriquer ou vérifier les scénarios **avant** la partie, jamais pendant un tour. Il faut d'abord éprouver une recette narrative courte avant d'étendre la production.
+
+Pour ce premier lot : quatre jauges (Public, Énergie, Argent, Confiance), personnages récurrents (Flo, Nox, Mona), drapeaux de conséquences différées, fins multiples et moteur déterministe avec données versionnées. Écran et sauvegarde locale isolés sur la route de test `/histoire`, sans navigation ajoutée au jeu principal. Aucune monnaie, récompense, RPC, migration SQL ou dépendance nouvelle. Le simulateur historique « Ta chaîne », retiré en octobre, **n'est pas restauré**. Les dialogues et illustrations de Reigns ne sont pas copiés.
+
+Pilotage : travail sur branche dédiée tant que les tests end-to-end du dépôt et le rendu mobile ne sont pas validés. Première preuve : 4096 parcours explorés avec le moteur TypeScript strict, huit fins accessibles. Aucune revendication de déploiement ni de validation physique ; voir `docs/mode-histoire.md`.
+
+Complément de conception du 26 octobre : les chemins narratifs conditionnels peuvent se croiser. Dans le pilote V1, une guerre avec Nox masquait le retour du sponsor caché si les deux drapeaux étaient actifs. Une scène spécifique avec deux drapeaux a priorité dans la V2 : 21 scènes désormais, sans tirage de hasard. La version de sauvegarde passe à `.v2` : les anciennes parties de test ne sont pas requalifiées silencieusement et peuvent être recommencées. Les effets du dernier choix sont montrés, non uniquement insinués par le déplacement des jauges. Le moteur vérifie les sauvegardes par rejeu des décisions, non par seule inspection structurelle. Référence de conception : François Alliot, Game Developer, 2016 ; W3C 2.5.7 pour l'alternative accessible au glissé. Le pilote ne justifie pas encore une migration vers Ink.
+
 
 ## D-171 — 26 octobre 2026 : une session pour les trois réserves, sachet centré
 
@@ -2631,3 +2779,7 @@ La validation porte sur les images du mouvement dans une APK reconstruite,
 avec changements d'univers réellement vérifiés ; un état final correct ou un
 test de propriétés CSS ne suffit pas. Résultats et limites dans le premier
 checkpoint de la [passation](agent-handoff.md).
+
+
+## D-HISTOIRE-6 · Direction artistique des créateurs (27 octobre 2026)
+Inspirations de composition des six Reigns uniquement, sans emprunt de leurs images, personnages, logos, textes ni moteur. Les sept supports existants reçoivent leurs propres panoramas de studio, chaîne vidéo gaming, communautés, backstage, mails, partenariats et archives. Les scènes évoquent davantage YouTube et le jeu vidéo ; la structure de saison, les flags, règles, sauvegardes V4 et la production ne changent pas. Livraison exclusivement sur la PR #24 brouillon, non fusionnée. Vérification par captures et tests 320/390 attendue au SHA final.

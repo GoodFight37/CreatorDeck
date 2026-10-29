@@ -1,3 +1,16 @@
+# Checkpoint Codex — intégration Histoire locale, 29 octobre 2026
+
+- Malik confirme : Histoire dans CreatorDeck, aucune seconde application (D-189).
+- Fusion locale de #24 (`246247ea0a7ff60c8b267b4df859ba15762e6b16`) sur main `1437446d`, après #27 `c2d04c4f`. Publication #24 encore en attente des contrôles finaux.
+- Cinq conflits résolus : `docs/agent-handoff.md`, `decisions.md`, `known-issues.md`, `roadmap.md` gardent les deux côtés ; `release-notes.ts` garde les 74 entrées des deux parents, dates décroissantes, identifiants uniques (vérification exécutée).
+- Pas d'APK Histoire séparée : workflow preview retiré de l'intégration ; build.gradle, manifeste, creator-deck-app, missions-view et objectives.css restent ceux de main. Identifiant, signature, version et workflow APK habituel inchangés ; Tribunal conservé, aucun nouvel accès depuis le menu principal. `/histoire` appartient au même export web/Android.
+- D-179/D-180, sons d'origine, Binder muet, perf mobile, e2e rapide, tirages, économie, jetons et migrations inchangés (diff ciblé vérifié).
+- Contrôles sur l'arbre réconcilié : `npm run typecheck` réussi ; ESLint ciblé 31 fichiers réussi ; `npm test` **1269/1269**, 102 fichiers ; `npx vitest run -c vitest.ecrans.config.mts` **268/268**, 40 fichiers ; `npm run catalog:ci` réussi. Suite complète `npm run e2e:rapide` en cours, non annoncée verte.
+- Captures Histoire acte II 390 px et scène gaming 320 px inspectées : contenu lisible et personnages présents. Ce sont des captures Chromium, pas une validation Android physique.
+- CI #27 [40855816818](https://github.com/GoodFight37/CreatorDeck/actions/runs/40855816818) en échec sur le swipe MEMES cloud (les trois shards non-cloud et statique/build sont verts). Diagnostic reproduit en démo locale : `dragstart` sur IMG provoque `pointercancel`, première carte bloquée. Correction séparée `draggable={false}` dans MemeCard, en attente de validation ciblée ; aucune règle de booster modifiée.
+- Fichiers locaux d'autrui préservés par empreintes. Seul le bloc Kyara du handoff est protégé temporairement dans le stash `ea0ddbf6a9a8e0f695e8b138b2084d4df15767ad`, à réappliquer hors index après les commits documentaires. Audio et quatre PNG exclus des commits.
+- Suite : attendre l'E2E complète unique, valider la correction MEMES par scénario cloud ciblé, publier puis attendre Vérification et APK de test sur le SHA final. Émulateur et Redmi non vérifiés.
+
 # Checkpoint Codex — intégration PR #27, attente Android #24, 29 octobre 2026
 
 - Réservation Beads `CreatorDeck-Codex-h3u`, branche `codex/integration-pr27-pr24-20261029` créée depuis `origin/main` à jour (`0ea400c5`). Autorisation explicite de Malik pour les deux fusions.
@@ -263,6 +276,151 @@ et la précondition corrigée de quatre E2E sont dans [le suivi des boosters](dr
 [CI du code](https://github.com/GoodFight37/CreatorDeck/actions/runs/40499006220)
 en cours au relevé. Aucune APK locale construite, aucun essai sur téléphone
 physique. Les checkpoints suivants conservent leur statut historique.
+
+# Checkpoint Histoire — second lot Papers, Please, comparaison des deux archives (27 octobre 2026)
+
+- Deux archives de l'utilisateur réellement ouvertes en lecture seule : `PapersPlease.rar` et `PapersPlease.zip` ; 56 fichiers identiques selon chemins/tailles/CRC32 ; ZIP 49,48 Mo compressé, total de 90,72 Mo décompressé, version du jeu `1.4.11.124`. La première archive n'était pas reconnue via le système de pièces jointes mais **était accessible dans le conteneur**. Aucun fichier ajouté par le lancement.
+- Il s'agit d'une version Windows Unity IL2CPP : `GameAssembly.dll`, `PapersPlease_Data/il2cpp_data/Metadata/global-metadata.dat`, scènes/assets, localisations en ZIPs. Inspection statique de `StreamingAssets/loc/fr.zip` (134 PNG) : papiers, règles, autorisations, justificatifs, tampons et outils de comparaison. Aucun exécutable lancé et aucun contenu tiers redistribué, importé ou copié dans CreatorDeck.
+- Branche pilote PR #24, base `ccf89d4c91f88bc6263ccaa764e5d58fb10bb1ee` : élargissement original des dossiers de 8 à 13 scènes, mise en valeur visuelle des pièces sur fond de papier, compteur sélection 0/2 et indicateur visible pour la paire recoupée. Comparaison facultative, aucune modification moteur, flags, économie, sauvegardes V4 ni production. Tests Vitest des nouvelles scènes et Playwright vérifiant invariance de localStorage.
+- CI de `ccf89d4c91f88bc6263ccaa764e5d58fb10bb1ee` : contrôle Safari vert, jobs unitaires/build verts, E2E en cours au moment du suivi. À revérifier pour le nouveau SHA ; ne pas inférer que le nouveau lot est déployé sur Vercel. Vérifier la cohérence des dossiers au téléphone réel séparément.
+
+# Checkpoint Histoire — inspection de dossiers (27 octobre 2026)
+
+- Demande : continuer à développer pendant le quota Vercel bloqué ; tendre vers le poids narratif des décisions de Reigns et les enquêtes documentaires de Papers, Please.
+- Branche pilote PR #24 uniquement, ancien HEAD de départ `440111a1cbcefbc15802af19330ae04142a3194d`, CI précédent entièrement vert. Aucun merge ni intervention sur production, économie, règles de choix ou sauvegarde V4.
+- Ajout original : dossiers facultatifs à 3 pièces pour 8 scènes de sponsors, enquêtes, contrats et collecte. Un résultat positif apparaît si les deux preuves importantes ont été sélectionnées, sinon un indice neutre ; les joueurs peuvent ignorer les dossiers et choisir à tout moment. Carte et boutons gardent leur place. Nouvelle UI montée avec clé `scene.id`, réinitialisée sur changement de scène, accessible au clavier et au mobile.
+- À vérifier sur le nouveau SHA : typecheck, unitaires, Chromium 320×568, WebKit, captures mobile, aucun débordement ni blocage des décisions. Aucune simulation ne constitue une preuve de vrai appareil Android. Vercel renvoie `402 api-deployments-free-per-day`; ancienne alias d'Histoire servait encore `8dda6091` au moment de la vérification, ne pas dire que le nouveau code est jouable en prévisualisation.
+- Références de design consultées : Nerial/Devolver sur la boucle binaire et Lucas Pope sur l'inspection mobile ; seuls les principes sont repris, pas leurs données ni assets.
+
+# Checkpoint Histoire — audit natif et physique du swipe (27 octobre 2026)
+
+La demande porte explicitement sur l'analyse de l'APK Reigns **au niveau natif**, avant d'adapter CreatorDeck. Les adresses du `types.cs` ont permis de désassembler la bibliothèque ARM64 `libil2cpp.so` : `CardAct.LerpToPos`, `SlerpToPos`, `InputAct.CheckSlide/CheckUp/CheckBounds`. Seuil dynamique observé `2*stopamo`, durée de 50 ms sur un chemin de libération, interpolation bornée [0,1]. Les chemins Unity n'ont **pas été clonés** ; le code C# complet reste compilé et les détails de toutes les interpolations ne sont pas revendiqués.
+
+Après l'ancrage fixe des prévisualisations réalisé avant ce commit, ajout d'un helper pur `story-motion.ts` : résistance exponentielle/déplacement capé, inclinaison limitée et durée/rotation du lancer liée à la vitesse du geste, avec retour CSS souple. Tests pure Vitest et Playwright. Aucun changement des règles de décision (64 px ou flick rapide), contenu, sauvegarde V4, moteur, Supabase, économie ni `main`. Validation par CI du HEAD à lire séparément. Une vérification native Android/émulateur reste distincte des contrôles navigateurs.
+
+# Checkpoint Histoire — correction swipe mobile depuis captures réelles, 27 octobre 2026
+
+- Base distante contrôlée : `0d72d003f29fc3e053f0b9da87012a7dad82a17a` sur la PR #24 brouillon, branche `feature/histoire-reigns-pilot-20261026`. La demande porte sur trois défauts rapportés sur Redmi : cartouches masqués hors écran pendant le swipe gauche/droite, messages LIVE en trop, effet de carte fantôme lors d'un appui immobile.
+- Correction purement UI : cartouches retirés de la face pivotante, ancrés au centre du plateau et visibles tout au long d'un geste ; sur ≤600 px, translation plafonnée à 48 px et inclinaison à 3,6°, **sans modifier le seuil logique de validation**. L'événement pointerdown ne lance plus d'animation de drag tant que l'utilisateur n'a pas déplacé horizontalement le doigt, entrée sans fondu d'opacité ; chat murmuré caché sur mobile. Exit conservé après décision.
+- Les anciennes assertions de cartouches enfants de la carte ont été adaptées à leur position dans le plateau. Test géométrique à 320×568/390×844 du texte gauche et droit et de l'appui sans transparence. CI / captures / WebKit et geste Android réel restent à vérifier sur le nouveau HEAD. Ne pas annoncer « corrigé sur Redmi » sans essai appareil.
+- Aucun changement de scénario, moteur, V4, effets, économie, Supabase, `main` ou production. Aucun merge.
+
+# Checkpoint Histoire — passe Gemini V2 décor de carrière et chat LIVE, 27 octobre 2026
+
+- Base contrôlée : PR #24 brouillon, HEAD `0493cde4cf67c8da5242489e8caa02fe3c262c5a`. Ne pas confondre la CI de cette base avec le nouveau commit.
+- Ajout d'une présentation LIVE seule : accessoires SVG modifiant le setup en fonction de l'acte et de la trésorerie ; petites réactions neutres au déplacement du pouce (>25px), hors du contenu narratif, sans divulguer le résultat. Aucune nouvelle fonction lors des autres canaux, ni nouvel état sauvegardé ; support du mouvement réduit.
+- Les exemples Gemini « HistoireSaveV4 » (`flags: Record` et sauvegarde cloud) sont erronés ; le vrai moteur stocke un `string[]` en local et vérifie l'historique. On n'a ajouté ni traits temporaires, ni scènes ni scripts obligatoires, ni coûts au tour ; aucune modification de moteur, effets, test de balance, économie, production ou `main`.
+- À valider : CI sur le nouveau SHA, rendu Playwright 320/390, haptique et rendu natifs impossibles à déclarer validés ici. Ne pas fusionner.
+
+# Checkpoint Histoire — échos de choix différés après avis Gemini, 27 octobre 2026
+
+- Point de départ : PR #24 brouillon, commit `7b09d23e1fb985d860f2604549bf6e8437630a31` ; CI « Vérification » de ce SHA réussie (run 40487439854). Ne pas extrapoler ce résultat au commit présent.
+- Ajout limité à six règles d'échos utilisant **uniquement des flags de scénario existants** : `collecte_verifiee`, `archives_exposees`, `charte_collectif`, `studio_loue`, `source_menacee`, `filtre_agence`. Chaque souvenir ne s'affiche qu'à un interlude d'acte suivant la décision source ; deux maximum par passage. Tests unitaires ciblés de classement, anti-spoiler et non-mutation.
+- Le rapport Gemini contenait des propositions incompatibles ou redondantes : noms de jauges différents, prévisualisation déjà existante, changements de règles incompatibles avec la restauration V4, récompenses hors périmètre. Son composant de chat n'a **pas été copié**.
+- Vérifier CI complète et WebKit sur le nouveau HEAD. L'éditeur GitHub connecté ne dispose pas ici d'émulateur Android ou de navigateur interactif local ; aucune preuve native ou visuelle nouvelle revendiquée. Aucun merge, production, Supabase, économie ou modification de sauvegarde.
+
+# Checkpoint Histoire — finition des décors et des portraits, 27 octobre 2026
+
+- Base de reprise vérifiée : `77506c48b1609de5866e25a6b2964695821e186c`, 6/6 jobs CI généraux verts, WebKit vert.
+- Code de la passe : `b8cfefd31e927807927948563ccbbc006882ce22`. Mondes média enrichis en SVG, accessoires de personnages, alignement et contraste des textes sur mobile. Scène spécifique pour le studio, le premier clip, le premier sponsor et la double crise. Pas de système externe, pas de changement moteur ni sauvegarde V4.
+- Le premier test E2E de la passe avait une sérialisation Playwright incorrecte de `CSSStyleDeclaration` ; correction immédiate : renvoyer seulement la chaîne `getComputedStyle(el).textAlign`. Révision CI à contrôler sur le dernier SHA, ainsi que les captures Playwright.
+- Aucun merge, aucun changement de main, de production, de Supabase ou d'économie. Vercel nouvelle prévisualisation bloquée par limite des builds ; WebKit simulé n'est pas iPhone physique. Ponytail non disponible dans le catalogue connecté.
+
+# Checkpoint Histoire — sélecteur de galerie après journal illustré, 27 octobre 2026
+
+- Base de reprise `e51a82d98fadc53f3f1dc689097761e11697b07b`, PR brouillon #24. CI générale 40460274862 : 5/6 jobs OK, seul le shard 3/3 a échoué sur une assertion Playwright `locator(".story-portrait-illustration")` devenue ambiguë lorsque le journal contient aussi un portrait. WebKit 40460270324 : SUCCESS.
+- Correction : assertions de galerie limitées à `.story-play-card .story-scene-art .story-portrait-illustration`, qui désigne la carte réellement jouée. Masquage du portail de développement Next.js seulement dans la capture du journal pour ne pas photographier son indicateur N ; aucun CSS produit modifié.
+- Vraie capture du commit e51a82d inspectée : portraits Flo et Nox beaucoup plus grands dans le journal 320 px, aucun débordement observé. Le texte/les règles/les sauvegardes V4 ne changent pas. Nouveau SHA et CI de ce correctif à vérifier avant conclusion.
+- Ne pas merger ni toucher `main`, production, Supabase ou l'économie. Validation Android/iOS physique toujours absente.
+
+# Checkpoint Histoire — gros plan miniature carnet (27 octobre 2026)
+
+- Base : commit c29627068031375463edf0b94e8e4dc9416c0d87, PR #24 brouillon. Playwright 2/3 réussi, dont les neuf fins et les captures. Unitaires/TypeScript/build/SQL/RPC réussis ; Playwright 1/3 et 3/3 à confirmer.
+- Inspection réelle des fichiers de captures de c296270 : neuf cartes finales distinctes, lisibles à 390 px. Journal à 320 px : les personnages étaient beaucoup trop petits dans les vignettes de 60 px, avec un grand vide au-dessus. Correctif CSS ciblé : recadrer le visage, masquer le surplus dans le cadre, sans redessiner les autres portraits. Test de dimension + capture 320 px.
+- Ne pas annoncer le rendu rectifié validé avant capture du commit suivant. Aucun changement de moteur, économie, sauvegarde V4, Supabase, autres modes ou main. Ne pas fusionner, pas de test APK Android natif dans ce contexte.
+
+# Checkpoint Histoire — vérification des neuf gravures (27 octobre 2026)
+
+- Sur la PR #24, base 89aa26cb0476588d50a5d82723b909a50fe88cea. Build et tests unitaires verts sur cette base ; le shard Playwright 2/3 a trouvé une ancienne assertion qui attendait encore .story-channel-glyph sur la fin. Le produit affiche désormais .story-ending-artwork, conformément à la nouvelle direction artistique.
+- Correction ciblée de l'assertion, test galerie des neuf fins par rejouage déterministe, capture Playwright de chaque gravure à 390 px et portrait du journal à 320 px. Les nouvelles captures ne valent pas preuve Android physique.
+- Captures inspectées du précédent SHA : scène de départ, transition de l'acte II et fin scandale, composition lisible à 390 px ; finaliser le contrôle sur le dernier commit, sans changer main, production, économie, Supabase ni sauvegardes V4.
+- Ne pas fusionner. Les performances haptique/Capacitor Android et l'essai iPhone réel restent à confirmer.
+
+# Checkpoint Histoire — neuf gravures finales et journal illustré, 27 octobre 2026
+
+- Base distante contrôlée : 65b3088df04e7e552a8155e71d7193e7f7169d51, branche feature/histoire-reigns-pilot-20261026, PR #24 brouillon ; six jobs généraux réussis sur cette base.
+- Livraison préparée : story-ending-artwork.tsx donne neuf emblèmes SVG différents aux fins ; story-bonds.ts repère les rencontres dans les scènes effectivement jouées ; StoryJournal affiche leurs portraits et se referme au chapitre suivant. Styles et tests mobiles 320/390.
+- Confirmer les runs CI unitaires, Playwright Chromium, WebKit et captures de dénouement du SHA final ; ne pas annoncer le passage des tests avant leur résultat réel.
+- Aucun changement sur main, production, Supabase, économie, effets, sauvegarde V4 ou autres modes ; pas d'émulateur Android natif accessible ici. Ponytail indisponible, conseils React consultés.
+
+# Checkpoint Histoire — correction de compilation des échos (27 octobre 2026)
+
+- Sur la PR brouillon #24, commit `ec1cb97561fa1bf3bd0e555bf86330eb1095b503` : WebKit vert, mais premier run « Vérification » a fait échouer les tests unitaires et TypeScript.
+- Cause établie dans le fichier du commit : `storyActEchoes` référence `RECENT_FIRST` sans déclaration après réorganisation du tri. Correction : constante module `const RECENT_FIRST = [...RULES].sort((a, b) => b.since - a.since)` placée avant la fonction.
+- Les autres fichiers restent identiques et l'ordre du moteur / sauvegarde V4 est inchangé. Contrôler les runs du commit réparé avant toute revendication de réussite. Ne pas toucher `main`, production, Supabase, économie ou autres modes, ne pas fusionner.
+
+# Checkpoint Histoire — lisibilité des choix (27 octobre 2026)
+
+- Revue des véritables captures Chromium du SHA `7f747c0` : les textes de décisions étaient encore à 11 px sur mobile. Augmentation des libellés (12–13 px), des cibles (62–65 px) et du padding, tout en conservant une grille à deux choix.
+- Test Playwright dédié aux écrans 320×568 et 390×844. Le correctif est inclus avec le classement des échos récents et le statut de Nox apaisé ; conserver les règles/sauvegardes V4 et ne pas toucher `main`, production, Supabase ni économie.
+- CI générale, WebKit et nouvelles captures à vérifier sur le commit final avant conclusion. Pas de validation native Android ou iPhone réel.
+
+# Checkpoint Histoire — audit mémoire des actes et paix Nox (27 octobre 2026)
+
+- Sur la PR brouillon #24, base `7f747c02b5a6f86f1ffbfcd2240fe40f5871ef86`. Décors et relationnel inclus dans deux précédents commits `09abfbb` et `7f747c0`; WebKit sur `7f747c0` vert 5/5, CI générale à vérifier.
+- Défauts découverts par revue : rappels anciennement présentés avant les décisions plus récentes ; Nox classé « rivalité ouverte » après `paix_nox`. Correction des priorités des échos triée une fois, statut Nox corrigé. Tests unitaires ajoutés. Aucune nouvelle donnée persistée.
+- Tests finaux à vérifier au SHA publié : unitaires, écrans, lint, typecheck, build, Playwright Chromium et WebKit. Relever les captures de l'acte II et leur lisibilité.
+- Sans accès à l'APK Android ni à l'iPhone réel, les performances natifs, l'haptique et le temps de lecture humain restent à examiner. Aucun changement sur `main`, Supabase, économie, production ou autres modes. Ne pas fusionner.
+
+# Checkpoint Histoire — entourage dans le journal, 27 octobre 2026
+
+- Ce lot complète le commit de scénographie `09abfbb32c1908105725c009bc176d021bfc1b05`, sans changer de branche (PR brouillon #24).
+- `storyBonds` calcule les relations réellement rencontrées (Flo/Nox/Mona/Lina), à partir des seuls flags du moteur V4. Le journal facultatif les affiche avec monogrammes, statut et conséquence non chiffrée. Aucune nouvelle jauge, économie, sauvegarde ou scène.
+- Tests unitaires d'absence de personnages non rencontrés, priorité des réconciliations et non-persistance, ainsi qu'E2E Chrome à 320 px en rejouant douze décisions et vérifiant la restauration exacte.
+- Tous les nouveaux contrôles restent à vérifier sur le SHA poussé. Ne pas prétendre avoir testé l'APK Android ou un iPhone physique. `main`, production, Supabase et l'économie restent intacts ; ne pas fusionner.
+
+# Checkpoint Histoire — scénographie et échos d'actes, 27 octobre 2026
+
+- Base de reprise vérifiée : `95aa70eae945eac7e9e9c73f1e45e6dd5f69e7c6` sur `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon ; CI générale et WebKit vertes sur cette base.
+- Livraison préparée : nouveau décor SVG pour chacun des canaux LIVE/CHAT/DM/MAIL/CONTRAT/ARCHIVE/CLIP, portraits SVG enrichis d'accessoires, contour de carte au seuil de confirmation, `will-change` seulement pendant geste/envol. Rappels narratifs dérivés de flags existants (2 maximum) aux transitions des actes II à V, sans modifier le scénario ni l'état/sauvegarde V4.
+- Tests ciblés : calcul pur d'échos, parcours Playwright pour les supports et échos après 12 décisions, parcours WebKit pour décors et validation par glissement, capture 390 px de l'acte II. Validation sur le nouveau SHA et inspection des captures encore à confirmer.
+- Aucun changement de `main`, production, Supabase, économie, autres modes, ni accès au PC Windows. Ponytail indisponible ; guide React Vercel lu. Limites natives : émulateur APK Android et vrai Safari iPhone indisponibles, chronométrage réel de partie et révision éditoriale humaine encore nécessaires. Ne pas fusionner.
+
+# Checkpoint Histoire — cadrage diptyque après revue pixels, 27 octobre 2026
+
+- Branche PR #24 brouillon ; base `cafe79a419a6d0da0877a39c1615031ab8d5d404`. WebKit du SHA `cafe79a` : 4/4 tests réussis. CI générale `40448132913` : build/qualité, SQL jetable, RPC simulés et Playwright 1/3 et 2/3 réussis au dernier relevé, Playwright 3/3 encore en cours.
+- Capture réelle `scene-double-crise-390.png` de Playwright shard 2 inspectée : Nox/Mona présents, mais bustes trop petits dans un moniteur haut, vide excessif en haut. Variante 320 mieux proportionnée. Décision D-177 : dimensionner les SVG à 96 % de la hauteur de moniteur, avec cadrage dans chaque demi-panneau et mesure Playwright >=90 % aux deux dimensions.
+- Nouveau commit, CI et nouvelles captures à confirmer après publication. Aucune exécution Windows/Android/iPhone physique, aucune modification de `main`, production, Supabase, économie, audio ou sauvegarde.
+- Prochaine tâche : vérifier nouvelle capture duo à 320/390, valider la suite complète sur le nouveau HEAD, et tester sur téléphone réel seulement pour le rendu/haptique que la simulation ne garantit pas.
+
+# Checkpoint Histoire — diptyque Nox/Mona, 27 octobre 2026
+
+- Base de travail : `5e533f8d572f3b52d7cfb250bcf44f7bb2fbf7f5`, branche `feature/histoire-reigns-pilot-20261026`, PR #24 brouillon. Le nouveau run WebKit `40447426307` est vert ; la Vérification générale `40447432129` a été lancée sur ce même SHA et devait être contrôlée jusqu'à fin avant nouvelle publication.
+- Défaut : l'événement `double_crise` annonce NOX + MONA, mais l'ancienne variante `duo` de `StoryPortrait` affichait le portrait générique « Toi ». Correction proposée : portrait double en panneaux juxtaposés avec les palettes originales de Nox et Mona, finitions CSS propres, tests de présence et captures Playwright à 320/390.
+- Validation de cette correction à confirmer après commit par la CI et par l'inspection des deux images générées ; pas de téléphone physique et aucun accès au PC Windows. Cette correction n'affecte que Histoire et les documents/notes associés ; pas de `main`, production, Supabase ni économie.
+- Ponytail absent ; guide React Vercel consulté. Ne pas fusionner.
+
+# Checkpoint CreatorDeck Histoire — gestes / HUD du 27 octobre 2026
+
+- Branche exclusive `feature/histoire-reigns-pilot-20261026`, PR #24 toujours en brouillon. Base distante vérifiée avant intervention : `f58a80b50580ef63235a2b63574c7a6853ffa9d5`. Ne jamais fusionner ou toucher `main`, la production, Supabase ni l'économie.
+- Avant intervention : Actions Vérification `40443983697` réussie sur `f58a80b`, WebKit `40443979282` réussi. Capture Playwright Safari simulé à 390 px récupérée et réellement inspectée ; pas de Safari iPhone physique. GitHub accessible en lecture/écriture ; aucun accès au checkout Windows ou à son `git status` dans cette session.
+- Lot code : événements de déplacement regroupés par `requestAnimationFrame` et nettoyage des frames ; inspections et missions refermées à la scène suivante ; emblèmes du HUD avec cible minimale 44 px sur 320 px ; léger décollement tactile et filet intérieur du dos. Tests Chromium/WebKit, note joueur et décision D-175 ajoutés.
+- Contrôles **du nouveau commit** : relever le SHA, ses nouveaux runs, les captures et leurs limites. Ce checkpoint documentaire ne prouve pas les résultats de CI ni les performances physiques. Ponytail indisponible, guide React Vercel lu.
+- Prochaine action : inspecter les runs sur le nouveau SHA ; reprendre les captures 320/390 et les traces, diagnostiquer tout échec. Sur Android/iOS réel, vérifier le rythme, l'haptique et le défilement. Les dossiers Windows et toutes les modifications locales éventuelles ont été préservés.
+
+# Checkpoint mode Histoire — passe design D-172 (26 octobre 2026)
+
+Branche **uniquement** `feature/histoire-reigns-pilot-20261026` ; PR brouillon #24. Relecture de la direction artistique Pocket (`DESIGN.md`, `globals.css`), guide React de Vercel et WCAG. Nouvelle carte-scène avec décor de studio CSS, marqueur de personnage Toi/Flo/Nox/Mona, signalement des jauges basses, texte et boutons améliorés, mouvement réduit, petites hauteurs. Tests Playwright ajoutés pour identité des personnages et 320/390 px. Aucun nouveau média, API, coût, dépendance ou modification de `main`/carte/SQL. Vérifier l'état des workflows et le SHA de la dernière prévisualisation avant d'annoncer la validation ; une prévisualisation READY ne confirme pas les gestes, l'accessibilité ou la qualité visuelle. Ponytail non disponible, non exécuté. Suivi technique : `docs/mode-histoire.md`.
+
+# Checkpoint mode Histoire — vérifications et réécriture du pilote, 26 octobre 2026
+
+**Branche de travail uniquement :** `feature/histoire-reigns-pilot-20261026`, PR [#24](https://github.com/GoodFight37/CreatorDeck/pull/24) en brouillon, base main historique `ecaf2907dc2921abc77888eaff560fac22c28e99`. Commits de corrections postérieurs au pilote `4cb66e3` : lint React/Next, rejouage strict de la sauvegarde, tests anti-altération, Playwright, retour visuel des conséquences, 21e scène combinant les intrigues Nox/Mona, nouvelle sauvegarde `.v2`. **Ne pas réécrire le moteur streamer retiré.**
+
+Preuve initiale du SHA `4cb66e3` : CI `40304763340`, compilation Next et typecheck réussis, 264 tests écrans réussis ; job qualité global **rouge sur trois erreurs ESLint du composant Histoire**. Les erreurs ont été corrigées sur la branche. Les runs lancés sur les commits postérieurs n'étaient pas terminés au dernier relevé : vérifier leur statut précis avant toute revendication de réussite et n'envoyer en production que du code validé.
+
+Simulation locale des modules TS purs après version 2 : **4096 parcours**, **21/21 scènes visitées**, **8 fins** et sauvegardes reconstituées, sans bloqueur. Ce n'est **ni** une preuve du rendu Next/Vercel, **ni** un test sur téléphone physique. La prévisualisation Vercel est sur branche ; l'accès visuel direct via navigateur de l'agent a été bloqué. Les 4 tests Playwright sur la branche doivent encore être lus dans leur CI (sauvegarde, gestes, clavier, écran 320px, reprise). Aucun changement de Supabase ni économie. Aucun appel d'IA payante dans le jeu. Ponytail absent des skills disponibles, non exécuté.
+
+Retrouver la conception, les résultats et les limites dans `docs/mode-histoire.md`. Un contrôle automatisé horaire du chantier a été configuré hors dépôt, avec signalement uniquement si progrès ou blocage concret.
 
 # Checkpoint Codex — réserves des boosters et sachet recentré, 26 octobre 2026
 

@@ -1,3 +1,17 @@
+**27 octobre 2026 · Inspection Papers, Please :** les archives RAR/ZIP utilisateur sont identiques, 56 fichiers réels dont ressources Unity IL2CPP et 134 textures d'une localisation. Étude des familles de documents/outils ; aucun contenu réutilisé. Le mode Histoire étend les dossiers facultatifs de 8 à 13 avec papier original, marque de sélection et indices liés aux conséquences de la saison. Contrôler la CI du nouveau SHA, garder `main` intact et attendre l'accès Vercel pour tester la version mobile déployée.
+
+**27 octobre 2026 · Dossiers d'inspection Histoire (PR #24) :** mini-enquête facultative : sur 8 scènes de contrat, sponsor, enquête ou collecte, comparer 2 pièces parmi 3 pour mettre à jour une anomalie avant le choix gauche/droite. UI spécifique CreatorDeck, tactile/clavier, aucun blocage du rythme Reigns, aucun effet sur sauvegarde V4/équilibrage, aucun déploiement ni merge. Tests ajoutés ; contrôle CI et rendu réel à faire au SHA de livraison.
+
+**27 octobre 2026 · Physique du mode Histoire PR #24 :** l'APK Reigns a été désassemblé (ARM64 IL2CPP, fonctions CardAct/InputAct), permettant d'observer des seuils et interpolations natives. CreatorDeck utilise une implantation indépendante de glissement résistant, retour souple et lancer selon la vitesse, sans changer les seuils de validation ni les sauvegardes V4. Tests unitaires et Playwright ajoutés ; CI du nouveau commit et rendu Android à contrôler.
+
+**27 octobre 2026 · Correctif tactile Histoire PR #24 :** cartouches de réponse ancrés sur le plateau et non sur la face en mouvement, déplacement visuel limité sur ≤600 px sans changer l'activation du choix, carte opaque au simple contact, réactions LIVE supplémentaires masquées sur téléphone. Test de géométrie et annulation 320/390 ajouté, CI et revue du rendu mobile réel à confirmer. Pas de changement moteur, économie, sauvegardes V4 ni `main`.
+
+**27 octobre 2026 · Présentation mode Histoire (PR #24 brouillon) :** murmures neutres réservés aux décisions en LIVE lors du swipe, et variations de régie selon le progrès et l'argent. Le mode hors direct reste inchangé. Nouveaux tests de décor et geste mobile ; CI et rendu natif du SHA à vérifier. Moteur, sauvegarde V4, saison, fins, économie et `main` inchangés.
+
+**27 octobre 2026 · Mémoire du mode Histoire (PR #24 brouillon) :** six drapeaux existants reçoivent un rappel narratif dans les interludes appropriés, sans toucher au scénario, aux effets, aux sauvegardes V4 ni à la collection. Test unitaire ajouté ; vérifier CI du nouveau SHA et garder le mode isolé de `main`.
+
+**27 octobre 2026 · Monde des créateurs (PR #24 brouillon) :** cartes de jeu et panoramas SVG originaux inspirés de six Reigns, avec décors pour stream, YouTube/gaming, chat, messages, contrats et archives. Glyphes et portraits existants conservés ; 40 décisions, neuf fins, flags, effets, économie et sauvegarde V4 inchangés. Tests/captures 320 et 390 à contrôler au commit livré. Aucun merge, aucune modification de main ou Supabase.
+
 # Roadmap CreatorDeck
 
 **Lots Codex — 28 octobre 2026 :** inventaire audio E1 et audit DPR2 des images
@@ -39,6 +53,10 @@ réussies sur le site publié (compte simulé). Preuves : [suivi des boosters](d
 ## Anime — catalogue complet du 27 octobre 2026
 
 Quatrième booster dans le Drop, ouverture et révélation communes, cartes premium et classeur `/anime` avec possessions sur l’appareil. Le visuel Manga Drop noir/or approuvé remplace le sachet Anime dans le carrousel et l’ouverture (D-173), avec la déchirure alignée sur sa soudure. Les 1 020 cartes importées sont raccordées (D-175), soit 1 000 ajouts, avec compteur dynamique, pagination et recherche. Les anciennes possessions sont conservées. Code `f9ec59fd` publié sur Vercel Production, deux E2E téléphone verts sur le site publié ; règles/réserve serveur et droits des illustrations restent à établir avant diffusion publique. Aucune APK locale demandée. Détails et preuves : [passation Kyara](passation-kyara.md).
+
+**Nouvelle passe Histoire expérimentale (PR #24) :** décors vectoriels de canal, accessoires de personnages et retours narratifs de flags aux transitions d’acte, sans changer les règles ni la sauvegarde V4. CI et captures à valider sur le nouveau SHA. La validation Android/iOS physique reste ouverte.
+
+**Mode Histoire — saison 1 « Zéro spectateur » (PR brouillon #24, 27 octobre 2026) :** jusqu’à 40 décisions, cinq actes, quatre jauges, 84 scènes alternatives et neuf fins accessibles, avec personnages récurrents et conséquences différées. Journal de bord, objectif de chaque acte, points neutres de prévisualisation des jauges affectées, dos de carte CreatorDeck, sauvegarde locale V4 contrôlée par rejeu, reprise et recommencement confirmé. Tests du moteur et Playwright automatisés sur la branche expérimentale `/histoire` ; contrôle Android et iOS physiques et temps de lecture réels à vérifier avant toute intégration. La production, les cartes, les jetons, Supabase et les quatre piliers ne sont pas modifiés. Détails : [mode-histoire.md](mode-histoire.md), [bible narrative](mode-histoire-saison-v3.md), [audit V4](mode-histoire-v4-audit.md).
 
 **Réserves des boosters et sachet préparé — 26 octobre 2026 (D-171) :** publié dans
 [`ea80907a`](https://github.com/GoodFight37/CreatorDeck/commit/ea80907a0d364a1d97c1cca6b97477a8cbfdc1a0),
@@ -1270,3 +1288,12 @@ du plan actif. Ne pas les reprendre sans nouvelle demande de Malik.
 - [x] **Les sons mesurés, et un volume réglable** (8 octobre 2026) : chaque bruitage est mesuré (RMS, crête) et ramené à sa cible de volume perçu — ce qu'on entend le plus souvent est le plus discret — et un réglage **Volume** (Discret / Normal / Fort) baisse toute l'application d'un cran, sous l'interrupteur *Son* (`docs/assets-sonores.md`)
 - [x] **L'ouverture d'un paquet devient un moment** (8 octobre 2026, au soir) : entrée de carte avec rebond et halo par rareté, refus qui rougit, cascade sur le Perfect, et une **déchirure** de 700 ms entre le geste et la première carte (`src/components/pack-tear.tsx`). Rien ne boucle, tout est coupé par le réglage « Reflets des cartes » et par « moins d'animations » — un test le vérifie
 - [ ] **Bilan & équilibrage des gains** (historique du 8 octobre 2026) : l'outil `streamer:bilan` mesurait alors les paliers et gains à partir du moteur client. Il a été retiré avec ce moteur le 22 octobre ; cette ancienne tâche n'est plus active.
+# Intégration Histoire — 29 octobre 2026
+
+Malik autorise #27 puis #24 et refuse une application Android séparée (D-189).
+Histoire rejoint CreatorDeck sur `/histoire`, sans nouvel accès depuis le menu
+principal ni changement du Tribunal, des boosters ou de l'économie. Intégration
+locale réconciliée ; contrôles finaux et publication à confirmer au checkpoint.
+Essais émulateur/Redmi et durée humaine des parties restent non vérifiés.
+Les mentions de PR brouillon et de prévisualisation ci-dessous sont historiques.
+

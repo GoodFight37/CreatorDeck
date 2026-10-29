@@ -38,6 +38,12 @@ gardent leurs protections. Trois cas échouent avant ; six cas bureau/téléphon
 passent après, dont 24 préparations par un seul appui. Validation complète et
 publication : [suivi des boosters](drop-boosters.md).
 
+
+## Histoire pilote · cadrage grands téléphones (27 octobre 2026)
+
+- **Défaut de présentation découvert** sur la PR #24, commit `f07e9246` : Playwright bureau avec viewport 390×844 mesurait 239–240 px pour l'illustration au lieu du minimum de 250 px déjà exigé par la suite. Ce n'est ni un problème de moteur ni une preuve de bug sur iPhone physique.
+- **Correction préparée** : augmenter la hauteur du moniteur sur écrans hauts avec `clamp(260px,33svh,300px)` ; garder le réglage compact spécifique aux écrans de 700px de haut ou moins. Ne pas affaiblir l'assertion Playwright. Résultat à vérifier sur le nouveau SHA, sans changement de sauvegarde V4.
+
 ## MEMES/IMGFLIP : fausse reconnexion et sachet trop bas — publiés, 26 octobre 2026
 
 P1, base `ecaf2907`, suivi `CreatorDeck-Codex-pg1`. Malik observe Live fonctionnel
@@ -1378,3 +1384,11 @@ isolé Edge réussi : contour système de 2 px, décalage de 2 px ; écrans cibl
 l’application n’a pas démarré : le `next dev` préexistant sur le port 3000 ne
 répond pas. Correctif publié dans `f5f27f90` ; GitHub confirme le contrôle
 Vercel `success` sur ce SHA. Résultat CI Actions non vérifiable depuis ce chat.
+
+## H-UI-018 — Échos anciens et statut Nox après apaisement (27 octobre 2026)
+
+- Reproduction sur la PR #24 : une transition d'acte avec flags de plusieurs époques affichait en priorité les premiers souvenirs du prologue au lieu des décisions récentes. Le journal affichait « Rivalité ouverte » si `guerre_nox` persistait après le flag `paix_nox`.
+- Cause : ordre fixe des règles d'échos ; condition du statut Nox incomplète.
+- Correction préparée sur la branche expérimentale : tri statique décroissant des étapes d'échos, sans tri pendant le rendu, et priorité au flag d'apaisement. Tests unitaires ciblés ajoutés.
+- Incident de validation au premier passage : `RECENT_FIRST` était utilisé sans être déclaré dans `story-echoes.ts`, ce qui échouait à la compilation TypeScript et aux tests unitaires. La constante est maintenant explicitement déclarée ; CI du correctif encore à confirmer.
+- Statut : correction à vérifier sur CI du SHA publié ; non fusionnée sur `main`. Aucun changement du moteur, des sauvegardes V4 ou des autres modes.
