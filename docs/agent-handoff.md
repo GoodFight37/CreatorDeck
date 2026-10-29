@@ -10,8 +10,8 @@ pas de bruit de carte, rien à l'ouverture, aigus agressifs, sons et musique tro
   `pop` à l'ouverture, `card-draw` à chaque carte). Gardés : `setAudioBackground`,
   `activeEffects`, aperçus, D1. `playCraft` joue `playReward` (son d'avant).
 - **Retouches** : `card-draw` cible −21 dB (+4 demandé, gain réel **+3,35 dB**,
-  plafonné par la crête −6 dBFS). `card-turn` déjà au plafond, inchangé ; il ne joue
-  nulle part (`playPageTurn` en réserve). Passe-bas **4,5 kHz** sur la synthèse
+  plafonné par la crête −6 dBFS). `card-turn` déjà au plafond, inchangé ; il joue au
+  tour de page du Binder (`binder-view.tsx:161`, bug `6u3`, déjà le cas avant le 27/10). Passe-bas **4,5 kHz** sur la synthèse
   (`SYNTH_LOWPASS_HZ`). Musique hub 0,08 → **0,14**, pack 0,04 → **0,07**.
 - **Aigus mesurés** (rendu des plans, FFT, part > 6 kHz) : avant passe-bas, 0 à 5,5 %
   (déchirure 5,5, Épique 4,7, Rare 3,8) ; après, ≤ 0,5 % partout, centroïde Rare
