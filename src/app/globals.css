@@ -4797,7 +4797,9 @@ input:focus-visible {
   color: color-mix(in srgb, var(--rarity) 80%, #fff); font-size: clamp(8px, 4cqw, 12px); font-weight: 700; line-height: 1;
   letter-spacing: .12em; text-shadow: none;
 }
-.creator-card.creator-print.is-compact .card-photo-wrap { bottom: 22%; }
+.creator-card.creator-print.is-compact .card-photo-wrap { top: 11%; bottom: 22%; }
+/* En miniature, le numéro garde sa bande entière au lieu d'être rogné par la photo. */
+.creator-card.creator-print.is-compact .card-topline { height: 11%; top: 0; }
 .creator-card.creator-print.is-compact .card-nameplate { height: 22%; padding-block: 0; }
 .creator-card.creator-print.is-compact .card-nameplate h3 {
   font-size: clamp(9px, min(20cqw, calc(150cqw / var(--name-len, 8))), 18px);

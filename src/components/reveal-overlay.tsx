@@ -352,7 +352,8 @@ export function RevealOverlay({
                   </span>
                 </div>
                 <div className="perfect-card-caption">
-                  <span>{RARITY_META[item.rarity].label}{item.isNew ? " · Nouvelle" : ""}</span>
+                  {/* La rareté se lit au contour de la carte : la légende ne dit que la nouveauté. */}
+                  <span>{item.isNew ? "Nouvelle" : "Doublon"}</span>
                   {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
                 </div>
               </div>

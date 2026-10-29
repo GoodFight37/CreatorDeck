@@ -12,6 +12,10 @@ la partie « Carte » de D-179 et les dégradés de matière de D-168 :
 - plus de filet autour du portrait ni de reflet de rareté ; les reflets des
   variantes Holo, Gold et Live restent.
 Révélation, récap, peel et portraits de D-179 inchangés.
+Retour téléphone de Malik (booster parfait) : le halo d'Épique/Légendaire posé sur
+le bloc carte + légende dessinait un rectangle autour de « Épique · Nouvelle ».
+Halo retiré du bloc (la carte porte le sien), légende réduite à « Nouvelle » /
+« Doublon » comme le récap, numéro des miniatures plus rogné.
 
 ## D-179 — 29 octobre 2026 : Drop premium, la rareté portée par l'objet
 
