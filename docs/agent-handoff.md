@@ -1,3 +1,15 @@
+# Checkpoint Codex — intégration PR #27, attente Android #24, 29 octobre 2026
+
+- Réservation Beads `CreatorDeck-Codex-h3u`, branche `codex/integration-pr27-pr24-20261029` créée depuis `origin/main` à jour (`0ea400c5`). Autorisation explicite de Malik pour les deux fusions.
+- **#27 fusionnée et vérifiée sur GitHub** : `c2d04c4f11e1cf65a6378c9f6a1e7ac872bf94ec`, push normal vers main ; PR marquée MERGED automatiquement. Six fichiers, aucun conflit, Drop premium D-179/D-180 préservé.
+- Sur ce SHA : `npx vitest run -c vitest.ecrans.config.mts` **268/268**, 40 fichiers ; `npm run e2e:rapide -- e2e/memes.spec.ts e2e/booster-selector.spec.ts` **34 réussis, 16 ignorés**, 2,1 min, sortie 0. Aucun EPERM.
+- Deux captures Chromium 390 × 844 inspectées : `reports/integration-pr27-memes-390.png` et `reports/integration-pr27-imgflip-390.png` (locales). Images chargées (480 px), filtre CSS absent, aucun voile observé ; source MEMES de faible résolution.
+- **#24 non fusionnée** : inspection `git merge-tree --write-tree` seulement ; conflits prévus dans les quatre docs et `src/lib/release-notes.ts`, `creator-deck-app.tsx` se fusionne automatiquement. Aucun conflit résolu ni code Histoire installé à ce stade.
+- Question envoyée à Malik : le nouveau workflow Histoire active `cdStoryPreview=true` (identifiant `com.creatordeck.app.histoire`, version `histoire-<SHA>`). Paramètres du workflow APK habituel inchangés ; attendre sa réponse avant fusion, conformément à sa consigne Android.
+- CI #27 : [Vérification 40855816818](https://github.com/GoodFight37/CreatorDeck/actions/runs/40855816818) en file au dernier relevé. Aucun vert annoncé. Vérifications finales et e2e complète après intégration #24 non lancés.
+- Fichiers locaux d'autrui conservés, notamment Kyara ci-dessous, audio, PNG et Gradle. Émulateur, APK et Redmi non vérifiés.
+- Prochaine action : obtenir la décision Android, réconcilier #24 sans toucher économie/tirage/boosters/Supabase, conserver les deux côtés des docs et toutes les notes datées, puis lancer les contrôles finaux demandés.
+
 # Checkpoint Claude — D-180 : carte sans métal, rareté au contour, 29 octobre 2026
 
 Malik rejette la plaque métallisée et les losanges de D-179 (« cheap », trop de matières).
