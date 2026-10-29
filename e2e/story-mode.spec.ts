@@ -142,6 +142,7 @@ test("Histoire : objectif, épisode et noms des jauges découvrables au toucher"
 
 test("Histoire : la mission passe d'un acte à l'autre sans modifier la sauvegarde", async ({ page }) => {
   await page.goto("/histoire");
+  // Attendre l'écriture initiale pour qu'elle n'écrase pas le scénario injecté.
   await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   let run = startStory(STORY_PROLOGUE);
   for (let i = 0; i < 12; i++) run = chooseStory(STORY_PROLOGUE, run, "left");
