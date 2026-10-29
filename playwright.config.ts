@@ -11,6 +11,10 @@ import { E2E_CLOUD_KEY, E2E_CLOUD_URL, e2eCloudActive } from "./e2e/cloud-factic
  *
  * Lancer : `npm run e2e` (la première fois : `npx playwright install chromium`).
  */
+// `CREATORDECK_E2E_BUILD=1` : tests sur l'export statique (`next build` sans
+// retirer les prototypes, que l'e2e visite), servi tel que le téléphone le reçoit.
+const E2E_BUILD = process.env.CREATORDECK_E2E_BUILD === "1";
+
 export default defineConfig({
   testDir: "./e2e",
   // Le premier chargement compile la page en mode développement : large.
@@ -18,8 +22,8 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: true,
   // Un seul ouvrier : `next dev` compile à la demande, et plusieurs onglets
-  // simultanés le font surtout attendre.
-  workers: 1,
+  // simultanés le font surtout attendre. L'export déjà compilé en supporte quatre.
+  workers: E2E_BUILD ? 4 : 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI
@@ -34,9 +38,10 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: process.env.CREATORDECK_LOCAL_QUALITY ? "npm run dev -- --webpack" : "npm run dev",
+    command: E2E_BUILD ? "npx next build && npx serve out -l 3000 --no-clipboard -L"
+      : process.env.CREATORDECK_LOCAL_QUALITY ? "npm run dev -- --webpack" : "npm run dev",
     url: "http://localhost:3000",
-    timeout: process.env.CREATORDECK_LOCAL_QUALITY ? 180_000 : 120_000,
+    timeout: E2E_BUILD ? 420_000 : process.env.CREATORDECK_LOCAL_QUALITY ? 180_000 : 120_000,
     // Sans cloud par défaut, quel que soit `.env.local` ; `CREATORDECK_E2E_CLOUD=1`
     // donne la configuration factice (RPC interceptés). Vider les variables ne
     // suffit pas si un serveur déjà lancé garde les vraies : il n'est donc
