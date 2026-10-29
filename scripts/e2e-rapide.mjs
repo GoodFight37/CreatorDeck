@@ -4,9 +4,9 @@
  */
 import { spawnSync } from "node:child_process";
 
-const run = spawnSync("npx", ["playwright", "test", ...process.argv.slice(2)], {
+// Sans shell : un `--grep "avec le serveur"` doit rester un seul argument.
+const run = spawnSync(process.execPath, ["node_modules/@playwright/test/cli.js", "test", ...process.argv.slice(2)], {
   stdio: "inherit",
-  shell: true,
   env: { ...process.env, CREATORDECK_E2E_BUILD: "1" },
 });
 process.exit(run.status ?? 1);
