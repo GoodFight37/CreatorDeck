@@ -1,3 +1,12 @@
+# Intégration Histoire — 29 octobre 2026 (D-189)
+
+Histoire est réconciliée avec main dans le même export CreatorDeck ; aucune
+application Android séparée, aucun nouvel accès depuis le menu principal,
+aucune modification des boosters ou de l'économie. Vérifications et statut de
+publication : premier checkpoint de [la passation](agent-handoff.md).
+Émulateur, Redmi et durée humaine des parties restent non vérifiés.
+Les mentions de PR brouillon et d'APK séparée ci-dessous sont historiques.
+
 **27 octobre 2026 · Inspection Papers, Please :** les archives RAR/ZIP utilisateur sont identiques, 56 fichiers réels dont ressources Unity IL2CPP et 134 textures d'une localisation. Étude des familles de documents/outils ; aucun contenu réutilisé. Le mode Histoire étend les dossiers facultatifs de 8 à 13 avec papier original, marque de sélection et indices liés aux conséquences de la saison. Contrôler la CI du nouveau SHA, garder `main` intact et attendre l'accès Vercel pour tester la version mobile déployée.
 
 **27 octobre 2026 · Dossiers d'inspection Histoire (PR #24) :** mini-enquête facultative : sur 8 scènes de contrat, sponsor, enquête ou collecte, comparer 2 pièces parmi 3 pour mettre à jour une anomalie avant le choix gauche/droite. UI spécifique CreatorDeck, tactile/clavier, aucun blocage du rythme Reigns, aucun effet sur sauvegarde V4/équilibrage, aucun déploiement ni merge. Tests ajoutés ; contrôle CI et rendu réel à faire au SHA de livraison.
@@ -1296,4 +1305,3 @@ principal ni changement du Tribunal, des boosters ou de l'économie. Intégratio
 locale réconciliée ; contrôles finaux et publication à confirmer au checkpoint.
 Essais émulateur/Redmi et durée humaine des parties restent non vérifiés.
 Les mentions de PR brouillon et de prévisualisation ci-dessous sont historiques.
-

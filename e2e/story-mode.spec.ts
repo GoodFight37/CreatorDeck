@@ -181,6 +181,8 @@ test("Histoire : emblèmes originaux, supports de diffusion et profondeur du paq
 test("Histoire : les actes sont des interludes et les fins des affiches de direct", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
+  // Laisser l'initialisation écrire sa sauvegarde avant d'injecter celle du test.
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   let run = startStory(STORY_PROLOGUE);
   for (let index = 0; index < 12; index++) run = chooseStory(STORY_PROLOGUE, run, "left");
   expect(run.ending).toBeNull();
@@ -1009,6 +1011,7 @@ test("Histoire : les neuf fins ont chacune un visuel différent sur téléphone"
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
   await mkdir("test-results/mobile-observation-histoire", { recursive: true });
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   const uniqueArtwork = new Set<string>();
   for (const [ending, path] of Object.entries(endingPaths)) {
     let run = startStory(STORY_PROLOGUE);

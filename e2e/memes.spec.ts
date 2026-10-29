@@ -132,6 +132,7 @@ test("MEMES et Imgflip présentent la photo source sans voile, matière ni fond 
     await expect(photo).toHaveCSS("object-fit", "contain");
     await expect(photo).toHaveCSS("filter", "none");
     await expect(photo).toHaveCSS("transform", "none");
+    await expect(photo).toHaveAttribute("draggable", "false");
     await expect(card.locator(".card-photo-shade, .card-photo-backdrop, .meme-card-material")).toHaveCount(0);
     await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     await page.getByRole("button", { name: "Fermer" }).click();

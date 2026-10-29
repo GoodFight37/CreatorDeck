@@ -1,3 +1,15 @@
+# Checkpoint Codex — #27 puis #24 prêtes, même application, 29 octobre 2026
+
+- Autorisation Malik confirmée ; #27 déjà fusionnée sur main `c2d04c4f`, #24 intégrée localement par merge `c4f2a48ffda507ded8259581d9dc3ce0e54fff15`, sans application séparée (D-189). Correction MEMES et fiabilisation de deux tests Histoire livrées avec ce checkpoint.
+- Les quatre documents en conflit gardent les deux côtés ; toutes les notes de version sont conservées et triées. Android, workflow APK de test, navigation, Tribunal, carte Live premium D-179/D-180, sons, Binder muet et économie de main inchangés. Route `/histoire` dans le même export ; aucun bouton ajouté au menu principal.
+- Contrôles finaux : `npm run typecheck` OK ; ESLint ciblé 31 fichiers puis les 4 fichiers corrigés OK ; `npm test` **1269/1269** ; `npx vitest run -c vitest.ecrans.config.mts` **268/268** ; `npm run catalog:ci` OK.
+- **Unique suite complète locale** `npm run e2e:rapide` : **335 réussis, 62 ignorés, 7 échecs**, 8,1 min, sortie 1. Un contrôle de timing Rare a échoué sous charge ; un test Histoire injectait sa sauvegarde avant l'initialisation ; les cinq derniers échecs suivent la mort du serveur `serve` (`EMFILE: too many open files`), puis `ERR_CONNECTION_REFUSED`. Ne pas annoncer cette suite verte.
+- Reprise ciblée des échecs et de MEMES, 1 worker : **17 réussis / 1 échec**, ce dernier sur les neuf fins présentait la même course de sauvegarde du test. Après attente explicite de la sauvegarde initiale, **2/2** sur les neuf fins. Tous les cas initialement en échec ont donc réussi dans les reprises ciblées ; aucune seconde suite complète locale.
+- CI #27 avait révélé le glissement MEMES bloqué : reproduit avec événements `dragstart` IMG → `pointercancel`, corrigé uniquement par `draggable={false}` sur l'image commune. `CREATORDECK_E2E_CLOUD=1 npm run e2e:rapide -- e2e/memes.spec.ts --grep 'avec le serveur' --workers=1` : **2/2**, 53,2 s (RPC factices). L'assertion sur l'attribut est couverte par les reprises MEMES, démo comprise. Aucun tirage, économie ou migration modifié.
+- Captures inspectées : MEMES/Imgflip 390 px, Histoire acte II 390 px et gaming 320 px. Chromium uniquement ; pas d'émulateur, d'APK installé ni de Redmi.
+- Publication normale vers main puis attente de **Vérification et APK de test sur le SHA final**. Le statut CI avant cette publication n'est pas une preuve du résultat final.
+- Fichiers locaux d'autrui exclus des commits (empreintes vérifiées). Bloc Kyara temporairement sauvegardé dans `ea0ddbf6a9a8e0f695e8b138b2084d4df15767ad`, à réappliquer hors index après ce commit. Réservation `CreatorDeck-Codex-h3u`.
+
 # Checkpoint Codex — intégration Histoire locale, 29 octobre 2026
 
 - Malik confirme : Histoire dans CreatorDeck, aucune seconde application (D-189).

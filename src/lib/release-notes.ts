@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-29-memes-imgflip-nettete", date: "2026-10-29", title: "Des images MEMES et Imgflip plus nettes",
+    summary: "Les images retrouvent leurs couleurs, sans voile ni fond flouté.",
+    sections: [{ title: "MEMES et Imgflip", items: [
+      "Les cartes affichent leur image d'origine, sans couche qui la filtre.",
+      "Le glissement passe à la carte suivante sans déplacer l'image dans le navigateur.",
+    ] }],
+  },
+  {
     id: "2026-10-29-drop-premium", date: "2026-10-29", title: "Des cartes qui ont du poids",
     summary: "La rareté se voit au premier coup d’œil, et le booster finit sur tes cinq cartes.",
     sections: [{ title: "Ouverture du booster", items: [

@@ -1,3 +1,12 @@
+# Mise à jour d'intégration — 29 octobre 2026
+
+Les consignes historiques ci-dessous sont remplacées par D-189 : Malik autorise
+la fusion et veut Histoire dans CreatorDeck, sans seconde application Android.
+Le workflow APK Histoire et le drapeau de prévisualisation ne sont pas intégrés.
+Le workflow APK de test habituel reste inchangé. Aucun accès depuis le menu
+principal n'est ajouté dans ce lot ; le Tribunal est conservé. La route
+`/histoire` appartient au même export web/Android que le jeu.
+
 # Mode Histoire — dossier de passation finale vers Codex
 
 **Préparé le 28 octobre 2026.** Source de vérité : [PR #24](https://github.com/GoodFight37/CreatorDeck/pull/24), branche `feature/histoire-reigns-pilot-20261026`. **Aucune fusion dans `main` n'est effectuée par cette passation.** La décision et l'exécution de l'intégration sont réservées à l'utilisateur et à Codex.
@@ -52,12 +61,3 @@
 - Architecture/choix actuels : `docs/mode-histoire.md`, `docs/mode-histoire-saison-v3.md`, `docs/mode-histoire-v4-audit.md`, `docs/agent-handoff.md`.
 
 **Feu vert fusion seulement après :** CI entièrement verte sur le **HEAD d'intégration**, revue du diff de fichiers partagés, entrée officielle testée, APK officielle non régressée et acceptation de l'utilisateur. Ne pas traiter le statut READY de Vercel comme une preuve de gameplay parfait.
-# Mise à jour d'intégration — 29 octobre 2026
-
-Les consignes historiques ci-dessous sont remplacées par D-189 : Malik autorise
-la fusion et veut Histoire dans CreatorDeck, sans seconde application Android.
-Le workflow APK Histoire et le drapeau de prévisualisation ne sont pas intégrés.
-Le workflow APK de test habituel reste inchangé. Aucun accès depuis le menu
-principal n'est ajouté dans ce lot ; le Tribunal est conservé. La route
-`/histoire` appartient au même export web/Android que le jeu.
-

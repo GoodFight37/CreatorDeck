@@ -1,3 +1,14 @@
+## MEMES / Imgflip : glissement annulé par le navigateur — 29 octobre 2026
+
+P1, introduit par #27 (`c2d04c4f`), trouvé dans sa CI cloud simulée.
+Après retrait du voile, l'image reçoit directement le geste : le navigateur
+émet `dragstart` sur IMG puis `pointercancel`, la révélation reste à 1/5.
+Reproduit localement à 390 px sur la démo sans compte, événements enregistrés.
+Correction : `draggable={false}` sur l'image commune MEMES/Imgflip ; garder le
+test cloud qui glisse réellement, ajouter une assertion sur l'attribut de l'image.
+Validation de la correction consignée au checkpoint d'intégration. Aucun tirage
+ni stockage modifié ; bouton suivant disponible comme contournement avant correction.
+
 ## Audio : double motif légendaire et Atelier silencieux — 27 octobre 2026
 
 P2, base `b3922daf`, suivi `CreatorDeck-Codex-4m4`. La révélation légendaire
