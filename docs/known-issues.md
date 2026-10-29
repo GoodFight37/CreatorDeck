@@ -1,3 +1,14 @@
+## Live invité : connexion imposée après un seul aperçu — 29 octobre 2026
+
+P1, signalé par Malik, suivi `CreatorDeck-Codex-79x`, base `cbe86a33`.
+Reproduction : ouvrir le Live sans compte, fermer la révélation ; le compte
+s'ouvre automatiquement et le prochain essai est refusé, même après rechargement.
+Causes confirmées : garde `hasSeenTutorialPack` dans `use-pack-opening.ts` et
+ouverture du compte dans `closeReveal`. Correction : aperçu répétable tant que
+l'utilisateur est invité, fermeture vers le Drop. Les tirages de compte restent
+serveur et ne se replient jamais localement. Validation : tests d'écrans et
+parcours navigateur sans compte, résultats au premier checkpoint.
+
 ## MEMES / Imgflip : glissement annulé par le navigateur — 29 octobre 2026
 
 P1, introduit par #27 (`c2d04c4f`), trouvé dans sa CI cloud simulée.

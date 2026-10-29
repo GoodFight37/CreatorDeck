@@ -1,3 +1,11 @@
+# Boosters sans connexion — 29 octobre 2026 (D-191)
+
+Live invité répétable et retour au Drop sans demande de compte implémentés ;
+MEMES, Imgflip et Anime déjà accessibles sans connexion. Treize tests d'écrans
+et huit scénarios navigateur ciblés réussis ; CI complète et publication à
+confirmer au premier checkpoint. Les aperçus ne créditent pas de collection ou
+récompenses de compte ; Anime conserve sa collection locale.
+
 # Chantiers à reprendre — 29 octobre 2026 (D-190)
 
 État vérifié dans Beads ; les décisions d'emplacement restent à Malik.

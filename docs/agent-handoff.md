@@ -1,3 +1,13 @@
+# Checkpoint Codex — boosters sans connexion, 29 octobre 2026
+
+- Demande Malik : permettre à un testeur ou une IA d'ouvrir les boosters dès l'arrivée, sans connexion obligatoire. Suivi `CreatorDeck-Codex-79x`, D-191 ; base code `cbe86a335ff56f365f29523188a2a170c1937c2d`, branche `codex/boosters-sans-connexion-20261029`.
+- Live invité : suppression de la limite d'un seul aperçu, même si l'ancien marqueur est déjà consommé ; fermer la révélation revient au Drop et n'ouvre plus le compte. Réutilisation de l'aperçu existant, sans gain, cartes ou réserve de compte. Les refus serveur d'un compte connecté ne se replient jamais localement.
+- MEMES/Imgflip déjà accessibles en démo ; Anime déjà accessible avec collection locale : leurs règles sont conservées. Pas de modification du Paquet Scène, des missions, du Tribunal, des libellés MEMES FR ou de l'accès Histoire dans ce lot.
+- Fichiers de code : `src/hooks/use-pack-opening.ts`, `src/components/creator-deck-app.tsx`, note de version ; tests `src/ecrans-tutorial-pack.test.tsx`, `e2e/product-audit.spec.ts`, `e2e/booster-selector.spec.ts`. Documentation D-191 et problème connu mis à jour.
+- Vérifications locales : typecheck et ESLint ciblé réussis ; `npx vitest run -c vitest.ecrans.config.mts src/ecrans-tutorial-pack.test.tsx src/ecrans-circle-pack.test.tsx src/ecrans-circle-onboarding.test.tsx` **13/13** ; `CREATORDECK_E2E_CLOUD=1 npm run e2e:rapide -- e2e/product-audit.spec.ts e2e/booster-selector.spec.ts --grep 'invités répétables|sans connexion :' --workers=2` **8/8**, 2,1 min, sortie 0. Live trois fois dont rechargement, les trois autres boosters jusqu'à leur récap et retour ; aucune fenêtre Compte imposée.
+- Suite complète confiée à la CI de branche avant le push normal de ce même SHA vers main, conformément à la règle de validation des écrans. Pas de nouvelle suite locale complète après ces scénarios ciblés.
+- Fichiers locaux audio/PNG/Android et bloc Kyara préservés, hors commits. Aucun test émulateur ni Redmi revendiqué. Suite : vérifier CI de branche, publier sans force sur main, confirmer le SHA Vercel puis vérifier le parcours invité publié.
+
 # Checkpoint Codex — priorités de Malik à consigner, 29 octobre 2026
 
 - Demande : faire le point sur les chantiers et noter les décisions, **sans implémenter maintenant**. Code audité `27f5f6a2c8ec0e4d10b59320558ddac4f0c629f9`, branche `codex/integration-pr27-pr24-20261029`, main distant égal au démarrage.

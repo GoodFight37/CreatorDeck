@@ -733,11 +733,7 @@ export function CreatorDeckApp() {
 
   function closeReveal() {
     setTearing(false);
-    if (tutorialReveal) {
-      setTutorialReveal(false);
-      setAccountFocus(null);
-      setAccountOpen(true);
-    }
+    setTutorialReveal(false);
     setWelcomeGiftReveal(false);
     setDrawnCards([]);
     setRevealIndex(0);

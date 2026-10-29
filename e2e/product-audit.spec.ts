@@ -48,21 +48,26 @@ test("sons, musique et reflets actifs par défaut, OFF conservé au rechargement
   await expect(page.locator("html")).toHaveAttribute("data-card-fx", "off");
 });
 
-test("avec le serveur : pack tutoriel invité, sans gain ni appel de tirage", async ({ page }) => {
+test("avec le serveur : boosters invités répétables sans connexion, gain ni appel de tirage", async ({ page }) => {
   test.skip(!cloudUrl(), "build sans cloud : essai invité spécifique au cloud");
   let calls = 0;
   await page.route("**/rest/v1/rpc/open_pack", async (route) => { calls++; await route.abort(); });
   await gotoDeck(page, false);
-  await page.getByRole("button", { name: "Essayer", exact: true }).click();
-  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
-  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
-  await expect(reveal).toBeVisible();
-  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Mon compte", exact: true })).toBeVisible();
+  for (const reload of [false, false, true]) {
+    if (reload) await gotoDeck(page, false);
+    await page.getByRole("button", { name: "Essayer", exact: true }).click();
+    await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+    const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+    await expect(reveal).toBeVisible();
+    for (let i = 0; i < 5; i++) {
+      await expect(reveal.locator(".reveal-next")).toBeEnabled();
+      await reveal.locator(".reveal-next").click();
+    }
+    await expect(reveal).toHaveCount(0);
+    await expect(page.getByRole("dialog", { name: "Mon compte", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Essayer", exact: true })).toBeEnabled();
+  }
   expect(calls).toBe(0);
-  await gotoDeck(page, false);
-  // Le paquet EST le bouton : son nom dit ce qu'un appui fera.
-  await expect(page.locator(".booster-carousel").getByRole("button", { name: "Se connecter pour ouvrir", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
   await expect(page.locator(".binder-empty-state")).toBeVisible();
 });

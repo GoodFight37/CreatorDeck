@@ -16,7 +16,7 @@ describe("l’essai invité sans récompense ni repli cloud", () => {
   let banc: Banc;
   beforeEach(() => { banc = creerBanc(); banc.preparer(); connection.userId = null; result = undefined; vi.useFakeTimers(); });
   afterEach(() => { banc.nettoyer(); vi.useRealTimers(); vi.restoreAllMocks(); });
-  it("montre cinq cartes, ne touche ni la partie ni le serveur, puis demande un compte", async () => {
+  it("montre cinq cartes et permet de recommencer sans partie ni serveur modifiés", async () => {
     const local = vi.spyOn(gameStore, "openPack");
     const server = vi.spyOn(cloudStore, "openPack");
     await banc.monter(<Harness />);
@@ -32,16 +32,18 @@ describe("l’essai invité sans récompense ni repli cloud", () => {
     expect(local).not.toHaveBeenCalled();
     expect(server).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(TUTORIAL_PACK_KEY)).toBe("1");
-    banc.appuyer("Compte");
-    await act(async () => { await Promise.resolve(); });
-    expect(result?.status).toBe("refused");
+    banc.appuyer("Essayer");
+    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    expect(result?.status).toBe("drawn");
+    expect(local).not.toHaveBeenCalled();
+    expect(server).not.toHaveBeenCalled();
   });
-  it("garde la limite après un rechargement", async () => {
+  it("permet aussi l'ouverture si l'ancien essai a déjà été consommé", async () => {
     window.localStorage.setItem(TUTORIAL_PACK_KEY, "1");
     await banc.monter(<Harness />);
-    banc.appuyer("Compte");
-    await act(async () => { await Promise.resolve(); });
-    expect(result?.status).toBe("refused");
+    banc.appuyer("Essayer");
+    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    expect(result?.status).toBe("drawn");
   });
   it("un refus serveur avec compte ne se transforme jamais en essai local", async () => {
     connection.userId = "linked-account";

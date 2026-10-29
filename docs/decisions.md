@@ -1,3 +1,23 @@
+## D-191 — 29 octobre 2026 : boosters accessibles sans connexion obligatoire
+
+Malik veut pouvoir partager le lien du jeu à un testeur ou une IA, qui doit
+pouvoir ouvrir dès l'arrivée sans créer de compte ni se connecter. Le Live Drop
+invité devient répétable, même après consommation de l'ancien essai ; fermer
+sa révélation ne déclenche plus l'écran Compte. MEMES et Imgflip gardent leurs
+démos déjà accessibles ; Anime reste ouvrable avec sa collection locale.
+Suivi : `CreatorDeck-Codex-79x`.
+
+La connexion reste facultative pour essayer ces quatre boosters. Elle reste
+nécessaire pour la collection et les récompenses serveur : les aperçus Live,
+MEMES et Imgflip ne touchent ni collection, ni réserve, ni points, ni jetons de
+compte. Un utilisateur connecté continue à tirer par le serveur, sans repli
+local en cas d'erreur. Le Paquet Scène et les autres activités ne font pas
+partie de ce changement. Aucun schéma, migration ou nouvel appel payant.
+
+Réutiliser le parcours d'aperçu Live existant plutôt que créer un mode de jeu
+supplémentaire. Vérifier répétition immédiate, rechargement, ancien essai et
+absence de connexion imposée pour les quatre univers.
+
 ## D-190 — 29 octobre 2026 : Histoire remplace le Tribunal ; MEMES sans FR
 
 Malik précise que l'intégration d'Histoire doit inclure un accès dans le jeu.

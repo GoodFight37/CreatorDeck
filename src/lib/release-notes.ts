@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-29-boosters-sans-connexion", date: "2026-10-29", title: "Essaie les boosters sans te connecter",
+    summary: "Les quatre boosters s'ouvrent sans compte, et tu peux recommencer le Live Drop autant que tu veux.",
+    sections: [{ title: "Jouer sans compte", items: [
+      "Le Live Drop reste disponible même si tu as déjà terminé un premier essai.",
+      "Après l'aperçu, tu reviens au jeu sans ouverture automatique de la connexion.",
+      "Les aperçus Live, MEMES et Imgflip ne créditent ni cartes ni récompenses de compte ; la collection Anime reste locale.",
+    ] }],
+  },
+  {
     id: "2026-10-29-memes-imgflip-nettete", date: "2026-10-29", title: "Des images MEMES et Imgflip plus nettes",
     summary: "Les images retrouvent leurs couleurs, sans voile ni fond flouté.",
     sections: [{ title: "MEMES et Imgflip", items: [

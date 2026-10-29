@@ -46,6 +46,28 @@ async function fakeAccount(page: Page) {
   return calls;
 }
 
+for (const [universe, open] of [
+  ["MEMES", "ESSAYER MEMES SANS COMPTE"],
+  ["IMGFLIP", "ESSAYER IMGFLIP SANS COMPTE"],
+  ["ANIME", "Ouvrir le booster Anime"],
+] as const) test(`avec le serveur : sans connexion : ${universe} s'ouvre depuis le Drop et revient sans demander de compte`, async ({ page }) => {
+  test.skip(!cloudUrl(), "Le build cloud simulé vérifie l'absence de compte.");
+  await gotoDeck(page, false);
+  await page.getByRole("button", { name: universe, exact: true }).click();
+  await page.getByRole("button", { name: open, exact: true }).click();
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const scene = page.locator(".opening-continuum");
+  for (let i = 0; i < 5; i++) {
+    await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
+    await scene.locator(".meme-reveal-next").click();
+  }
+  await expect(scene.locator(".meme-reveal-summary-grid > div")).toHaveCount(5);
+  await scene.locator(".meme-reveal-next").click();
+  await expect(scene).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Mon compte", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: open, exact: true })).toBeEnabled();
+});
+
 test("le choix d'univers change de booster sans préparer ni consommer", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page, true, { withoutCircle: true });
