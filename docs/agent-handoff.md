@@ -1,3 +1,18 @@
+# Checkpoint Claude — performance mobile, Binder muet, e2e rapide, 29 octobre 2026
+
+- **E2E rapide** (`6fb71c64`, `8b3a53fb`, `b11fbc4f`) : `npm run e2e:rapide` = `next build` +
+  `serve out` + 4 ouvriers ; suite complète 4,9 à 6,1 min au lieu de 11,1. La CI
+  (`CREATORDECK_E2E_BUILD=1`) passe ses jobs Playwright de 4,7–5,6 à 2,9–4,2 min.
+  Le test du rituel Rare+ attend maintenant le départ du retournement (délai 210 ms).
+  Course rare connue : rituel commun, 1 échec sur 56 sous forte charge (la CI rejoue une fois).
+- **Performance mobile** (`008b81c7`, `t5b`) : 10 halos en dégradé sans `filter: blur` ;
+  déchirure sans `setState` par image (découpe écrite sur rabat/corps/intérieur, plus de
+  variables héritées par la scène) ; glisser de la révélation en `transform` en ligne.
+  Écrans 267/267, e2e complet **231/49/0**. **Gain non mesuré sur téléphone** : à
+  valider sur le Redmi (APK) avant de clore `t5b`.
+- **Binder muet** (`92daa986`, `6u3`) : décision de Malik, le son de page remis le 13/10
+  est retiré ; correctif écrit par Codex, vérifié par Claude (test rouge puis vert).
+
 # Checkpoint Claude — lot H : retour aux sons d'origine, 29 octobre 2026
 
 Suivi `CreatorDeck-Codex-t6y`, base `1b298c51` (main). Malik, après test téléphone :
