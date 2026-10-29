@@ -181,8 +181,12 @@ for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 999
     const reveal = page.locator(".reveal-game");
     await expect(reveal).toHaveClass(new RegExp(`reveal-rarity-${rarity}`));
     const face = reveal.locator(".reveal-flip-face");
-    const motion = await face.evaluate((node) => {
+    const motion = await face.evaluate(async (node) => {
       const animation = node.getAnimations()[0];
+      // Rare et mieux attendent 210 ms : figé avant, le retournement ne démarre jamais.
+      if ((window as typeof window & { __ritualBlockedAtStart?: boolean }).__ritualBlockedAtStart === undefined) {
+        await new Promise(resolve => node.addEventListener("animationstart", resolve, { once: true }));
+      }
       animation.pause();
       const timing = animation.effect!.getTiming();
       const duration = Number(timing.duration);
