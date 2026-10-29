@@ -37,7 +37,6 @@
   background:
     radial-gradient(circle at 50% 50%, rgb(var(--cinema-hot) / .24), transparent 28%),
     radial-gradient(circle at 50% 50%, transparent 28%, rgb(var(--cinema-main) / .48) 39%, rgb(var(--cinema-secondary) / .26) 48%, transparent 74%);
-  filter: blur(18px);
   opacity: 0;
   transform: translate(-50%, -50%) scale(.54);
   animation: reveal-corona-impact 1450ms cubic-bezier(.12,.7,.19,1)

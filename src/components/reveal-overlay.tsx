@@ -190,9 +190,7 @@ export function RevealOverlay({
   function resetRevealDrag(element?: HTMLElement | null) {
     const target = element || anchorRef.current;
     if (target) {
-      target.style.removeProperty("--reveal-drag-x");
-      target.style.removeProperty("--reveal-drag-y");
-      target.style.removeProperty("--reveal-drag-rotate");
+      target.style.removeProperty("transform");
       target.classList.remove("is-swiping");
     }
   }
@@ -216,9 +214,8 @@ export function RevealOverlay({
     const anchor = anchorRef.current || event.currentTarget;
     const clampedX = Math.max(-160, Math.min(160, dx));
     const clampedY = Math.max(-140, Math.min(110, dy));
-    anchor.style.setProperty("--reveal-drag-x", `${clampedX}px`);
-    anchor.style.setProperty("--reveal-drag-y", `${clampedY}px`);
-    anchor.style.setProperty("--reveal-drag-rotate", `${clampedX * 0.08}deg`);
+    // Transform direct : une variable CSS sur l'ancre recalculerait le style de toute la carte à chaque image.
+    anchor.style.transform = `translate(-50%, -50%) translate(${clampedX}px, ${clampedY}px) rotate(${clampedX * 0.08}deg)`;
     anchor.classList.add("is-swiping");
   }
 

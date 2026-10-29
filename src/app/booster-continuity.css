@@ -564,11 +564,9 @@ html:has(.booster-presentation) { overflow: hidden; }
 .reveal-game .reveal-stage > .reveal-anchor:active {
   cursor: grabbing;
 }
+/* Le doigt pose le transform en ligne (reveal-overlay.tsx). */
 .reveal-game .reveal-stage > .reveal-anchor.is-swiping {
   transition: none;
-  transform: translate(-50%, -50%)
-    translate(var(--reveal-drag-x, 0px), var(--reveal-drag-y, 0px))
-    rotate(var(--reveal-drag-rotate, 0deg));
 }
 /* flat, pas preserve-3d : en 3D, chaque enfant (photo, textes) garde son
    propre recto et la WebView Android le montrait à l'envers pendant le

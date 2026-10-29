@@ -662,7 +662,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.transform)).toContain("perspective(900px)");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
   await expect(dialog.locator("canvas")).toHaveCount(0);
-  const pull = await dialog.locator(".booster-physical-scene").evaluate(node => Number((node as HTMLElement).style.getPropertyValue("--peel-progress")));
+  const pull = await dialog.locator(".foil-top-piece").evaluate(node => Number((node as HTMLElement).style.getPropertyValue("--peel-progress")));
   expect(pull).toBeGreaterThan(.3);
   expect(pull).toBeLessThan(1);
   expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).not.toBe("none");
@@ -735,7 +735,7 @@ test("free peel follows a bent retracing stroke and opens on a broad swipe", asy
     .map((pair) => pair.split(",").map(Number));
   expect(trace.some(([x], index) => index > 0 && x < trace[index - 1][0] - 2)).toBe(true);
   expect(Math.max(...trace.map(([, y]) => y)) - Math.min(...trace.map(([, y]) => y))).toBeGreaterThan(3);
-  const capCut = await dialog.locator(".booster-physical-scene")
+  const capCut = await dialog.locator(".foil-top-piece")
     .evaluate((node) => (node as HTMLElement).style.getPropertyValue("--cut-top"));
   expect(capCut).toContain(`${trace[0][0]}% ${trace[0][1]}%`);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");

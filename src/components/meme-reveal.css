@@ -10,7 +10,7 @@
 }
 .meme-reveal-aura { position: absolute; top: 28%; width: min(85vw, 420px); aspect-ratio: 1; border-radius: 50%;
   background: radial-gradient(circle, color-mix(in srgb, var(--meme-aura, #f5bb68) 42%, transparent), transparent 68%);
-  filter: blur(22px); opacity: .26; pointer-events: none; }
+  opacity: .26; pointer-events: none; }
 .meme-reveal-aura.rarity-common { opacity: .08; }
 .meme-reveal-aura.rarity-rare { --meme-aura: #50a8ef; opacity: .2; }
 .meme-reveal-aura.rarity-epic { --meme-aura: #b78aea; opacity: .55; }

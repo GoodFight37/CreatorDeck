@@ -20,6 +20,11 @@ type PeelFrame = {
   tilt: { x: number; y: number };
 };
 
+const REST_CUT: PeelFrame["cut"] = { start: 7, end: 7, progress: 0, direction: 1, origin: 7 };
+// Valeurs de repos posées par React une fois ; le geste les réécrit ensuite à la main.
+const restTop = { "--peel-progress": 0, "--peel-direction": 1, "--peel-origin-x": "7%" } as CSSProperties;
+const restInterior = { "--cut-start": "7%", "--cut-end": "7%", "--peel-progress": 0 } as CSSProperties;
+
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
  * passes, peels the upper weld off, then exposes and lifts actual card backs.
@@ -51,13 +56,55 @@ export function PackTear({
   children?: ReactNode;
 }) {
   const dialogRef = usePresentationFocus(true, returnFocusTo);
-  const [cut, setCut] = useState({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
-  const [trace, setTrace] = useState<{ x: number; y: number }[]>([]);
+  // La soudure du visuel Manga Drop est plus fine ; le geste reste partagé.
+  const seamY = customArtwork === "/packs/anime-opening.webp" ? 6.24 : 15.45;
   const [returning, setReturning] = useState(false);
   const pull = useRef({ x: 0, y: 0, angle: 0 });
   const topRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const interiorRef = useRef<HTMLDivElement>(null);
+  const traceRef = useRef<SVGSVGElement>(null);
+  const cutRef = useRef<PeelFrame["cut"]>(REST_CUT);
+  const lastTrace = useRef<{ x: number; y: number }[]>([]);
   const pullProgress = useRef(0);
-  // Les mouvements du doigt arrivent plus vite que l'écran : un seul rendu par image.
+  // La découpe s'écrit sur les trois pièces qui la lisent, sans rendu React ni
+  // variable héritée par toute la scène : le doigt va plus vite que l'écran.
+  const paintCut = useCallback((trace: { x: number; y: number }[], cut: PeelFrame["cut"]) => {
+    cutRef.current = cut;
+    lastTrace.current = trace;
+    // Keep the drawn path in touch order: X reversals and deliberate Y bends are
+    // part of the cut, not noise to collapse into a horizontal rail.
+    const edge = smoothPeelEdge(trace);
+    const boundary = edge.length > 1
+      ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
+      : `0% ${seamY}%, 100% ${seamY}%`;
+    const reversed = [...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || `0% ${seamY}%`;
+    const top = topRef.current?.style;
+    top?.setProperty("--cut-top", `polygon(0% 0%, 100% 0%, 100% ${seamY}%, ${reversed}, 0% ${seamY}%)`);
+    top?.setProperty("--peel-progress", String(cut.progress / 100));
+    top?.setProperty("--peel-direction", String(cut.direction));
+    top?.setProperty("--peel-origin-x", `${cut.origin}%`);
+    bodyRef.current?.style.setProperty("--cut-body", `polygon(0% ${seamY}%, ${boundary}, 100% ${seamY}%, 100% 100%, 0% 100%)`);
+    const interior = interiorRef.current?.style;
+    interior?.setProperty("--cut-start", `${cut.start}%`);
+    interior?.setProperty("--cut-end", `${cut.end}%`);
+    interior?.setProperty("--peel-progress", String(cut.progress / 100));
+    const svg = traceRef.current;
+    if (!svg) return;
+    const points = edge.map((point) => `${point.x},${point.y}`).join(" ");
+    svg.querySelectorAll("polyline").forEach((line) => line.setAttribute("points", points));
+    const sparks = edge.filter((_, index) => index % 5 === 2).map((point, index) => {
+      const spark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      spark.setAttribute("class", "foil-cut-spark");
+      spark.setAttribute("cx", String(point.x));
+      spark.setAttribute("cy", String(point.y));
+      spark.setAttribute("r", "0.42");
+      spark.style.animationDelay = `${(index % 4) * 45}ms`;
+      return spark;
+    });
+    svg.querySelector("g")?.replaceChildren(...sparks);
+  }, [seamY]);
+  // Les mouvements du doigt arrivent plus vite que l'écran : une écriture par image.
   const peelFrame = useRef<{ id: number; next: PeelFrame | null }>({ id: 0, next: null });
   const scheduleCut = useCallback((next: PeelFrame) => {
     const frame = peelFrame.current;
@@ -68,7 +115,6 @@ export function PackTear({
       const latest = frame.next;
       frame.next = null;
       if (!latest) return;
-      setTrace(latest.trace);
       pull.current = latest.pull;
       const top = topRef.current;
       if (top) {
@@ -77,9 +123,9 @@ export function PackTear({
       if (sceneRef.current && cardEffectsAllowed()) {
         sceneRef.current.style.transform = `translate(-50%, -50%) perspective(900px) rotateX(${latest.tilt.x + 1.5}deg) rotateY(${latest.tilt.y - 4}deg)`;
       }
-      setCut(latest.cut);
+      paintCut(latest.trace, latest.cut);
     });
-  }, []);
+  }, [paintCut]);
   const cancelScheduledCut = () => {
     const frame = peelFrame.current;
     if (frame.id) cancelAnimationFrame(frame.id);
@@ -149,7 +195,7 @@ export function PackTear({
     top?.style.setProperty("--peel-y", `${pull.current.y}px`);
     top?.style.setProperty("--peel-angle", `${pull.current.angle}deg`);
     sceneRef.current?.style.setProperty("--peel-release", String(pullProgress.current));
-    setCut((current) => ({ ...current, start: 4, end: 96, progress: 100 }));
+    paintCut(lastTrace.current, { ...cutRef.current, start: 4, end: 96, progress: 100 });
     setOpened(true);
 
     try {
@@ -170,7 +216,7 @@ export function PackTear({
       completeExtraction();
     }
 
-  }, [completeExtraction]);
+  }, [completeExtraction, paintCut]);
 
   useEffect(() => {
     const chamber = chamberRef.current;
@@ -204,22 +250,13 @@ export function PackTear({
     pullProgress.current = 0;
     setReturning(true);
     setReleaseReady(false);
-    setTrace([]);
     pull.current = { x: 0, y: 0, angle: 0 };
-    setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
+    paintCut([], REST_CUT);
   };
 
   // La palette de la scène et des dos suit le sachet ouvert (booster-continuity.css).
   const universe = customArtwork?.includes("anime") ? "anime" : customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes" : customArtwork?.includes("imgflip") ? "imgflip"
     : kind === "live" ? "live" : undefined;
-  // La soudure du visuel Manga Drop est plus fine ; le geste reste partagé.
-  const seamY = customArtwork === "/packs/anime-opening.webp" ? 6.24 : 15.45;
-  // Keep the drawn path in touch order: X reversals and deliberate Y bends are
-  // part of the cut, not noise to collapse into a horizontal rail.
-  const edge = smoothPeelEdge(trace);
-  const boundary = edge.length > 1
-    ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
-    : `0% ${seamY}%, 100% ${seamY}%`;
   const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
 
   return createPortal(
@@ -253,15 +290,6 @@ export function PackTear({
         <div
           ref={sceneRef}
           className={`booster-physical-scene${releaseReady ? " is-release-ready" : ""}${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
-          style={{
-            "--cut-start": `${cut.start}%`,
-            "--cut-end": `${cut.end}%`,
-            "--peel-progress": cut.progress / 100,
-            "--peel-direction": cut.direction,
-            "--peel-origin-x": `${cut.origin}%`,
-            "--cut-top": `polygon(0% 0%, 100% 0%, 100% ${seamY}%, ${[...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || `0% ${seamY}%`}, 0% ${seamY}%)`,
-            "--cut-body": `polygon(0% ${seamY}%, ${boundary}, 100% ${seamY}%, 100% 100%, 0% 100%)`,
-          } as CSSProperties}
         >
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
@@ -269,7 +297,7 @@ export function PackTear({
           <div className="foil-inner-shadow" aria-hidden="true" />
           {/* L'intérieur : tant que le sachet est fermé on ne voit rien, mais dès
               que la soudure cède, la lumière et la tranche des cartes en sortent. */}
-          <div className="foil-interior" aria-hidden="true">
+          <div ref={interiorRef} className="foil-interior" aria-hidden="true" style={restInterior}>
             <span className="foil-interior-light" />
             <span className="foil-interior-edges" />
           </div>
@@ -289,26 +317,17 @@ export function PackTear({
             ))}
           </div>
           </div>
-          <div className="foil-body-piece" aria-hidden="true">
+          <div ref={bodyRef} className="foil-body-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
             <span className="pack-bulge" />
           </div>
-          <div ref={topRef} className="foil-top-piece" aria-hidden="true">
+          <div ref={topRef} className="foil-top-piece" aria-hidden="true" style={restTop}>
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
-          <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <polyline className="foil-cut-glow" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
-            <polyline className="foil-cut-slit" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
-            {edge.filter((_, index) => index % 5 === 2).map((point, index) => (
-              <circle
-                key={`${index}-${point.x.toFixed(1)}-${point.y.toFixed(1)}`}
-                className="foil-cut-spark"
-                cx={point.x}
-                cy={point.y}
-                r="0.42"
-                style={{ animationDelay: `${(index % 4) * 45}ms` }}
-              />
-            ))}
+          <svg ref={traceRef} className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline className="foil-cut-glow" points="" />
+            <polyline className="foil-cut-slit" points="" />
+            <g />
           </svg>
           <div
             className="booster-tear-track booster-peel-zone"
@@ -335,12 +354,11 @@ export function PackTear({
               };
               setReturning(false);
               setReleaseReady(false);
-              setTrace([point]);
               pull.current = { x: 0, y: 0, angle: 0 };
               for (const key of ["--peel-x", "--peel-y", "--peel-angle"]) topRef.current?.style.removeProperty(key);
               sceneRef.current?.classList.add("is-pulling");
               pullProgress.current = 0;
-              setCut({ start: point.x, end: point.x, progress: 0, direction: 1, origin: point.x });
+              paintCut([point], { start: point.x, end: point.x, progress: 0, direction: 1, origin: point.x });
               try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* capture */ }
             }}
             onPointerMove={(event) => {

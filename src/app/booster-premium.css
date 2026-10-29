@@ -125,7 +125,6 @@
   width: 84%;
   height: 22%;
   background: radial-gradient(ellipse, rgba(229, 77, 124, .25), rgba(74, 19, 66, .14) 40%, transparent 76%);
-  filter: blur(24px);
 }
 .booster-cinematic .booster-tear-track {
   position: absolute;

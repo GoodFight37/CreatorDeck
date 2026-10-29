@@ -325,12 +325,12 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(pointer("pointermove", 124, 100));
     });
     expect(anchor.classList.contains("is-swiping")).toBe(true);
-    expect(anchor.style.getPropertyValue("--reveal-drag-x")).toBe("24px");
+    expect(anchor.style.transform).toContain("translate(24px, 0px)");
     expect(anchor.style.getPropertyValue("--reveal-tilt-y")).toBe("");
     act(() => { anchor.dispatchEvent(pointer("pointerup", 124, 100)); });
     expect(next).not.toHaveBeenCalled();
     expect(anchor.classList.contains("is-swiping")).toBe(false);
-    expect(anchor.style.getPropertyValue("--reveal-drag-x")).toBe("");
+    expect(anchor.style.transform).toBe("");
   });
 
   it("le balayage de la dernière carte range le paquet sans avancer", async () => {

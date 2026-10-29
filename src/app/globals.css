@@ -4369,7 +4369,6 @@ input:focus-visible {
   opacity: 0;
   background: radial-gradient(ellipse at center,
     rgb(251 160 112 / .23) 0%, rgb(219 99 125 / .15) 38%, transparent 73%);
-  filter: blur(19px);
   box-shadow: none;
   pointer-events: none;
   animation: rare-aura-arrive 1.4s ease-out var(--rare-delay, 0ms) both;
@@ -4379,7 +4378,6 @@ input:focus-visible {
   height: min(76dvh, 560px);
   background: radial-gradient(ellipse at center,
     rgb(255 223 151 / .34) 0%, rgb(246 173 98 / .19) 40%, transparent 76%);
-  filter: blur(24px);
 }
 .reveal-rare-aura-perfect {
   top: 50%;
@@ -4387,7 +4385,6 @@ input:focus-visible {
   height: min(74dvh, 550px);
   background: radial-gradient(ellipse at center,
     rgb(255 222 155 / .29), rgb(212 141 90 / .13) 43%, transparent 76%);
-  filter: blur(25px);
 }
 @keyframes rare-aura-arrive {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.82); }
@@ -4485,21 +4482,18 @@ input:focus-visible {
   height: min(74dvh, 580px);
   background: radial-gradient(ellipse at 50% 48%,
     rgb(249 154 123 / .40) 0%, rgb(229 94 122 / .21) 32%, rgb(115 46 120 / .12) 52%, transparent 78%);
-  filter: blur(21px);
 }
 .reveal-rare-aura-rare {
   width: min(100vw, 520px);
   height: min(82dvh, 590px);
   background: radial-gradient(ellipse at 50% 48%,
     rgb(194 48 96 / .48) 0%, rgb(140 33 82 / .31) 36%, rgb(74 18 61 / .16) 58%, transparent 80%);
-  filter: blur(19px);
 }
 .reveal-rare-aura-legendary {
   width: min(110vw, 650px);
   height: min(86dvh, 680px);
   background: radial-gradient(ellipse at 50% 48%,
     rgb(255 238 178 / .54), rgb(245 174 91 / .27) 34%, rgb(182 87 98 / .10) 58%, transparent 78%);
-  filter: blur(27px);
 }
 .reveal-rare-aura-perfect {
   background: radial-gradient(ellipse at center,
@@ -4538,7 +4532,6 @@ input:focus-visible {
   background: radial-gradient(circle,
     rgb(236 86 122 / .21) 0%, rgb(119 45 117 / .15) 32%,
     rgb(80 25 96 / .08) 51%, transparent 72%);
-  filter: blur(15px);
   pointer-events: none;
 }
 .booster-cinematic-orbit { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
