@@ -15,8 +15,9 @@ describe("portraits sélectionnés", () => {
       && creator.slug !== "diverron")).toEqual([]);
   });
 
-  it("charge les 454 portraits manuels et les 699 versions Upscayl utilisables", async () => {
-    expect(Object.keys(MANUAL_PORTRAIT_OVERRIDES)).toHaveLength(454);
+  // 29/10/2026 : dix choix manuels n'étaient que la photo créditée réduite à 450 px ; la version 900 px reprend la main.
+  it("charge les 444 portraits manuels et les 699 versions Upscayl utilisables", async () => {
+    expect(Object.keys(MANUAL_PORTRAIT_OVERRIDES)).toHaveLength(444);
     expect(Object.keys(UPSCALED_PORTRAIT_OVERRIDES)).toHaveLength(699);
     for (const [slug, imagePath] of Object.entries(MANUAL_PORTRAIT_OVERRIDES)) {
       expect(CREATORS.some((creator) => creator.slug === slug)).toBe(true);

@@ -162,10 +162,34 @@
   top: max(22px, calc(var(--scene-pack-center) - var(--scene-pack-height) / 2 - 48px));
   left: 16px;
   right: 16px;
-  font-size: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 6vw, 26px);
   font-weight: 700;
-  letter-spacing: .08em;
-  line-height: 1.5;
+  letter-spacing: .14em;
+  line-height: 1.2;
+}
+/* La consigne montre le sens du geste : un trait qui file vers la droite, comme la coupe. */
+.booster-cinematic.booster-presentation .booster-opening-instruction:not(:empty)::after {
+  content: ""; width: 34px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, currentColor);
+  animation: tear-hint-sweep 1400ms cubic-bezier(.22, .65, .24, 1) infinite;
+}
+@keyframes tear-hint-sweep {
+  0% { opacity: 0; transform: translateX(-10px) scaleX(.4); transform-origin: left; }
+  45% { opacity: 1; transform: translateX(0) scaleX(1); }
+  100% { opacity: 0; transform: translateX(12px) scaleX(1); }
+}
+/* La rupture a du poids : le sachet encaisse le coup, puis remonte. */
+/* Hors révélation seulement : `opening-shell-retire` prend ensuite la main. */
+.opening-continuum:not(.is-revealing) .booster-physical-scene.booster-foil-open {
+  animation: tear-rupture-jolt 320ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes tear-rupture-jolt {
+  0% { translate: 0 0; scale: 1; }
+  30% { translate: 0 7px; scale: .975; }
+  65% { translate: 0 -3px; scale: 1.012; }
+  100% { translate: 0 0; scale: 1; }
 }
 .booster-cinematic.booster-presentation .booster-premium-actions {
   position: absolute;
@@ -206,7 +230,7 @@
 .opening-continuum.is-revealing .booster-opening-instruction,
 .opening-continuum.is-revealing .booster-premium-actions { visibility: hidden; }
 .opening-continuum.is-revealing .booster-physical-scene {
-  animation: opening-shell-retire 300ms var(--ease-out) 120ms both;
+  animation: opening-shell-retire 300ms var(--ease-out) 220ms both;
 }
 /* Le sachet quitte la scène : il descend un peu et s'efface entièrement.
    Le centrage passe par `transform` sur cet élément : on déplace donc avec
@@ -385,6 +409,47 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 .booster-presentation .reveal-dos::before { content: ""; position: absolute; inset: 11%; border: 1px solid rgba(255,227,193,.28); border-radius: 3%; }
 .booster-presentation .reveal-back-sigil { width: 62%; }
+/* Récap : les cinq cartes posées sur la table, rien d'autre à lire. */
+.reveal-game .reveal-recap {
+  position: absolute;
+  inset: calc(76px + env(safe-area-inset-top)) 0 calc(96px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: clamp(12px, 3dvh, 24px);
+  padding: 0 16px;
+}
+.reveal-game .reveal-recap-grid {
+  --recap-card: min(calc((100vw - 64px) / 3), calc((100dvh - 330px) * .715 / 2), 150px);
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 14px 12px;
+  max-width: calc(var(--recap-card) * 3 + 24px);
+}
+@media (min-width: 601px) {
+  .reveal-game .reveal-recap-grid { --recap-card: min(17vw, calc((100dvh - 300px) * .715), 170px); max-width: none; }
+}
+.reveal-game .reveal-recap-card {
+  position: relative; display: grid; gap: 6px; justify-items: center;
+  width: var(--recap-card);
+  animation: recap-card-land 420ms cubic-bezier(.22, .65, .24, 1) calc(var(--recap-i) * 70ms) both;
+}
+.reveal-game .reveal-recap-card .reveal-card { width: 100%; max-height: none; container-type: inline-size; }
+.reveal-game .reveal-recap-caption {
+  color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+}
+.reveal-game .reveal-recap-card.rarity-rare .reveal-recap-caption,
+.reveal-game .reveal-recap-card.rarity-epic .reveal-recap-caption,
+.reveal-game .reveal-recap-card.rarity-legendary .reveal-recap-caption { color: var(--text); }
+@keyframes recap-card-land {
+  from { opacity: 0; transform: translateY(14px) scale(.94); }
+  to { opacity: 1; transform: none; }
+}
+.reveal-game .reveal-recap .reveal-next-pack { margin: 0; color: var(--text); font-size: 13px; text-align: center; }
+.reveal-game.reveal-summary-open .reveal-recap .pack-end-live { position: static; transform: none; width: 100%; max-width: 360px; padding: 0; gap: 6px; }
+.reveal-game.reveal-summary-open .reveal-recap .pack-end-live :is(.pack-end-face, .pack-end-details) { display: none; }
+.reveal-game.reveal-summary-open .reveal-recap .pack-end-live h2 { font-size: 22px; margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-game .reveal-recap-card { animation: none; }
+}
+[data-card-fx="off"] .reveal-game .reveal-recap-card { animation: none; }
 @media (max-width: 600px) {
   .reveal-game .reveal-perfect-grid {
     --perfect-card-width: min(calc((100vw - 64px) / 3), calc((100dvh - 360px) * .715 / 2), 160px);
@@ -541,6 +606,7 @@ html:has(.booster-presentation) { overflow: hidden; }
   animation: scene-cards-rise var(--pack-extraction-ms, 1200ms) cubic-bezier(.13, .7, .2, 1) both;
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
+  transform-origin: 50% 100%;
   animation: scene-card-extract calc(var(--pack-extraction-ms, 1200ms) - 250ms) cubic-bezier(.18, .74, .22, 1) calc(var(--card-i) * 50ms) both;
 }
 @keyframes scene-card-extract {
@@ -548,8 +614,9 @@ html:has(.booster-presentation) { overflow: hidden; }
     rotateY(calc((var(--card-i) - 2) * 3deg)) scale(.82); }
   44% { opacity: 1; transform: translateY(4%) translateZ(calc(var(--card-i) * 7px))
     rotateX(4deg) rotateY(calc((var(--card-i) - 2) * 2deg)) scale(.94); }
-  60%, 82% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 12px),
-    calc((4 - var(--card-i)) * -4px)) rotate(calc((4 - var(--card-i)) * -2deg)); }
+  /* Les cinq dos s'ouvrent en main un instant : on compte les cartes avant les faces. */
+  56%, 86% { opacity: 1; transform: translate(calc((var(--card-i) - 2) * 5%), calc(var(--card-i) * -1%))
+    rotate(calc((var(--card-i) - 2) * 3deg)) scale(.8); }
   100% { opacity: 1; transform: translate(calc((4 - var(--card-i)) * 2px),
     calc((4 - var(--card-i)) * -2px)); }
 }
@@ -862,8 +929,12 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 }
 [data-card-fx="off"] .foil-burst,
 [data-card-fx="off"] .foil-interior { display: none; }
+[data-card-fx="off"] .opening-continuum:not(.is-revealing) .booster-physical-scene.booster-foil-open,
+[data-card-fx="off"] .booster-cinematic.booster-presentation .booster-opening-instruction::after { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .foil-burst { display: none; }
+  .opening-continuum:not(.is-revealing) .booster-physical-scene.booster-foil-open,
+  .booster-cinematic.booster-presentation .booster-opening-instruction::after { animation: none; }
   .booster-foil-open .foil-interior { animation: none; opacity: 0; }
 }
 

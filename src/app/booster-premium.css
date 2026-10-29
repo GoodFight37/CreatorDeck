@@ -99,7 +99,7 @@
 .booster-caption-rule:last-child { transform: rotate(180deg); }
 .booster-cinematic .booster-opening-instruction {
   margin: 0;
-  color: rgba(255, 238, 231, .92);
+  color: #fff4ea;
   font-size: 13px;
   font-weight: 800;
   text-align: center;
@@ -270,12 +270,14 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: rgba(255, 229, 224, .58);
-  padding: 8px 10px;
-  font: 500 11px/1.25 var(--font-body, Arial), sans-serif;
+  /* Secondaire mais lisible au pouce (brief Malik 29/10, remplace l'opacité .2 de D-136). */
+  color: rgba(255, 229, 224, .82);
+  padding: 8px 12px;
+  font: 600 13px/1.25 var(--font-body, Arial), sans-serif;
   text-decoration: underline;
+  text-decoration-color: rgba(255, 229, 224, .4);
   text-underline-offset: 4px;
-  opacity: .2;
+  opacity: .78;
   pointer-events: auto;
 }
 @media (hover: hover) and (pointer: fine) {

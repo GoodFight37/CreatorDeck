@@ -1,3 +1,31 @@
+## D-179 — 29 octobre 2026 : Drop premium, la rareté portée par l'objet
+
+Brief de Malik après test du Live Drop sur Vercel : cartes « fiche contact »,
+Commune et Légendaire trop proches, écran TIRE vide, lien de secours invisible,
+fin du booster sur des bandeaux. Choix, dans l'ordre cartes → révélation → peel :
+- **Carte (les trois vues, `globals.css`, couche `creator-print`)** : cartouche
+  teinté de la rareté, filet de sa couleur autour du portrait, étiquette colorée
+  précédée de 1 à 5 losanges imprimés (Commune 1 → Légendaire 5) ; Commune en
+  graphite brossé, Rare et Épique avec un filet chromé et un halo propre.
+  Légendaire inchangée (or). Pas de pastille : D-168 tient.
+- **Portraits** : dix choix manuels n'étaient que la photo créditée réduite à
+  450 px (rubius, shroud, nadeshot, ultia, saken-lol, cabochardlol, f0rest,
+  9pasha, etoiles, mistermv) ; la version 900 px reprend la main. Les 19 autres
+  paires sont des photos différentes : arbitrage de Malik
+  (`docs/captures/drop-premium/portraits-masques.png`), D-075 protège ses choix.
+- **Révélation** : les cinq dos s'ouvrent en éventail pendant l'extraction
+  (`scene-card-extract`), puis se regroupent ; `PACK_TEAR_MS` inchangé. Fin du
+  booster séquentiel : « Voir mes cartes » → récap des cinq cartes (comme MEMES),
+  puis « Ranger dans le classeur » (verrou 1,5 s existant). Le direct de la
+  dernière chaîne reste sous la grille, sans grand visage.
+  Le sachet vide s'efface 100 ms plus tard (délai 120 → 220 ms) : la sonde
+  mesurait ~100 ms de pénombre entre les dos et la première face.
+- **Peel** : consigne TIRE en display 20–26 px avec un trait qui file dans le sens
+  du geste ; « Ouvrir sans déchirer » lisible (13 px, opacité .78), toujours en bas,
+  cible 44 px — **remplace l'opacité .2 de D-136**. La rupture donne un léger coup
+  au sachet (320 ms). Coupés sous mouvement réduit et Reflets OFF.
+Aucun son, taux, tirage, économie ou SQL ne change.
+
 ## D-178 — 28 octobre 2026 : adoption de D1 et clôture audio
 
 Malik approuve la musique D1 et tous les effets, demande leur activation dans

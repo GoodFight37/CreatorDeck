@@ -230,12 +230,12 @@ describe("les effets de révélation", () => {
 
     // Personne en direct : les cartes se rangent d'un appui, sans récap à lire.
     banc.appuyer("Ranger dans le classeur");
-    expect(document.querySelector(".reveal-summary")).toBeNull();
+    expect(document.querySelector(".reveal-recap")).toBeNull();
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
   });
 
-  it.each(["rare", "epic", "legendary"] as const)("range la dernière carte %s dès le premier appui", async (rarity) => {
+  it.each(["rare", "epic", "legendary"] as const)("montre le récapitulatif après la dernière carte %s avant de ranger", async (rarity) => {
     const fermer = vi.fn();
     const suivant = vi.fn();
     const { RevealOverlay } = await import("@/components/reveal-overlay");
@@ -247,8 +247,19 @@ describe("les effets de révélation", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter(rarity) - 1); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    banc.appuyer("Ranger dans le classeur");
+    banc.appuyer("Voir mes cartes");
+    expect(document.querySelectorAll(".reveal-recap-grid .reveal-recap-card")).toHaveLength(2);
+    expect(document.querySelectorAll(".reveal-recap-card .creator-card.is-compact")).toHaveLength(2);
+    expect(Array.from(document.querySelectorAll(".reveal-recap-caption"), item => item.textContent)).toEqual(["Nouvelle", "Nouvelle"]);
     expect(document.querySelector(".reveal-summary")).toBeNull();
+    expect(fermer).not.toHaveBeenCalled();
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
+    banc.appuyer("Ranger dans le classeur");
+    expect(fermer).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(MEME_REVEAL_TIMING.summaryHoldMs - 1); });
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    banc.appuyer("Ranger dans le classeur");
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant).not.toHaveBeenCalled();
   });
@@ -345,7 +356,7 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(new window.MouseEvent("pointermove", { bubbles: true, clientX: 100, clientY: 90 }));
       anchor.dispatchEvent(new window.MouseEvent("pointerup", { bubbles: true, clientX: 100, clientY: 90 }));
     });
-    expect(document.querySelector(".reveal-summary")).toBeNull();
+    expect(document.querySelector(".reveal-recap")).toBeNull();
     expect(next).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
   });
@@ -383,7 +394,7 @@ describe("les effets de révélation", () => {
 
     await act(async () => { await vi.advanceTimersByTimeAsync(1_600); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
-      .toContain("Ranger dans le classeur");
+      .toContain("Voir mes cartes");
   });
 
   it("ignore l'appui pendant le flip de la cinquième carte", async () => {
@@ -419,9 +430,12 @@ describe("les effets de révélation", () => {
         "Reflets OFF garde le même emplacement sans la pause CSS").not.toBeNull();
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
       expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
-        .toContain("Ranger dans le classeur");
-      // Le mode sobre saute le flip ; personne en direct, un appui range le paquet.
-      act(() => document.querySelector<HTMLButtonElement>(".reveal-next")!.click());
+        .toContain("Voir mes cartes");
+      // Le mode sobre saute le flip, mais garde le récapitulatif avant de ranger.
+      banc.appuyer("Voir mes cartes");
+      expect(fermer).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(MEME_REVEAL_TIMING.summaryHoldMs + 1); });
+      banc.appuyer("Ranger dans le classeur");
       expect(fermer).toHaveBeenCalledOnce();
     } finally {
       delete document.documentElement.dataset.cardFx;
@@ -543,7 +557,7 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     }
   });
 
-  it("un doublon en dernière carte rejoint la pile et le paquet se range d'un appui", async () => {
+  it("un doublon en dernière carte reste dans le récapitulatif avant de ranger", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     const suivant = vi.fn(), fermer = vi.fn();
     await banc.monter(<RevealOverlay cards={[carte("rare", "a"), { ...carte("epic"), isNew: false }] as never}
@@ -552,6 +566,10 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-stage.is-piling")).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
     expect(suivant).not.toHaveBeenCalled();
+    banc.appuyer("Voir mes cartes");
+    expect(Array.from(document.querySelectorAll(".reveal-recap-caption"), item => item.textContent)).toEqual(["Nouvelle", "Doublon"]);
+    expect(fermer).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(MEME_REVEAL_TIMING.summaryHoldMs + 1); });
     banc.appuyer("Ranger dans le classeur");
     expect(fermer).toHaveBeenCalledOnce();
   });
@@ -575,9 +593,9 @@ describe("fin du booster : regarder ou ranger", () => {
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={fermer} />);
     await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
     expect(document.querySelector(".reveal-next-pack"), "pas d'heure de sachet quand on va regarder").toBeNull();
-    banc.appuyer("Ranger dans le classeur");
+    banc.appuyer("Voir mes cartes");
     expect(fermer).not.toHaveBeenCalled();
-    const fin = document.querySelector(".pack-end-live")!;
+    const fin = document.querySelector(".reveal-recap .pack-end-live.reveal-summary")!;
     expect(fin.querySelector(".pack-end-face img")).not.toBeNull();
     expect(fin.textContent).toContain(last.displayName);
     const watch = fin.querySelector<HTMLAnchorElement>("a.pack-end-watch")!;
@@ -589,8 +607,8 @@ describe("fin du booster : regarder ou ranger", () => {
     expect(ranger.textContent).toContain("Ranger");
     expect(ranger.className).toContain("is-secondary");
     expect(ranger.disabled).toBe(true);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
-    banc.appuyer("Ranger");
+    await act(async () => { await vi.advanceTimersByTimeAsync(MEME_REVEAL_TIMING.summaryHoldMs + 1); });
+    banc.appuyer("Ranger dans le classeur");
     expect(fermer).toHaveBeenCalledOnce();
   });
 
@@ -603,8 +621,11 @@ describe("fin du booster : regarder ou ranger", () => {
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
     expect(document.querySelector(".reveal-next-pack")).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
+    expect(document.querySelector(".reveal-next-pack")).toBeNull();
+    expect(document.querySelector(".reveal-guaranteed")?.textContent).toBe("Carte garantie du booster");
+    banc.appuyer("Voir mes cartes");
     const heure = new Date(T0 + PACKS.live.regenMs).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
-    expect(document.querySelector(".reveal-next-pack")?.textContent).toBe(`Prochain sachet à ${heure}`);
+    expect(document.querySelector(".reveal-recap .reveal-next-pack")?.textContent).toBe(`Prochain sachet à ${heure}`);
     expect(document.querySelectorAll(".reveal-next-pack")).toHaveLength(1);
   });
 
@@ -615,6 +636,8 @@ describe("fin du booster : regarder ou ranger", () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
     await act(async () => { await vi.advanceTimersByTimeAsync(readyAfter("rare")); });
-    expect(document.querySelector(".reveal-next-pack")?.textContent).toBe("Un sachet t’attend");
+    expect(document.querySelector(".reveal-next-pack")).toBeNull();
+    banc.appuyer("Voir mes cartes");
+    expect(document.querySelector(".reveal-recap .reveal-next-pack")?.textContent).toBe("Un sachet t’attend");
   });
 });

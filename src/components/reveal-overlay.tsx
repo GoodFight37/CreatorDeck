@@ -177,6 +177,7 @@ export function RevealOverlay({
   const endCreator = creatorFor(cards[cards.length - 1].creatorSlug);
   const endStream = !overlay && !tutorial && endCreator ? liveFor(live, endCreator.login, now) : null;
   const endReady = termine && (perfect ? !locked : flippedCardId === cardId);
+  const recap = !overlay && !tutorial && !perfect && cards.length > 1;
   const rareGlow = !duplicate && (perfect || card.rarity === "epic" || card.rarity === "legendary");
   const rarityAura = rareGlow || (!duplicate && card.rarity === "rare");
   const flash = !alreadyOwned && flashFor(card.rarity, perfect);
@@ -252,7 +253,8 @@ export function RevealOverlay({
     // et révéler la carte suivante avant que le joueur ait pu la voir.
     if (!perfect && !showSummary && flippedCardId !== card.id) return;
     if (termine) {
-      if (endStream) setShowSummary(true);
+      // Le booster se referme sur ses cartes : récap des cinq avant de ranger.
+      if (recap || endStream) setShowSummary(true);
       else onClose();
     } else onNext();
   }
@@ -361,9 +363,30 @@ export function RevealOverlay({
       {perfect && !showSummary && endReady && !endStream && !overlay ? (
         <NextPackLine now={now} className="reveal-next-pack" />
       ) : null}
-      {showSummary && endStream && endCreator ? (
-        <PackEndLive creator={endCreator} stream={endStream} onWatch={onClose} />
-      ) : perfect || showSummary ? null : (
+      {showSummary ? (
+        <div className="reveal-recap">
+          <div className="reveal-recap-grid" role="list" aria-label="Les cartes de ce booster">
+            {cards.map((item, recapIndex) => {
+              const recapCreator = creatorFor(item.creatorSlug);
+              return recapCreator ? (
+                <div key={item.id} role="listitem" className={`reveal-recap-card rarity-${item.rarity}`} style={{ "--recap-i": recapIndex } as CSSProperties}>
+                  <CreatorCard
+                    creator={recapCreator}
+                    variant={item.variant}
+                    compact
+                    className={`reveal-card rarity-${item.rarity}`}
+                    onClick={() => setInspected(item)}
+                  />
+                  <span className="reveal-recap-caption">{item.isNew ? "Nouvelle" : "Doublon"}</span>
+                </div>
+              ) : null;
+            })}
+          </div>
+          {endStream && endCreator
+            ? <PackEndLive creator={endCreator} stream={endStream} onWatch={onClose} />
+            : <NextPackLine now={now} className="reveal-next-pack" />}
+        </div>
+      ) : perfect ? null : (
         <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
           {card.isNew && !tutorial && !quickFlip ? (
             // Nouvelle : un flash de la couleur de sa rareté. Pas de second nom :
@@ -451,7 +474,7 @@ export function RevealOverlay({
             ) : null}
             {endReady && tutorial ? (
               <p className="reveal-next-pack">Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé.</p>
-            ) : endReady && !endStream && !overlay ? (
+            ) : endReady && !endStream && !overlay && !recap ? (
               <NextPackLine now={now} className="reveal-next-pack" />
             ) : isLast ? (
               <span className="reveal-guaranteed">Carte garantie du booster</span>
@@ -476,13 +499,13 @@ export function RevealOverlay({
       >
         <span>
           {showSummary
-            ? "Ranger"
+            ? "Ranger dans le classeur"
             : locked
             ? "Perfect…"
             : !perfect && flippedCardId !== card.id
             ? "Révélation…"
             : termine
-                ? tutorial ? "Terminer l’essai" : "Ranger dans le classeur"
+                ? tutorial ? "Terminer l’essai" : recap ? "Voir mes cartes" : "Ranger dans le classeur"
                 : "Carte suivante"}
         </span>
         {showSummary ? (

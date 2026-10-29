@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-29-drop-premium", date: "2026-10-29", title: "Des cartes qui ont du poids",
+    summary: "La rareté se voit au premier coup d’œil, et le booster finit sur tes cinq cartes.",
+    sections: [{ title: "Ouverture du booster", items: [
+      "Chaque carte porte sa rareté : un à cinq losanges, un cartouche et un filet à sa couleur, du graphite de la Commune à l’or de la Légendaire.",
+      "Les cinq dos s’ouvrent en éventail avant de se retourner.",
+      "À la fin, tes cinq cartes s’affichent ensemble avant d’être rangées.",
+      "La consigne TIRE est plus lisible, la déchirure a plus de poids, et « Ouvrir sans déchirer » se lit enfin.",
+    ] }],
+  },
+  {
     id: "2026-10-29-sons-d-origine", date: "2026-10-29", title: "Le retour des sons d’origine",
     summary: "Les bruitages du début du jeu reviennent, plus doux et mieux audibles.",
     sections: [{ title: "Ambiance sonore", items: [

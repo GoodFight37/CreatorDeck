@@ -247,15 +247,18 @@ test("les cinq dos se posent avant le reveal et le récapitulatif attend le joue
   expect(probe?.phaseAtOneSecond).toBe("extracting");
   expect(probe?.backs).toBe(5);
   expect(probe!.revealAfterMs).toBeGreaterThanOrEqual(1_100);
-  // Each new face must finish before advancing; a duplicate waits for the tap like any card.
-  // The last tap puts the cards away: no summary grid, back to the Drop.
+  // Chaque face termine son retournement avant l'appui, doublon compris.
+  // Le dernier appui ouvre le récapitulatif avant de ranger les cartes.
   for (let i = 0; i < 5; i++) {
     const next = pack.locator(".reveal-next");
     await expect(next).toBeEnabled();
-    if ((await next.textContent())?.includes("Ranger dans le classeur")) break;
+    if ((await next.textContent())?.includes("Voir mes cartes")) break;
     await next.click();
   }
-  await expect(pack.locator(".reveal-next-pack")).toHaveText(/^(Prochain sachet à \d{2} h \d{2}|Un sachet t’attend)$/);
+  await expect(pack.locator(".reveal-next-pack")).toHaveCount(0);
+  await pack.getByRole("button", { name: "Voir mes cartes", exact: true }).click();
+  await expect(pack.locator(".reveal-recap-card")).toHaveCount(5);
+  await expect(pack.locator(".reveal-recap .reveal-next-pack")).toHaveText(/^(Prochain sachet à \d{2} h \d{2}|Un sachet t’attend)$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(await page.evaluate(() => window.innerWidth));
   await page.screenshot({ path: `test-results/ritual-end-${test.info().project.name}.png` });
   await pack.getByRole("button", { name: "Ranger dans le classeur", exact: true }).click();
@@ -293,7 +296,7 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
   await expect(fifthFlip).toHaveCount(1);
   await expect(fifthFlip).toHaveCSS("animation-name", "none");
   await expect(fifthFlip).toHaveCSS("animation-delay", "0s");
-  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+  await expect(reveal.getByRole("button", { name: "Voir mes cartes" })).toBeEnabled();
 });
 
 test("Reflets OFF supprime l'attente dédiée à la carte garantie", async ({ page }) => {
@@ -319,7 +322,7 @@ test("Reflets OFF supprime l'attente dédiée à la carte garantie", async ({ pa
   await expect(fifthFlip).toHaveCount(1);
   await expect(fifthFlip).toHaveCSS("animation-name", "none");
   await expect(fifthFlip).toHaveCSS("animation-delay", "0s");
-  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+  await expect(reveal.getByRole("button", { name: "Voir mes cartes" })).toBeEnabled();
 });
 
 test("a horizontal swipe advances after the flip and the button remains available", async ({ page }) => {
@@ -386,7 +389,7 @@ test("la carte garantie se retourne automatiquement, sans languette ni second ge
   await fifthFlip.evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
-  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+  await expect(reveal.getByRole("button", { name: "Voir mes cartes" })).toBeEnabled();
 });
 
 test("les appuis répétés pendant le retournement ne sautent pas de révélation", async ({ page }) => {
@@ -448,7 +451,7 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
   await reveal.locator(".reveal-flip-face").evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
-  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+  await expect(reveal.getByRole("button", { name: "Voir mes cartes" })).toBeEnabled();
 });
 
 test("home pack artwork stays named and the long gesture hint is removed", async ({ page }) => {
@@ -695,7 +698,8 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   });
   expect(retirement.name).toBe("opening-shell-retire");
   expect(milliseconds(retirement.duration)).toBe(300);
-  expect(milliseconds(retirement.delay)).toBe(120);
+  // 220 ms : les dos restent visibles jusqu'à l'arrivée de la première face (D-179).
+  expect(milliseconds(retirement.delay)).toBe(220);
   await expect.poll(() => shell.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(0);
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-opening.png" });
@@ -924,8 +928,8 @@ test("l’ouverture alternative reste discrète en bas, après le geste de déch
   expect(alternativeBox.y).toBeGreaterThan(568 - 90);
   expect(alternativeBox.height).toBeGreaterThanOrEqual(44);
   expect(alternativeBox.y + alternativeBox.height).toBeLessThanOrEqual(568);
-  expect(await alternative.evaluate((node) => getComputedStyle(node).fontSize)).toBe("11px");
-  expect(Number(await alternative.evaluate((node) => getComputedStyle(node).opacity))).toBeLessThanOrEqual(.2);
+  expect(await alternative.evaluate((node) => getComputedStyle(node).fontSize)).toBe("13px");
+  expect(Number(await alternative.evaluate((node) => getComputedStyle(node).opacity))).toBeGreaterThanOrEqual(.7);
   await alternative.click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
 });

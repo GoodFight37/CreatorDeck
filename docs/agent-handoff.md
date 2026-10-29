@@ -1,3 +1,23 @@
+# Checkpoint Claude — Drop premium : cartes, récap, peel, 29 octobre 2026
+
+Brief de Malik (Live Drop Vercel), décision **D-179**. Branche `claude/drop-premium` depuis `242b9287`.
+- **Cartes** (`globals.css`, couche `creator-print`) : cartouche et filet à la couleur de rareté,
+  1 à 5 losanges devant l'étiquette, Commune graphite, Rare/Épique chromées. Mêmes cartes en
+  révélation, fiche et classeur (un seul `CreatorCard`).
+- **Portraits** : 10 doublons 450 px → version créditée 900 px (444 manuels). 19 paires
+  différentes en attente de Malik : `docs/captures/drop-premium/portraits-masques.png`.
+- **Révélation** : éventail des 5 dos ; récap des 5 cartes avant « Ranger dans le classeur »
+  (`reveal-overlay.tsx`, `booster-continuity.css`). **Peel** : TIRE plus grand avec trait de geste,
+  lien de secours lisible (D-136 remplacé), coup de rupture 320 ms. Sachet vide effacé à 220 ms au lieu de 120
+  (sonde : ~100 ms de pénombre entre dos et première face, réduite).
+- **Preuves** : captures avant/après 320 et 360 px dans `docs/captures/drop-premium/`.
+  Écrans 268/268, unitaires 1223/1223, typecheck, ESLint, `catalog:ci` ; **e2e complet 231/49/0**
+  (4,6 min, export compilé) après mise à jour de `centered-torn-sachet` (win32 régénérées, **linux copiées des win32** :
+  si la CI échoue sur ce test, reprendre les `-linux.png` de l'artefact Playwright).
+  Tests adaptés par Codex (Vitest EPERM chez lui), vérifiés par Claude.
+- **Non vérifié** : émulateur Android, APK et Redmi ; ressenti du coup de rupture et de l'éventail
+  au pouce ; cas « dernière chaîne en direct » dans le récap vu seulement en test d'écran.
+
 # Checkpoint Claude — performance mobile, Binder muet, e2e rapide, 29 octobre 2026
 
 - **E2E rapide** (`6fb71c64`, `8b3a53fb`, `b11fbc4f`) : `npm run e2e:rapide` = `next build` +

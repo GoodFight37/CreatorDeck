@@ -4765,7 +4765,8 @@ input:focus-visible {
 .creator-card.creator-print:not(.is-locked) {
   --card-edge: 2%;
   --card-finish: 0;
-  background: #25282e;
+  /* Commune mate : graphite brossé, propre. */
+  background: linear-gradient(160deg, #343840, #22252b 55%, #2c3037);
   box-shadow: 0 1px 0 #657080, 0 3px 0 #101216, 0 12px 22px -12px #000;
 }
 .creator-card.creator-print .card-photo-wrap { inset: 8% var(--card-edge) 18%; }
@@ -4784,7 +4785,9 @@ input:focus-visible {
 .creator-card.creator-print .card-nameplate {
   height: 18%; padding: 2% 6%; display: flex; flex-direction: column;
   justify-content: center; gap: 1cqw;
-  background: #202329; border: 0; box-shadow: inset 0 1px rgb(255 255 255 / .14);
+  /* Le cartouche prend la teinte de sa rareté : on la lit avant le nom. */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rarity) 20%, #1d2026), color-mix(in srgb, var(--rarity) 7%, #121418));
+  border: 0; box-shadow: inset 0 1px color-mix(in srgb, var(--rarity) 55%, transparent);
 }
 .creator-card.creator-print .card-nameplate h3 {
   margin: 0; font-size: clamp(12px, min(11cqw, calc(145cqw / var(--name-len, 8))), 32px);
@@ -4792,8 +4795,30 @@ input:focus-visible {
   color: #fff4e2;
 }
 .creator-card.creator-print .card-rarity-label {
-  color: #d0d5df; font-size: clamp(8px, 4cqw, 12px); line-height: 1;
+  --pips: 1;
+  display: inline-flex; align-items: center; gap: .6em;
+  color: color-mix(in srgb, var(--rarity) 72%, #fff); font-size: clamp(9px, 4.6cqw, 13px); font-weight: 800; line-height: 1;
   letter-spacing: .12em; text-shadow: none;
+}
+/* Symbole de rareté imprimé, un losange de plus par palier (Commune 1 → Légendaire 5). */
+.creator-card.creator-print .card-rarity-label::before {
+  content: ""; flex: none; width: calc(var(--pips) * .8em); height: .62em; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6'%3E%3Cpath d='M3.1 0 6.2 3 3.1 6 0 3z'/%3E%3C/svg%3E") 0 0 / .8em .62em repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6'%3E%3Cpath d='M3.1 0 6.2 3 3.1 6 0 3z'/%3E%3C/svg%3E") 0 0 / .8em .62em repeat-x;
+}
+.creator-card.creator-print.rarity-uncommon .card-rarity-label { --pips: 2; }
+.creator-card.creator-print.rarity-rare .card-rarity-label { --pips: 3; }
+.creator-card.creator-print.rarity-epic .card-rarity-label { --pips: 4; }
+.creator-card.creator-print.rarity-legendary .card-rarity-label { --pips: 5; }
+/* Rare et Épique : un filet chromé au-dessus du cartouche, la matière se voit sans toucher. */
+.creator-card.creator-print:is(.rarity-rare, .rarity-epic) .card-nameplate {
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--rarity) 80%, #fff) 30%, #fff 50%, color-mix(in srgb, var(--rarity) 80%, #fff) 70%, transparent) top / 100% 2px no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--rarity) 26%, #1d2026), color-mix(in srgb, var(--rarity) 9%, #121418));
+}
+/* Filet de la couleur de rareté autour du portrait : la photo est sertie, pas collée. */
+.creator-card.creator-print:not(.is-locked) .card-photo-wrap {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rarity) 60%, #000), 0 0 0 2px rgb(0 0 0 / .5);
 }
 .creator-card.creator-print.is-compact .card-photo-wrap { bottom: 22%; }
 .creator-card.creator-print.is-compact .card-nameplate { height: 22%; padding-block: 0; }
@@ -4810,11 +4835,13 @@ input:focus-visible {
   background: linear-gradient(135deg, #253f38, #8ba99a 22%, #28463e 50%, #4f7e69);
 }
 .creator-card.creator-print.rarity-rare:not(.is-locked) {
-  --card-finish: .22;
+  --card-finish: .3;
+  box-shadow: 0 1px 0 #d8f2ff, 0 3px 0 #10243a, 0 0 18px -4px rgb(64 169 255 / .55), 0 12px 22px -12px #000;
   background: linear-gradient(135deg, #e0f4ff, #537a9d 19%, #d8f2ff 23%, #1d3854 48%, #b1dbf6 76%, #3d6584);
 }
 .creator-card.creator-print.rarity-epic:not(.is-locked) {
-  --card-edge: 3%; --card-finish: .32;
+  --card-edge: 3%; --card-finish: .4;
+  box-shadow: 0 1px 0 #ecdbff, 0 4px 0 #2a1f3d, 0 0 22px -2px rgb(164 108 255 / .6), 0 14px 24px -12px #000;
   background: linear-gradient(125deg, #ecdbff, #68558f 18%, #baa1e1 20%, #322745 46%, #d6c1f4 48%, #514067 72%, #e2cdff);
 }
 .creator-card.creator-print.rarity-epic::after { border: 2px double #c2aadf; }
