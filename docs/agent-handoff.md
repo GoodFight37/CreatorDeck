@@ -1,3 +1,31 @@
+# Checkpoint Claude — lot H : retour aux sons d'origine, 29 octobre 2026
+
+Suivi `CreatorDeck-Codex-t6y`, base `1b298c51` (main). Malik, après test téléphone :
+pas de bruit de carte, rien à l'ouverture, aigus agressifs, sons et musique trop bas.
+
+- **10 WAV d'origine** restaurés depuis `87716db9~1` ; prises générées du 27/10
+  (`reveal-*`, `impact-*`, `pack-tear*`, `perfect*`, `grace`, `gavel`, `craft*`, `*-alt`)
+  retirées de `public/sfx/`, conservées dans l'historique Git.
+- **`sfx.ts`** : corps d'avant le 27/10 pour tous les gestes (synthèse + bruitage :
+  `pop` à l'ouverture, `card-draw` à chaque carte). Gardés : `setAudioBackground`,
+  `activeEffects`, aperçus, D1. `playCraft` joue `playReward` (son d'avant).
+- **Retouches** : `card-draw` cible −21 dB (+4 demandé, gain réel **+3,35 dB**,
+  plafonné par la crête −6 dBFS). `card-turn` déjà au plafond, inchangé ; il ne joue
+  nulle part (`playPageTurn` en réserve). Passe-bas **4,5 kHz** sur la synthèse
+  (`SYNTH_LOWPASS_HZ`). Musique hub 0,08 → **0,14**, pack 0,04 → **0,07**.
+- **Aigus mesurés** (rendu des plans, FFT, part > 6 kHz) : avant passe-bas, 0 à 5,5 %
+  (déchirure 5,5, Épique 4,7, Rare 3,8) ; après, ≤ 0,5 % partout, centroïde Rare
+  1 541 → 1 077 Hz. Les prises rejetées faisaient 56 à 97 %. Rendu théorique, pas une
+  écoute.
+
+Validation : unitaires **1 223/1 223**, écrans **267/267**, typecheck, ESLint ciblé.
+`e2e/audio-premium` réécrit (vérifie `pop` + `card-draw` + synthèse) : 2/2. Unique suite
+E2E complète : **227 réussis / 49 ignorés / 4 échecs**, 11,1 min ; les 4 échecs étaient les
+gains de musique en dur de `pack-tear.spec.ts` (0,08/0,04), corrigés et rejoués 4/4.
+**Non fait** : APK/émulateur et écoute sur le Redmi ; Malik teste au téléphone.
+Fichiers locaux de Codex (lot A, `audio-lab.tsx`, PNG, Android, bloc Kyara) laissés hors
+commit ; `audio-lab.tsx` local pointe encore vers `pack-tear.wav`, retiré.
+
 # Checkpoint Codex — lots E1/B/C/D et carrousel, 28 octobre 2026
 
 Base visuelle `6c82d3ec6116727c194ee1410ba036809c2baedd`, branche réelle

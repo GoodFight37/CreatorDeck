@@ -37,7 +37,7 @@ test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", a
   const startProbe = await page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
   );
-  expect(startProbe?.gains.some((gain) => Math.abs(gain - 0.08) < 0.001)).toBe(true);
+  expect(startProbe?.gains.some((gain) => Math.abs(gain - 0.14) < 0.001)).toBe(true);
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
 
   await expect.poll(() => page.evaluate(() =>
@@ -47,7 +47,7 @@ test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", a
     (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
   );
   expect(probe?.loops).toEqual([true]);
-  expect(probe?.gains.some((gain) => Math.abs(gain - 0.04) < 0.001)).toBe(true);
+  expect(probe?.gains.some((gain) => Math.abs(gain - 0.07) < 0.001)).toBe(true);
 });
 
 test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au hub à la fermeture", async ({ page }) => {
@@ -76,14 +76,14 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const scene = page.locator(".opening-continuum");
   await expect.poll(() => page.evaluate(() =>
-    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.04) ?? false,
+    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.07) ?? false,
   )).toBe(true);
   await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.getByRole("dialog", { name: "Résultat du booster" }).getByRole("button", { name: "Fermer", exact: true }).click();
   await expect.poll(() => page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.at(-1) ?? 0,
-  )).toBe(0.08);
+  )).toBe(0.14);
   const probe = await page.evaluate(() => (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; loops: boolean[] } }).__creatorDeckAudioProbe);
   expect(probe?.loops.filter(Boolean)).toHaveLength(1);
 });

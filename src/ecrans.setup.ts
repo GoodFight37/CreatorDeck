@@ -139,6 +139,9 @@ window.AudioContext ??= class {
   createGain() {
     return { connect: (cible: unknown) => cible, gain: { value: 0, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} } };
   }
+  createBiquadFilter() {
+    return { connect: (cible: unknown) => cible, type: "", frequency: { value: 0 } };
+  }
   createBufferSource() {
     sonsJoues.bruitages += 1;
     return { buffer: null, connect: (cible: unknown) => cible, start: () => {}, stop: () => {} };

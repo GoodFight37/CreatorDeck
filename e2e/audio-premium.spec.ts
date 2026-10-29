@@ -1,14 +1,32 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
-test("les gestes du booster jouent des fichiers, une seule déchirure, sans synthèse brute", async ({ page }) => {
+test("l'ouverture du booster fait entendre le paquet et le bruit de carte", async ({ page }) => {
   await page.addInitScript(() => {
-    const probe = { effects: 0, loops: 0, oscillators: 0 };
+    // Chaque tampon décodé garde le nom de son fichier : on sait quel bruitage part.
+    const probe = { played: [] as string[], loops: 0, oscillators: 0 };
     Object.assign(window, { __audioPremium: probe });
+    const fileOf = new WeakMap<object, string>();
+    const fetchFile = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await fetchFile(...args);
+      const name = String(args[0]).match(/\/sfx\/([\w-]+)\.wav$/)?.[1];
+      if (name) {
+        const read = response.arrayBuffer.bind(response);
+        response.arrayBuffer = async () => { const data = await read(); fileOf.set(data, name); return data; };
+      }
+      return response;
+    };
+    const decode = AudioContext.prototype.decodeAudioData;
+    AudioContext.prototype.decodeAudioData = function (this: BaseAudioContext, data: ArrayBuffer) {
+      const name = fileOf.get(data);
+      return decode.call(this, data).then(buffer => { if (name) fileOf.set(buffer, name); return buffer; });
+    } as typeof decode;
     const create = AudioContext.prototype.createBufferSource;
     AudioContext.prototype.createBufferSource = function () {
       const source = create.call(this), start = source.start.bind(source);
       source.start = (when, offset, duration) => {
-        if (source.loop) probe.loops++; else probe.effects++;
+        if (source.loop) probe.loops++;
+        else probe.played.push(source.buffer ? fileOf.get(source.buffer) ?? "?" : "?");
         return start(when, offset, duration);
       };
       return source;
@@ -16,21 +34,20 @@ test("les gestes du booster jouent des fichiers, une seule déchirure, sans synt
     const oscillator = AudioContext.prototype.createOscillator;
     AudioContext.prototype.createOscillator = function () { probe.oscillators++; return oscillator.call(this); };
   });
-  const probe = () => page.evaluate(() => (window as typeof window & { __audioPremium: { effects: number; loops: number; oscillators: number } }).__audioPremium);
+  const probe = () => page.evaluate(() => (window as typeof window & { __audioPremium: { played: string[]; loops: number; oscillators: number } }).__audioPremium);
   await gotoDeck(page);
   await expect.poll(async () => (await probe()).loops).toBe(1);
   expect(await page.evaluate(() => performance.getEntriesByType("resource").filter(r => r.name.endsWith("/music/candidates/collection-electronique-v1.mp3")).length)).toBe(1);
-  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").filter(r => r.name.endsWith(".wav")).length)).toBeGreaterThan(30);
-  const before = (await probe()).effects;
+  await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").filter(r => r.name.endsWith(".wav")).length)).toBeGreaterThanOrEqual(7);
+  const before = (await probe()).played.length;
   await page.getByRole("button", { name: /^(Ouvrir le booster|Essayer)$/ }).click();
-  expect((await probe()).effects).toBe(before);
+  expect((await probe()).played).toHaveLength(before);
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
-  // Le paquet et son extraction, puis la révélation commune (ou un impact + motif).
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
-  await expect.poll(async () => (await probe()).effects - before).toBeGreaterThanOrEqual(3);
+  // Le paquet sonne (« pop » + synthèse), puis la première carte (« card-draw » + gamme).
+  await expect.poll(async () => (await probe()).played.slice(before)).toEqual(expect.arrayContaining(["pop", "card-draw"]));
   const after = await probe();
-  expect(after.effects - before).toBeLessThanOrEqual(4);
-  expect(after.oscillators).toBe(0);
+  expect(after.oscillators).toBeGreaterThan(0);
   expect(after.loops).toBe(1);
 });
 

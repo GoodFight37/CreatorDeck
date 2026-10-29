@@ -1,7 +1,7 @@
 /**
- * Sons de l'application : prises acoustiques embarquées depuis le 27 octobre.
- * Les plans de synthèse ci-dessous sont en réserve ; les gestes actifs jouent
- * les fichiers mesurés. Historique et mesures : docs/audio-livraison-2026-10-27.md.
+ * Sons de l'application : **des bruitages embarqués, doublés d'un fond
+ * synthétisé**. Les prises générées du 27 octobre ont été retirées le 29 à la
+ * demande de Malik ; elles restent dans l'historique Git.
  *
  * **1. Un son par geste, et le son dit le geste — et se déplacer ne sonne pas.**
  * On n'entend donc **rien** en changeant d'onglet, en ouvrant une feuille, en
@@ -318,6 +318,7 @@ type AudioContextLike = {
   sampleRate: number;
   createOscillator: () => OscillatorNode;
   createGain: () => GainNode;
+  createBiquadFilter: () => BiquadFilterNode;
   createBufferSource: () => AudioBufferSourceNode;
   createBuffer: (numberOfChannels: number, length: number, sampleRate: number) => AudioBuffer;
   decodeAudioData: (data: ArrayBuffer) => Promise<AudioBuffer>;
@@ -330,10 +331,10 @@ let loaded = false;
 let background = false;
 const activeEffects = new Set<AudioBufferSourceNode>();
 export type MusicScene = "hub" | "pack" | "tribunal";
-/** Gains relatifs de BGM, gardés très bas à la demande du joueur. */
+/** Gains relatifs de BGM ; remontés le 29/10/2026, Malik l'entendait à peine au téléphone. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  hub: 0.08,
-  pack: 0.04,
+  hub: 0.14,
+  pack: 0.07,
   tribunal: 0,
 };
 
@@ -692,6 +693,13 @@ function audioContext(): AudioContextLike | null {
   return context;
 }
 
+/**
+ * Coupe les harmoniques des ondes carrées et en dents de scie, au-dessus de la
+ * note la plus haute (3,1 kHz) : Malik trouvait les aigus des Rares agressifs
+ * (29/10/2026). Mesure : énergie > 6 kHz de 3,8–5,5 % à ≤ 0,5 %.
+ */
+export const SYNTH_LOWPASS_HZ = 4_500;
+
 /** Joue un plan de notes. Silencieux si le son est coupé ou l'API absente. */
 export function play(plan: Note[]): void {
   if (isMuted() || background || !plan.length) return;
@@ -700,6 +708,10 @@ export function play(plan: Note[]): void {
   if (ctx.state === "suspended") void ctx.resume();
 
   const start = ctx.currentTime + 0.01;
+  const tone = ctx.createBiquadFilter();
+  tone.type = "lowpass";
+  tone.frequency.value = SYNTH_LOWPASS_HZ;
+  tone.connect(masterBus(ctx));
   for (const note of plan) {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -715,7 +727,7 @@ export function play(plan: Note[]): void {
     gain.gain.setValueAtTime(0.0001, start + note.at);
     gain.gain.exponentialRampToValueAtTime(peak, start + note.at + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + note.at + note.duration);
-    oscillator.connect(gain).connect(masterBus(ctx));
+    oscillator.connect(gain).connect(tone);
     oscillator.start(start + note.at);
     oscillator.stop(start + note.at + note.duration + 0.02);
   }
@@ -796,11 +808,15 @@ export function playSample(name: SampleName, gainFactor = 1): void {
 }
 
 export function playTear(): void {
-  playFamily("pack-tear");
+  play(tearPlan());
+  // Le paquet qu'on déchire, c'est du papier : le bruitage le dit mieux qu'une
+  // note. Chargé dès ce geste, il est prêt pour la première carte révélée.
+  playSample("card-draw");
 }
 
 export function playPackOpening(): void {
-  playTear();
+  play(packOpeningPlan());
+  playSample("pop");
 }
 
 /**
@@ -811,30 +827,31 @@ export function playPackOpening(): void {
  * avant de la lire.
  */
 export function playReveal(rarity: Rarity, variant: CardVariant = "standard"): void {
-  playFamily(`reveal-${rarity}`, variant === "standard" ? 1 : 1.06);
+  play(revealPlan(rarity, variant));
+  playSample("card-draw", 0.85);
 }
 
 export function playReward(): void {
-  playFamily("chime");
+  play(rewardPlan());
+  playSample("chime", 0.8);
 }
 
 export function playLegendaryStinger(): void {
-  playFamily("reveal-legendary");
+  play(legendaryStingerPlan());
 }
 
 export function playPerfectStinger(): void {
-  playFamily("perfect");
+  play(perfectStingerPlan());
 }
 
 export function playTribunalEndStinger(): void {
-  playFamily("chime", 0.8);
+  play(tribunalEndStingerPlan());
 }
 
 /** Le bang d'une carte Épique ou mieux (à jouer après le silence). */
 export function playBang(rarity: Rarity, variant: CardVariant = "standard"): void {
-  // L'impact et le motif forment un seul événement, sur deux couches discrètes.
-  if (rarity === "epic" || rarity === "legendary") playFamily(`impact-${rarity}`, 0.65);
-  playReveal(rarity, variant);
+  play(bangPlan(rarity, variant));
+  playSample("chip-place", 0.7);
 }
 
 /**
@@ -844,17 +861,19 @@ export function playBang(rarity: Rarity, variant: CardVariant = "standard"): voi
  * synthèse — et les deux passent par `isMuted()`.
  */
 export function playGrace(): void {
-  playFamily("grace");
+  play(gracePlan());
+  playSample("chip-place", 0.7);
 }
 
 /** Le ban est maintenu : le marteau tombe. Synthèse seule, le coup suffit. */
 export function playGavel(): void {
-  playFamily("gavel");
+  play(gavelPlan());
 }
 
 /** Le son d'une carte qui refuse de se retourner. */
 export function playRefuse(): void {
-  playFamily("close");
+  play(refusePlan());
+  playSample("close", 0.6);
 }
 
 // ---------------------------------------------------------------------------
@@ -880,7 +899,7 @@ export function playRefuse(): void {
 
 /** Des pièces tombent : une récompense est encaissée (points, sabliers, jetons). */
 export function playCoins(): void {
-  playFamily("coins");
+  playSample("coins");
 }
 
 // ---------------------------------------------------------------------------
@@ -930,25 +949,17 @@ export function playMenuClose(): void {
 
 /** Une carte se pose quelque part (un doublon sacrifié, une carte cédée). */
 export function playCardPlace(): void {
-  playFamily("chip-place");
+  playSample("chip-place");
 }
 
 /** Une publication est encaissée. */
 export function playChime(): void {
-  playFamily("chime");
+  playSample("chime");
 }
 
-const familyTurn = new Map<SampleName, number>();
-/** Alterne deux prises réelles, sans superposer le même son au même geste. */
-function playFamily(name: SampleName, gain = 1): void {
-  const alt = `${name}-alt` as SampleName;
-  const turn = familyTurn.get(name) ?? 0;
-  familyTurn.set(name, turn + 1);
-  playSample(alt in SAMPLES && turn % 2 ? alt : name, gain);
-}
-
+/** Un créateur rejoint le classeur : le carillon de récompense, comme avant le 27/10. */
 export function playCraft(): void {
-  playFamily("craft");
+  playReward();
 }
 
 // ---------------------------------------------------------------------------

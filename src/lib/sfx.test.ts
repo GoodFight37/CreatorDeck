@@ -96,15 +96,15 @@ describe("plans de sons", () => {
 
 describe("mix de la musique", () => {
   it("garde la musique basse au démarrage, plus basse pendant un pack et absente au Tribunal", () => {
-    expect(MUSIC_SCENE_GAIN.hub).toBe(0.08);
-    expect(MUSIC_SCENE_GAIN.pack).toBe(0.04);
+    expect(MUSIC_SCENE_GAIN.hub).toBe(0.14);
+    expect(MUSIC_SCENE_GAIN.pack).toBe(0.07);
     expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeCloseTo(0.5);
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
 
   it("remonte uniquement les deux sons de manipulation des cartes", () => {
-    expect(NIVEAUX_SFX.niveaux["card-draw"].cibleDb).toBe(-30);
-    expect(NIVEAUX_SFX.niveaux["card-turn"].cibleDb).toBe(-32);
+    expect(NIVEAUX_SFX.niveaux["card-draw"].cibleDb).toBe(-21);
+    expect(NIVEAUX_SFX.niveaux["card-turn"].cibleDb).toBe(-28.6);
     expect(NIVEAUX_SFX.niveaux.click.cibleDb).toBe(-32);
   });
 

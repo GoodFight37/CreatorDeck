@@ -46,22 +46,18 @@ const CIBLES = {
   select: -26,
   "menu-open": -30,
   close: -30,
+  // Déjà au plafond de crête : impossible de le monter sans dépasser −6 dBFS.
   "card-turn": -28.6,
   "chip-place": -30,
   // Les gestes qui portent quelque chose : le papier d'une carte, le paquet.
-  "card-draw": -25,
+  // +4 dB le 29/10 (Malik n'entendait plus le bruit de carte au téléphone) ;
+  // la crête max (−6 dBFS) plafonne le gain réel à +3,35 dB.
+  "card-draw": -21,
   pop: -29,
   // Ce qui se gagne : les pièces et le carillon.
   coins: -28,
   chime: -28,
 };
-// Les prises générées ont été mesurées après traitement, avec une cible par geste.
-const mesures = JSON.parse(readFileSync(path.join(ROOT, "docs/audio-measurements.json"), "utf8"));
-for (const mesure of mesures) {
-  if (mesure.fichier.startsWith("public/sfx/") && mesure.fichier.endsWith(".wav")) {
-    CIBLES[path.basename(mesure.fichier, ".wav")] = mesure.cibleDb;
-  }
-}
 
 /**
  * La crête ne doit jamais dépasser ça, même après amplification.

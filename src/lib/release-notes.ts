@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-29-sons-d-origine", date: "2026-10-29", title: "Le retour des sons d’origine",
+    summary: "Les bruitages du début du jeu reviennent, plus doux et mieux audibles.",
+    sections: [{ title: "Ambiance sonore", items: [
+      "L’ouverture du sachet sonne de nouveau, et chaque carte révélée fait entendre son papier.",
+      "Les sons des cartes rares sont adoucis dans les aigus.",
+      "La musique est un peu plus présente ; tes réglages de volume restent les tiens.",
+    ] }],
+  },
+  {
     id: "2026-10-28-musique-collection", date: "2026-10-28", title: "Une musique pour ta collection",
     summary: "Une nouvelle boucle électronique douce accompagne le jeu.",
     sections: [{ title: "Ambiance sonore", items: [
