@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { preloadPortraits } from "@/lib/preload";
-import { MANUAL_PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
+import { MANUAL_PORTRAIT_OVERRIDES, PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
 
 /**
  * Le préchargement des portraits : cinq visages demandés **avant** la
@@ -50,8 +50,9 @@ describe("préchargement des portraits", () => {
     const demandes = espion();
     preloadPortraits(["rubius", "shroud", "diverron", "rubius"]);
     expect(demandes).toEqual([
-      MANUAL_PORTRAIT_OVERRIDES.rubius,
-      MANUAL_PORTRAIT_OVERRIDES.shroud,
+      // Depuis D-179, leur photo créditée en 900 px remplace le doublon manuel en 450 px.
+      PORTRAIT_OVERRIDES.rubius.image,
+      PORTRAIT_OVERRIDES.shroud.image,
       "/creators/provided/diverron.webp",
     ]);
   });

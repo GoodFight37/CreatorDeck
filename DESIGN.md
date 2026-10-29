@@ -325,10 +325,10 @@ cartouche or. La matière est commune aux trois vues et son reflet reste
 sur les bords. Pas de lien ni de compteur d'exemplaires sur l'objet : un tap
 ouvre sa fiche, qui porte les informations et le lien Twitch. L'accueil,
 les sachets, les règles et le son ne changent pas avec ce lot.
-**D-179 (29 octobre 2026)** : le cartouche et le filet du portrait prennent la
-teinte de la rareté ; l'étiquette est précédée de 1 à 5 losanges imprimés
-(Commune 1 → Légendaire 5) ; Rare et Épique ont un filet chromé au-dessus du
-cartouche et un halo propre. Toujours aucune pastille.
+**D-180 (29 octobre 2026, remplace la matière par rareté)** : plus de métal
+ni de plaque. Carte en encre sombre unie, à peine teintée de sa rareté ; la
+rareté se lit au contour (sa couleur, 1 → 3 px, halo à partir de Rare) et
+au libellé coloré au-dessus du nom. Nom crème sur une ligne. Aucune pastille.
 « Une planche TCG, pas une vignette » (`globals.css`) : portrait plein cadre au ratio 0,715 ; la rareté est le cadre (filet, épaisseur, reflet) ; une nameplate opaque en bas, nom en display condensée ; la variante est une matière (foil qui suit le doigt, led qui pulse, chrome). Le portrait est assombri en haut et en bas pour porter le rang et la nameplate. La rareté se lit à la lumière du bord, pas dans une pastille. La carte reste la même affiche partout. Le code garde deux mentions en rouge sur la planche : « Obtenue en direct » (variante Live, `.card-live`) et le lien « Direct » d'une chaîne réellement en ligne (`.card-on-air`), à réduire dans le balayage cg8.2. Sans photo, un placeholder affiche jusqu'à deux initiales dans un cercle teinté de la rareté.
 
 ### Le bandeau du direct (signature)

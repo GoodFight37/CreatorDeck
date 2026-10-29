@@ -25,14 +25,14 @@ async function binder(page: Page) {
 
 test("la matière distingue les raretés sans animation continue ni portrait masqué", async ({ page }) => {
   await binder(page);
-  const opacity = (rarity: string) => page.locator(`.collection-grid .rarity-${rarity} .card-foil`)
-    .evaluate((node) => Number(getComputedStyle(node).opacity));
-  // Sans style inline, la Commune n'a pas de reflet dans le classeur : sa
-  // rareté se lit au filet froid du bord. Les autres reprennent leur CSS.
-  expect(await opacity("common")).toBe(0);
-  expect(await opacity("rare")).toBeGreaterThan(0);
-  expect(await opacity("epic")).toBeGreaterThan(await opacity("rare"));
-  expect(await opacity("legendary")).toBeGreaterThan(await opacity("epic"));
+  // D-180 : pas de reflet de rareté ni de métal ; la rareté se lit au contour, plus épais à chaque palier.
+  const edge = (rarity: string) => page.locator(`.collection-grid .rarity-${rarity}:not(.is-locked)`).first()
+    .evaluate((node) => Number.parseFloat(getComputedStyle(node, "::after").borderTopWidth));
+  expect(await page.locator(".collection-grid .rarity-common .card-foil").first()
+    .evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(0);
+  expect(await edge("rare")).toBeGreaterThan(await edge("common"));
+  expect(await edge("epic")).toBeGreaterThan(await edge("rare"));
+  expect(await edge("legendary")).toBeGreaterThanOrEqual(await edge("epic"));
   await expect(page.locator(".collection-grid .rarity-legendary .card-identity")).toBeHidden();
   await expect(page.locator(".collection-grid .rarity-rare .card-foil")).toHaveCSS("animation-name", "none");
   // La lumière du classeur est fixe : le survol ne réécrit plus aucune variable.

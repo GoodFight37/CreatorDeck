@@ -1,3 +1,18 @@
+## D-180 — 29 octobre 2026 : carte sans métal, rareté au contour
+
+Malik juge la plaque métallisée sous le portrait « cheap », trop de matières
+(bordure + plaque + losanges + texte) et le bas de carte trop chargé. Remplace
+la partie « Carte » de D-179 et les dégradés de matière de D-168 :
+- carte en encre sombre unie (`color-mix` 9 % de la rareté sur `#14161b`),
+  sans dégradé chrome, brossé ni or, y compris la Légendaire ;
+- rareté au contour (`::after` à sa couleur : 1, 2, 2, 3, 3 px de Commune à Légendaire),
+  halo doux pour Rare, Épique, Légendaire ;
+- cartouche sans fond, libellé de rareté coloré sans losanges, nom crème sur
+  une ligne (points de suspension si trop long ; deux lignes en miniature) ;
+- plus de filet autour du portrait ni de reflet de rareté ; les reflets des
+  variantes Holo, Gold et Live restent.
+Révélation, récap, peel et portraits de D-179 inchangés.
+
 ## D-179 — 29 octobre 2026 : Drop premium, la rareté portée par l'objet
 
 Brief de Malik après test du Live Drop sur Vercel : cartes « fiche contact »,

@@ -1,3 +1,15 @@
+# Checkpoint Claude — D-180 : carte sans métal, rareté au contour, 29 octobre 2026
+
+Malik rejette la plaque métallisée et les losanges de D-179 (« cheap », trop de matières).
+- `globals.css` (couche `creator-print`) : encre sombre unie à peine teintée de la rareté,
+  plus aucun dégradé chrome/brossé/or ; contour à la couleur de rareté 1/2/2/3/3 px, halo
+  dès Rare ; cartouche sans fond, libellé coloré sans losanges, nom crème sur une ligne.
+- Avant/après mêmes cartes : `docs/captures/drop-premium/cartes-avant-apres.png`.
+- Correctif oublié du commit précédent : `preload.test.ts` attendait les portraits manuels
+  de rubius/shroud (passés en 900 px) — unitaires 1223/1223 maintenant.
+- `binder-finitions` vérifie l'épaisseur du contour au lieu du reflet par rareté.
+- E2E complet **231/49/0** (4,8 min). **Non vérifié** : émulateur, APK, Redmi.
+
 # Checkpoint Claude — Drop premium : cartes, récap, peel, 29 octobre 2026
 
 Brief de Malik (Live Drop Vercel), décision **D-179**. Branche `claude/drop-premium` depuis `242b9287`.
