@@ -22,7 +22,6 @@ import { CATALOG_SIZE, CREATORS, RETIRED_CREATORS, RARITY_META, type Rarity, typ
 import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
 import { cardEffectsAllowed } from "@/lib/tilt";
-import { playPageTurn } from "@/lib/sfx";
 
 export function CollectionView({
   game,
@@ -158,7 +157,6 @@ export function CollectionView({
   function turnPage(next: number) {
     const target = Math.max(0, Math.min(totalPages - 1, next));
     if (target === safePage || turnLock.current) return;
-    playPageTurn();
     const effects = cardEffectsAllowed();
     setTurnDirection(effects ? Math.sign(target - safePage) : 0);
     turnLock.current = effects;

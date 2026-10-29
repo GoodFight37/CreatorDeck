@@ -6,6 +6,7 @@ import { createInitialState, getGameView } from "@/lib/game-engine";
 import { HomeView } from "@/components/drop-view";
 import { CollectionView } from "@/components/binder-view";
 import { CardInspectModal } from "@/components/card-inspect-modal";
+import { preloadSamples } from "@/lib/sfx";
 
 const NOW = Date.UTC(2026, 9, 11, 12);
 vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
@@ -48,6 +49,18 @@ describe("le Binder se feuillette, ses visages d’abord", () => {
     expect(document.querySelector(".collection-grid")!.textContent).not.toContain("×2");
     act(() => document.querySelector<HTMLButtonElement>(".collection-grid .creator-card-inspect")!.click());
     expect(document.querySelector('[role="dialog"]')!.textContent).toContain("Possédée ×2");
+  });
+
+  it("tourner une page du Binder ne crée aucune source audio", async () => {
+    await collection([]);
+    // Charger le bruitage pour ne pas confondre fichier absent et navigation muette.
+    await act(async () => { preloadSamples(["card-turn"]); });
+    const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } }).__sons;
+    const avant = { ...sons };
+    expect(document.querySelector(".binder-page")!.getAttribute("data-page")).toBe("1");
+    await act(async () => { banc.appuyer("Suivant"); });
+    expect(document.querySelector(".binder-page")!.getAttribute("data-page")).toBe("2");
+    expect(sons).toEqual(avant);
   });
 
   it("garde les douze cartes et ignore un second feuilletage avant la pose", async () => {

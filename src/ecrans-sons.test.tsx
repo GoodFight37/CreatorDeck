@@ -88,7 +88,7 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
 
-  it("garde la recherche muette, mais donne un son bref au feuilletage", async () => {
+  it("garde la recherche et le feuilletage muets", async () => {
     await ecranToi();
     await act(async () => {});
     const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
@@ -97,20 +97,20 @@ describe("le réglage du son", () => {
     await banc.appuyerEtAttendre("Binder");
     const avant = sons.oscillateurs + sons.bruitages;
 
-    // L'album n'a plus de filtres ; chercher un nom est de la navigation muette,
-    // seuls les tours de page sont sonores.
+    // L'album n'a plus de filtres ; chercher un nom ou tourner une page est de la
+    // navigation muette (son de page retiré à la demande de Malik, 29/10/2026).
     expect(document.querySelector(".filter-chips"), "des filtres dans le classeur").toBeNull();
     const champ = document.querySelector<HTMLInputElement>('input[aria-label="Rechercher un créateur"]')!;
     banc.saisir(champ, "a");
     banc.saisir(champ, "");
     expect(sons.oscillateurs + sons.bruitages, "la recherche a sonné").toBe(avant);
     await banc.appuyerEtAttendre("Suivant");
-    expect(sons.oscillateurs + sons.bruitages, "la page n'a pas sonné").toBe(avant + 1);
+    expect(sons.oscillateurs + sons.bruitages, "la page a sonné").toBe(avant);
     // jsdom ne joue pas le tour de feuille : attendre son filet de sécurité.
     await act(async () => { await vi.advanceTimersByTimeAsync(420); });
     await banc.appuyerEtAttendre("Précédent");
 
-    expect(sons.oscillateurs + sons.bruitages, "le retour de page n'a pas sonné").toBe(avant + 2);
+    expect(sons.oscillateurs + sons.bruitages, "le retour de page a sonné").toBe(avant);
   });
 
   it("le son du booster démarre à la déchirure, jamais avant", async () => {
