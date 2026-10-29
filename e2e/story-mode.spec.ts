@@ -142,6 +142,7 @@ test("Histoire : objectif, épisode et noms des jauges découvrables au toucher"
 
 test("Histoire : la mission passe d'un acte à l'autre sans modifier la sauvegarde", async ({ page }) => {
   await page.goto("/histoire");
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   let run = startStory(STORY_PROLOGUE);
   for (let i = 0; i < 12; i++) run = chooseStory(STORY_PROLOGUE, run, "left");
   expect(run.ending).toBeNull();
@@ -267,6 +268,7 @@ test("Histoire : galerie visuelle des quatre personnages du premier acte", async
   test.skip(testInfo.project.name !== "téléphone", "Captures dédiées au projet mobile.");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   const screens = "test-results/mobile-observation-histoire";
   await mkdir(screens, { recursive: true });
@@ -287,6 +289,7 @@ test("Histoire : galerie des scènes signature et des épilogues mobiles", async
   test.skip(testInfo.project.name !== "téléphone", "Captures dédiées au projet mobile.");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/histoire");
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   const folder = "test-results/mobile-observation-histoire";
   await mkdir(folder, { recursive: true });
@@ -906,6 +909,7 @@ test("Histoire : les médias ont un décor propre et les choix laissent une trac
 test("Histoire : l'entourage du journal suit la partie réellement restaurée", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/histoire");
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   let played = startStory(STORY_PROLOGUE);
   for (let i = 0; i < 12; i++) played = chooseStory(STORY_PROLOGUE, played, "left");
   expect(played.ending).toBeNull();
@@ -982,6 +986,7 @@ test("Histoire : le dénouement a une gravure dédiée, enregistrée à la fin d
   }
   expect(played.ending).not.toBeNull();
   await page.goto("/histoire");
+  await expect.poll(() => page.evaluate(key => localStorage.getItem(key) !== null, STORY_SAVE_KEY)).toBe(true);
   await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
     key: STORY_SAVE_KEY, value: JSON.stringify(played),
   });

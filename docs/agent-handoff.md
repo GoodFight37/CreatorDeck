@@ -1,3 +1,12 @@
+# Checkpoint Codex — intégration publiée, dernière correction de tests Histoire, 29 octobre 2026
+
+- #27 (`c2d04c4f`) puis #24 (`c4f2a48f`) sont **MERGED sur GitHub**. Code intégré publié : `743ed9eb7374bfa4363fc9fb88adde5339b15c63`, Vercel Production READY `dpl_3J4XCVuRMKjgryozp3ogrkHCb9YR`, SHA vérifié via le connecteur Vercel.
+- CI [40861795381](https://github.com/GoodFight37/CreatorDeck/actions/runs/40861795381) : statique/unitaires/écrans/build, SQL jetable, cloud simulé et shards Playwright 1/3 et 3/3 **réussis** ; shard 2/3 échoué sur le test de gravure de fin, qui injectait sa sauvegarde avant l'initialisation de la page. Ce n'est pas un échec de moteur Histoire.
+- Même course que les deux tests déjà fiabilisés : cinq autres injections initiales repérées et corrigées dans `e2e/story-mode.spec.ts`, en attendant une sauvegarde existante avant de la remplacer. Aucun code produit modifié dans cette dernière correction. ESLint et diff-check réussis.
+- `npm run e2e:rapide -- e2e/story-mode.spec.ts --grep 'la mission passe|galerie visuelle des quatre|galerie des scènes signature|entourage du journal|le dénouement a une gravure' --workers=1` : **8 réussis / 2 ignorés / 0 échec**, 1,3 min, sortie 0. La suite complète locale n'a pas été répétée.
+- Nouveau commit de tests/checkpoint à publier normalement sur main ; attendre sa Vérification et son APK de test avant toute annonce verte. Les résultats locaux détaillés et les résolutions de conflits restent dans le checkpoint suivant.
+- Bloc Kyara réappliqué hors index (six lignes) et fichiers audio/PNG préservés par empreintes ; sauvegarde `ea0ddbf` conservée. Pas d'émulateur, pas de Redmi. Réservation h3u toujours en cours.
+
 # Checkpoint Codex — #27 puis #24 prêtes, même application, 29 octobre 2026
 
 - Autorisation Malik confirmée ; #27 déjà fusionnée sur main `c2d04c4f`, #24 intégrée localement par merge `c4f2a48ffda507ded8259581d9dc3ce0e54fff15`, sans application séparée (D-189). Correction MEMES et fiabilisation de deux tests Histoire livrées avec ce checkpoint.
