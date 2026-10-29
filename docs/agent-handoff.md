@@ -9,6 +9,7 @@ Malik rejette la plaque métallisée et les losanges de D-179 (« cheap », trop
   de rubius/shroud (passés en 900 px) — unitaires 1223/1223 maintenant.
 - `binder-finitions` vérifie l'épaisseur du contour au lieu du reflet par rareté.
 - Booster parfait (retour Redmi) : plus de rectangle de halo autour des légendes, légende « Nouvelle »/« Doublon », numéro des miniatures entier. Écrans 268/268, e2e parfait + classeur 26/26.
+- Rayures au-dessus des dos supprimées (`.foil-interior-edges`, trouvée par sonde de masquage). `centered-torn-sachet` régénérée (linux = copie win32). Numéro des miniatures : police réduite et au-dessus de la photo — la première tentative (photo descendue) avait cassé `finition.spec` en CI.
 - E2E complet **231/49/0** (4,8 min). **Non vérifié** : émulateur, APK, Redmi.
 
 # Checkpoint Claude — Drop premium : cartes, récap, peel, 29 octobre 2026

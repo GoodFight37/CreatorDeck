@@ -892,17 +892,6 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   background: radial-gradient(ellipse 62% 100% at 50% 100%,
     rgb(255 249 226 / .98), rgb(255 200 166 / .58) 42%, rgb(240 111 151 / .16) 66%, transparent 82%);
 }
-.foil-interior-edges {
-  position: absolute;
-  left: calc(var(--cut-start, 7%) + 3%);
-  width: calc(var(--cut-end, 7%) - var(--cut-start, 7%) - 6%);
-  top: calc(var(--pack-seam-y, 15.45%) - 12px);
-  height: 12px;
-  border-radius: 3px 3px 0 0;
-  background: repeating-linear-gradient(180deg, #f6e6d6 0 1.5px, #4a2447 1.5px 3px);
-  box-shadow: 0 -3px 10px rgb(255 214 180 / .55);
-  transform: translateY(calc((1 - var(--peel-progress, 0)) * 12px));
-}
 .booster-foil-open .foil-interior { animation: foil-interior-out 900ms ease-out both; opacity: 1; }
 @keyframes foil-interior-out {
   /* Opaque tant que les cartes sortent de la fente ; le fondu ne vient qu'après. */

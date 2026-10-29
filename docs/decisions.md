@@ -16,6 +16,9 @@ Retour téléphone de Malik (booster parfait) : le halo d'Épique/Légendaire po
 le bloc carte + légende dessinait un rectangle autour de « Épique · Nouvelle ».
 Halo retiré du bloc (la carte porte le sien), légende réduite à « Nouvelle » /
 « Doublon » comme le récap, numéro des miniatures plus rogné.
+Rayures au-dessus des dos à l'ouverture (là depuis `a1bf94a5`) : `.foil-interior-edges`
+peignait la « tranche des cartes » en bandes crème/sombres à hauteur de soudure ;
+une fois les vrais dos sortis, elles flottaient au-dessus. Élément supprimé.
 
 ## D-179 — 29 octobre 2026 : Drop premium, la rareté portée par l'objet
 

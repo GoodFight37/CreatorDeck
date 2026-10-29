@@ -296,10 +296,9 @@ export function PackTear({
           <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
           {/* L'intérieur : tant que le sachet est fermé on ne voit rien, mais dès
-              que la soudure cède, la lumière et la tranche des cartes en sortent. */}
+              que la soudure cède, la lumière en sort ; les vrais dos montent ensuite. */}
           <div ref={interiorRef} className="foil-interior" aria-hidden="true" style={restInterior}>
             <span className="foil-interior-light" />
-            <span className="foil-interior-edges" />
           </div>
           <div className="foil-chamber-mask" aria-hidden="true">
           <div
