@@ -1,3 +1,23 @@
+## D-190 — 29 octobre 2026 : Histoire remplace le Tribunal ; MEMES sans FR
+
+Malik précise que l'intégration d'Histoire doit inclure un accès dans le jeu.
+**Le Mode Histoire remplacera le Tribunal des Bannis.** La restriction de D-189
+sur l'ajout d'un accès est levée pour ce prochain chantier ; aucune application
+Android séparée. Suivi : `CreatorDeck-Codex-7o1`.
+
+L'emplacement reste à décider avec Malik : garder les trois onglets et proposer
+un accès bien visible dans Objectifs, ou passer à quatre onglets avec Histoire.
+Ces pistes ne sont pas une validation de navigation. Aucun écran ni bouton
+n'est modifié pendant cette prise de notes. Le remplacement fonctionnel du
+Tribunal est acté ; son retrait technique et les éléments associés seront cadrés
+dans le lot d'implémentation, sans suppression implicite de données.
+
+Sur les cartes MEMES et Imgflip, conserver le libellé de rareté mais remplacer
+**MEMES FR par MEMES** : le catalogue est international. Le texte en dur est
+confirmé dans `src/components/meme-card.tsx`, commun aux deux univers. Vérifier
+révélation, récapitulatif, fiche et classeur lors du correctif ; ne pas changer
+les sources/crédits ni les règles. Suivi : `CreatorDeck-Codex-2xo`.
+
 ## D-189 — 29 octobre 2026 : intégrer Histoire dans CreatorDeck, sans application séparée
 
 Malik autorise explicitement les fusions #27 puis #24 et refuse l'APK Histoire

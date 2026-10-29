@@ -1,4 +1,21 @@
-# Intégration Histoire — 29 octobre 2026 (D-189)
+# Chantiers à reprendre — 29 octobre 2026 (D-190)
+
+État vérifié dans Beads ; les décisions d'emplacement restent à Malik.
+
+| Chantier | Reste à faire | Suivi |
+| --- | --- | --- |
+| Accès au Mode Histoire | Remplacer le Tribunal des Bannis ; choisir un accès visible dans Objectifs avec trois onglets, ou un quatrième onglet Histoire. Aucun choix de navigation encore validé. | `CreatorDeck-Codex-7o1` |
+| Libellés MEMES / Imgflip | Remplacer « MEMES FR » par « MEMES » sur les cartes, rareté conservée ; vérifier ouverture, récapitulatif, fiche et classeur. | `CreatorDeck-Codex-2xo` |
+| Drop premium / portraits | Finir la validation APK/Redmi et arbitrer les 19 portraits, selon le suivi actuel ; code D-179/D-180 déjà publié. | `CreatorDeck-Codex-wmt` |
+| Performances mobiles | Confirmer sur Redmi les améliorations déjà implémentées ; mesures PC/émulateur ne suffisent pas à fermer ce suivi. | `CreatorDeck-Codex-t5b` |
+| Sachets Live / MEMES / Imgflip | Visuels à refaire ; chantier mis de côté, style et producteur des images à choisir. Manga Drop reste approuvé. | `CreatorDeck-Codex-dww` |
+| Sécurité base / Android | Reportée à la demande de Malik, à traiter avant d'inviter d'autres joueurs. | `CreatorDeck-Codex-drj` |
+
+Les deux PR #27/#24 sont fusionnées ; cela ne termine pas le chantier d'accès
+à Histoire. Les essais audio locaux restent hors livraison, sans nouvelle
+génération ni remplacement des sons d'origine autorisé par cette prise de notes.
+
+# Intégration Histoire — 29 octobre 2026 (D-189, accès à compléter selon D-190)
 
 Histoire est réconciliée avec main dans le même export CreatorDeck ; aucune
 application Android séparée, aucun nouvel accès depuis le menu principal,

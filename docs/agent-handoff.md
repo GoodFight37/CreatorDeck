@@ -1,3 +1,12 @@
+# Checkpoint Codex — priorités de Malik à consigner, 29 octobre 2026
+
+- Demande : faire le point sur les chantiers et noter les décisions, **sans implémenter maintenant**. Code audité `27f5f6a2c8ec0e4d10b59320558ddac4f0c629f9`, branche `codex/integration-pr27-pr24-20261029`, main distant égal au démarrage.
+- D-190 : Histoire doit avoir un accès dans le jeu et **remplacera le Tribunal des Bannis**. À choisir ensemble : trois onglets avec accès visible dans Objectifs, ou quatrième onglet Histoire. Aucun choix de navigation validé ; la restriction d'accès de D-189 ne doit plus bloquer ce chantier. Beads `CreatorDeck-Codex-7o1`.
+- Corriger plus tard le libellé **MEMES FR → MEMES** sur MEMES et Imgflip, catalogue international ; raretés inchangées. Texte en dur confirmé dans `src/components/meme-card.tsx:47`, composant commun. Beads `CreatorDeck-Codex-2xo`.
+- Autres suivis encore ouverts, vérifiés dans Beads : Drop premium/19 portraits et APK-Redmi (`wmt`), validation des performances Redmi (`t5b`), sachets Live/MEMES/Imgflip mis de côté (`dww`), sécurité reportée avant autres joueurs (`drj`). Essais audio locaux non livrés, sans relance autorisée.
+- Fichiers de documentation : décisions, roadmap et ce checkpoint ; message à Claude dans l'échange local. Aucun code, CSS, rareté, catalogue ou règle modifiés. Aucun test applicatif relancé pour ces notes ; vérification du diff et de la cohérence seulement. Préserver les changements locaux antérieurs, notamment le bloc Kyara du handoff.
+- Prochaine action : décider avec Malik de l'emplacement Histoire, puis cadrer le lot d'interface/remplacement du Tribunal. Le correctif de libellé est une tâche distincte prête à être prise.
+
 # Checkpoint Codex — intégration publiée, dernière correction de tests Histoire, 29 octobre 2026
 
 - #27 (`c2d04c4f`) puis #24 (`c4f2a48f`) sont **MERGED sur GitHub**. Code intégré publié : `743ed9eb7374bfa4363fc9fb88adde5339b15c63`, Vercel Production READY `dpl_3J4XCVuRMKjgryozp3ogrkHCb9YR`, SHA vérifié via le connecteur Vercel.
