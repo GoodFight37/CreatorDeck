@@ -121,3 +121,19 @@ test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et ti
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${COLLECTION_TOTAL}`);
   expect(draws).toBe(1);
 });
+
+test("MEMES et Imgflip présentent la photo source sans voile, matière ni fond flouté", async ({ page }) => {
+  await page.goto("/memes");
+  for (const name of ["Non mais allô, quoi", "Drake Hotline Bling"]) {
+    await page.getByPlaceholder("Nom ou numéro").fill(name);
+    await page.locator(".meme-slot").first().click();
+    const card = page.locator(".meme-inspect .meme-card");
+    const photo = card.locator(".card-photo");
+    await expect(photo).toHaveCSS("object-fit", "contain");
+    await expect(photo).toHaveCSS("filter", "none");
+    await expect(photo).toHaveCSS("transform", "none");
+    await expect(card.locator(".card-photo-shade, .card-photo-backdrop, .meme-card-material")).toHaveCount(0);
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+    await page.getByRole("button", { name: "Fermer" }).click();
+  }
+});
