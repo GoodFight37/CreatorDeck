@@ -77,7 +77,8 @@
    bordure de rareté assurent la lisibilité sans retoucher les pixels. */
 .meme-card { background: #0d0e13; }
 .meme-card .card-photo-wrap { z-index: 1; overflow: hidden; background: #0d0e13; }
-.meme-card .card-photo { object-fit: contain; object-position: center; filter: none; transform: none; }
+/* Une spécificité supérieure aux cartes Créateur, indépendamment de l'ordre CSS. */
+.creator-card.meme-card .card-photo { object-fit: contain; object-position: center; filter: none; transform: none; }
 .meme-card .card-nameplate { background: linear-gradient(150deg, rgb(15 13 20 / .94), rgb(12 10 17 / .98)); }
 .meme-card .card-nameplate h3 { font-size: clamp(15px, 5vw, 27px); }
 /* La vignette Mème garde la taille de cartouche du deck dans TOUS les écrans
