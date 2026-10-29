@@ -72,13 +72,13 @@
 .meme-pager button:disabled { opacity: .4; }
 .meme-pager span { color: #c7b0be; font-size: 12px; }
 .meme-credit { margin: 30px 0 0; color: #a9939d; font-size: 12px; line-height: 1.5; }
-.meme-card { background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--rarity) 24%, #15111b), #110f18 75%); }
-.meme-card .card-photo-wrap { z-index: 1; }
-.meme-card .card-photo { object-fit: contain; filter: none; }
-/* Une classe de plus que la règle des cartes Créateur : ni trame de points ni ombre intérieure sur un meme. */
-.creator-card.meme-card .card-photo-shade { background: linear-gradient(180deg, rgb(0 0 0 / .42), transparent 19% 67%, rgb(0 0 0 / .48)); box-shadow: none; }
-/* Le meme reste entier (son texte est en haut et en bas) ; ses bandes reprennent l'image, floutée. Grande carte seulement : un flou par vignette de grille coûterait trop sur mobile. */
-.meme-card .card-photo-backdrop { object-fit: cover; filter: blur(16px) saturate(1.15) brightness(.6); transform: scale(1.15); }
+/* MEMES / Imgflip : une seule image source, sans voile ni fond dupliqué flou.
+   Les images portent souvent leur propre texte ; le cartouche opaque et la
+   bordure de rareté assurent la lisibilité sans retoucher les pixels. */
+.meme-card { background: #0d0e13; }
+.meme-card .card-photo-wrap { z-index: 1; overflow: hidden; background: #0d0e13; }
+/* Une spécificité supérieure aux cartes Créateur, indépendamment de l'ordre CSS. */
+.creator-card.meme-card .card-photo { object-fit: contain; object-position: center; filter: none; transform: none; }
 .meme-card .card-nameplate { background: linear-gradient(150deg, rgb(15 13 20 / .94), rgb(12 10 17 / .98)); }
 .meme-card .card-nameplate h3 { font-size: clamp(15px, 5vw, 27px); }
 /* La vignette Mème garde la taille de cartouche du deck dans TOUS les écrans
@@ -93,26 +93,23 @@
   text-overflow: ellipsis;
 }
 .meme-card.is-compact .card-nameplate h3 { font-size: clamp(11px, 3.3vw, 15px); }
-/* Matière imprimée, entre illustration et texte. Les grilles ne déclenchent
-   aucune animation ; seule la grande carte réagit au doigt. */
-.meme-card-material, .meme-card-foil { position: absolute; inset: 0; pointer-events: none; }
-.meme-card-material { z-index: 2; }
-.meme-card-foil { z-index: 3; opacity: 0; mix-blend-mode: screen; }
-.meme-card.rarity-common .meme-card-material { background: linear-gradient(145deg, rgb(255 255 255 / .035), transparent 32% 70%, rgb(0 0 0 / .08)); }
+/* Le reflet interactif reste sur le cadre, jamais sur le visuel du mème.
+   On conserve l'animation au doigt et les bordures de rareté. */
+.meme-card-foil {
+  position: absolute; z-index: 3; inset: 0; padding: 3%;
+  pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
 .meme-card.rarity-common::after { border-color: rgb(141 149 167 / .55); }
-.meme-card.rarity-uncommon .meme-card-material { background: linear-gradient(145deg, rgb(94 232 178 / .09), transparent 34% 68%, rgb(40 130 96 / .1)); }
 .meme-card.rarity-uncommon::after { border-color: #5bd9a8; box-shadow: inset 0 0 0 2px #0d1713, inset 0 0 0 4px rgb(67 214 156 / .2); }
-.meme-card.rarity-rare .meme-card-material { background: linear-gradient(145deg, rgb(138 205 252 / .11), transparent 34% 68%, rgb(58 116 176 / .12)); }
 .meme-card.rarity-rare::after { border-color: #77c2ed; box-shadow: inset 0 0 0 2px #101421, inset 0 0 0 4px rgb(93 174 229 / .23); }
-.meme-card.rarity-epic .meme-card-material { background: radial-gradient(ellipse at 18% 12%, rgb(185 130 234 / .19), transparent 48%), linear-gradient(145deg, transparent 58%, rgb(111 61 164 / .16)); }
 .meme-card.rarity-epic::after { border-color: #d1a8ef; box-shadow: inset 0 0 0 2px #160e20, inset 0 0 0 6px rgb(167 109 214 / .25); }
-.meme-card.rarity-legendary .meme-card-material { background: radial-gradient(ellipse at 84% 14%, rgb(255 232 158 / .24), transparent 50%), linear-gradient(145deg, transparent 55%, rgb(174 99 38 / .17)); }
 .meme-card.rarity-legendary::after { border-color: #ffdc8f; box-shadow: inset 0 0 0 2px #211408, inset 0 0 0 5px rgb(243 181 82 / .35), inset 0 0 0 7px rgb(255 244 191 / .13); }
-.meme-card.rarity-mythic .meme-card-material { background: radial-gradient(ellipse at 18% 14%, rgb(255 216 239 / .24), transparent 43%), linear-gradient(135deg, rgb(133 121 250 / .14), transparent 35% 67%, rgb(233 94 139 / .2)); }
 .meme-card.rarity-mythic::after { border-width: 3px; border-color: #ffc2d2; box-shadow: inset 0 0 0 2px #130b18, inset 0 0 0 6px rgb(242 125 155 / .35), inset 0 0 0 8px rgb(255 231 246 / .13); }
 .meme-card.is-reactive .meme-card-foil { opacity: .42; background: radial-gradient(ellipse 55% 45% at var(--px, 28%) var(--py, 15%), rgb(255 255 255 / .44), color-mix(in srgb, var(--rarity) 40%, transparent) 40%, transparent 76%); }
-.meme-card.is-full-art .card-photo { padding: 2.2%; }
-.meme-card.is-full-art .card-photo-shade { background: linear-gradient(180deg, rgb(0 0 0 / .39), transparent 19% 57%, rgb(7 5 12 / .5) 100%); }
 .meme-card.is-full-art .card-nameplate { padding-block: 3.5%; background: linear-gradient(180deg, rgb(12 9 17 / .72), rgb(11 8 15 / .89)); border-top-color: color-mix(in srgb, var(--rarity) 75%, transparent); }
 .meme-card.is-full-art::after { border-color: color-mix(in srgb, var(--rarity) 82%, #ffe9af); box-shadow: inset 0 0 0 2px #170d18, inset 0 0 0 5px color-mix(in srgb, var(--rarity) 46%, transparent); }
 .meme-card.is-full-art:not(.is-compact) { box-shadow: 0 0 0 1px #170d18, 0 0 22px -10px color-mix(in srgb, var(--rarity) 62%, transparent), 0 16px 28px -13px rgb(0 0 0 / .88); }

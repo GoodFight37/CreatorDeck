@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { MEME_CARDS, MEME_RARITY, type MemeCard as MemeCardData, type MemeRarity } from "@/lib/memes";
 import { MemeCard } from "@/components/meme-card";
+import { GUEST_MEME_CARDS, GUEST_MEME_LABELS, useGuestMemeBooster } from "@/hooks/use-guest-meme-booster";
 import "./meme-deck.css";
 import "./meme-reveal.css";
 
@@ -33,6 +34,7 @@ function BoosterCountdown({ stock, nextAt }: { stock: number; nextAt: string | n
 export function MemeDeck() {
   const booster = useMemeBooster();
   const imgflipBooster = useImgflipBooster();
+  const guestBooster = useGuestMemeBooster(GUEST_MEME_CARDS);
   const { account, status, busy, problem } = booster;
   // Les possessions Imgflip (0062) rejoignent le même classeur : les identifiants
   // sont disjoints (`imgflip-…`), la fusion ne peut pas écraser une carte MEMES.
@@ -73,15 +75,18 @@ export function MemeDeck() {
       <div className="meme-pack-scene"><div className="meme-pack-floor" aria-hidden="true" />
         <div className="meme-pack-object" aria-hidden="true"><span className="meme-pack-film" /></div></div>
       <p className="meme-hero-line">5 cartes · 1 Rare ou mieux</p>
-      <button ref={openButtonRef} className="meme-open" type="button" disabled={!account || !status || status.stock < 1 || busy}
-        onClick={booster.prepare}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
+      <button ref={openButtonRef} className="meme-open" type="button"
+        disabled={account ? (!status || status.stock < 1 || busy) : guestBooster.presenting}
+        onClick={account ? booster.prepare : guestBooster.prepare}>
+        {account ? busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER" : "ESSAYER SANS COMPTE"}
+      </button>
       <p className="meme-status" aria-live="polite">{status
         ? <BoosterCountdown stock={status.stock} nextAt={status.nextAt} />
-        : account ? booster.problem && !booster.loading ? "Réserve MEMES indisponible." : "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
+        : account ? booster.problem && !booster.loading ? "Réserve MEMES indisponible." : "Lecture de ta réserve…" : "Démo gratuite : 5 cartes sans compte, non sauvegardées."}</p>
       {booster.notice ? <p role="status">{booster.notice}</p> : null}
       {problem ? <div className="meme-problem" role="alert"><p>{problem}</p>
         <button type="button" disabled={booster.loading} onClick={() => void booster.refresh()}>Réessayer la lecture</button></div> : null}
-      {!account ? <Link className="meme-account-link" href="/">Retourner au jeu pour se connecter</Link> : null}
+      {!account ? <Link className="meme-account-link" href="/">Connecte-toi uniquement pour conserver les cartes</Link> : null}
       <MemePackComposition />
     </section>
     <section className="meme-collection" aria-labelledby="meme-collection-heading">
@@ -114,7 +119,7 @@ export function MemeDeck() {
       </nav>
       <p className="meme-credit">Cartes MyMemeCards et modèles Imgflip. Sources indiquées sur les fiches.</p>
     </section>
-    <MemeBoosterOpening booster={booster} />
+    <MemeBoosterOpening booster={account ? booster : guestBooster} labels={!account ? GUEST_MEME_LABELS : undefined} />
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
       aria-label={"Carte " + selected.name}>
       <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>

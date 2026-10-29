@@ -11,7 +11,7 @@ test("l'univers MEMES présente un booster et un classeur séparés sur téléph
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/memes");
   await expect(page.getByRole("heading", { name: "MEMES", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "OUVRIR UN BOOSTER" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "ESSAYER SANS COMPTE" })).toBeEnabled();
   await expect(page.getByText(`0 / ${COLLECTION_TOTAL}`)).toBeVisible();
   await expect(page.locator(".meme-grid .meme-slot")).toHaveCount(12);
   await page.screenshot({ path: `test-results/memes-${test.info().project.name}.png` });
@@ -120,4 +120,47 @@ test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et ti
   await expect(scene).toHaveCount(0);
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${COLLECTION_TOTAL}`);
   expect(draws).toBe(1);
+});
+
+test("MEMES et Imgflip présentent la photo source sans voile, matière ni fond flouté", async ({ page }) => {
+  await page.goto("/memes");
+  for (const name of ["Non mais allô, quoi", "Drake Hotline Bling"]) {
+    await page.getByPlaceholder("Nom ou numéro").fill(name);
+    await page.locator(".meme-slot").first().click();
+    const card = page.locator(".meme-inspect .meme-card");
+    const photo = card.locator(".card-photo");
+    await expect(photo).toHaveCSS("object-fit", "contain");
+    await expect(photo).toHaveCSS("filter", "none");
+    await expect(photo).toHaveCSS("transform", "none");
+    await expect(card.locator(".card-photo-shade, .card-photo-backdrop, .meme-card-material")).toHaveCount(0);
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+    await page.getByRole("button", { name: "Fermer" }).click();
+  }
+});
+
+test("sans connexion : ouverture complète de démonstration, image nette et aucune sauvegarde", async ({ page }) => {
+  await page.goto("/memes");
+  await page.getByRole("button", { name: "ESSAYER SANS COMPTE" }).click();
+  const scene = page.locator(".opening-continuum");
+  await expect(scene).toHaveAttribute("data-opening-phase", "sealed");
+  const zone = (await scene.locator(".booster-peel-zone").boundingBox())!;
+  const x = zone.x + zone.width * .04;
+  const y = zone.y + zone.height * .65;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 12 });
+  await page.mouse.up();
+  await expect(scene.locator(".meme-reveal-flow")).toBeVisible();
+  await expect(scene.locator(".meme-reveal-front .card-photo")).toHaveCSS("filter", "none");
+  for (let i = 0; i < 5; i++) {
+    await expect(scene.locator(".meme-reveal-counter")).toHaveText(`CARTE ${i + 1} / 5`);
+    const next = scene.locator(".meme-reveal-next");
+    await expect(next).toBeEnabled();
+    await next.click();
+  }
+  await expect(scene.getByText("DÉMONSTRATION · CARTES NON CONSERVÉES")).toBeVisible();
+  await scene.getByRole("button", { name: "TERMINER LA DÉMO" }).click();
+  await expect(scene).toHaveCount(0);
+  await expect(page.getByText(`0 / ${COLLECTION_TOTAL}`)).toBeVisible();
+  await expect(page.getByRole("button", { name: "ESSAYER SANS COMPTE" })).toBeEnabled();
 });
